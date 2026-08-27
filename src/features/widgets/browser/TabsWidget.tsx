@@ -1,7 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { Icon } from '@/core/icons'
-import { useAsyncValue } from '@/core/hooks'
 import { faviconUrl, isExtension } from '@/core/platform/browser'
 import { registerWidget } from '@/core/widgets/registry'
 import type { WidgetProps } from '@/core/widgets/types'
@@ -48,10 +47,7 @@ function TabsWidget({ config }: WidgetProps<TabsConfig>) {
 
 function TabList({ config }: { config: TabsConfig }) {
   const [filter, setFilter] = useState('')
-  /** Bumped after closing tabs, to re-read the list. */
-  const [revision, setRevision] = useState(0)
-
-  const tabs = useAsyncValue(`tabs:${config.scope}:${revision}`, () => readTabs(config.scope))
+  const tabs = useLiveTabs(config.scope)
 
   if (!tabs) return <ListLoading />
 
@@ -70,7 +66,6 @@ function TabList({ config }: { config: TabsConfig }) {
   const closeDuplicates = async () => {
     if (duplicates.length === 0) return
     await chrome.tabs.remove(duplicates.map((tab) => tab.id))
-    setRevision((n) => n + 1)
   }
 
   return (
@@ -107,16 +102,68 @@ function TabList({ config }: { config: TabsConfig }) {
               action="close"
               actionLabel={`Close ${tab.title}`}
               onClick={() => void focusTab(tab)}
-              onAction={() => {
-                void chrome.tabs.remove(tab.id)
-                setRevision((n) => n + 1)
-              }}
+              // No manual refresh: closing fires onRemoved like any other close.
+              onAction={() => void chrome.tabs.remove(tab.id)}
             />
           ))}
         </div>
       )}
     </div>
   )
+}
+
+/**
+ * The open tabs, kept in step with the browser.
+ *
+ * Re-reading only after a close made from this widget left the list stale: a tab
+ * closed in the browser itself sat here as a dead row until the new tab page was
+ * reopened. Titles and URLs are shown too, so `onUpdated` counts as a change
+ * along with the obvious open/close ones — it is noisy during page loads, so the
+ * re-read is coalesced onto a short timer rather than run per event. The list is
+ * held in state rather than re-keyed, so a refresh replaces the rows in place
+ * instead of blinking the widget back to its loading state.
+ */
+function useLiveTabs(scope: TabsConfig['scope']): TabInfo[] | null {
+  const [tabs, setTabs] = useState<TabInfo[] | null>(null)
+
+  useEffect(() => {
+    let alive = true
+    const read = () => {
+      void readTabs(scope).then((next) => {
+        if (alive) setTabs(next)
+      })
+    }
+    read()
+
+    if (!isExtension() || !chrome.tabs) return () => {
+      alive = false
+    }
+
+    const events = [
+      chrome.tabs.onCreated,
+      chrome.tabs.onRemoved,
+      chrome.tabs.onUpdated,
+      chrome.tabs.onMoved,
+      chrome.tabs.onAttached,
+      chrome.tabs.onDetached,
+      chrome.tabs.onReplaced,
+    ].filter((event): event is chrome.events.Event<() => void> => Boolean(event?.addListener))
+
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const bump = () => {
+      clearTimeout(timer)
+      timer = setTimeout(read, 150)
+    }
+    for (const event of events) event.addListener(bump)
+
+    return () => {
+      alive = false
+      clearTimeout(timer)
+      for (const event of events) event.removeListener(bump)
+    }
+  }, [scope])
+
+  return tabs
 }
 
 async function readTabs(scope: TabsConfig['scope']): Promise<TabInfo[]> {
