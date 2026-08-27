@@ -16,11 +16,12 @@ const outDir = resolve(process.argv[3] ?? './shots')
 mkdirSync(outDir, { recursive: true })
 
 const browser = await chromium.launch()
-const shot = async (name, fn, { colorScheme = 'dark', ...size } = {}) => {
+const shot = async (name, fn, { colorScheme = 'dark', reducedMotion, ...size } = {}) => {
   const page = await browser.newPage({
     viewport: { width: size.width ?? 1440, height: size.height ?? 900 },
     deviceScaleFactor: 1,
     colorScheme,
+    reducedMotion,
   })
   page.on('console', (msg) => {
     if (msg.type() === 'error') console.error(`  [${name}] console: ${msg.text()}`)
@@ -110,6 +111,16 @@ await shot('tile-editor', async (page) => {
   }
 })
 
+await shot(
+  'reduced-motion',
+  async (page) => {
+    await seed(page, dashboardSettings)
+    await page.goto(`${base}/newtab.html`)
+    await settle(page)
+  },
+  { reducedMotion: 'reduce', width: 1600, height: 1100 },
+)
+
 await shot('dashboard', async (page) => {
   await seed(page, dashboardSettings)
   await page.goto(`${base}/newtab.html`)
@@ -151,6 +162,15 @@ await shot('widget-config', async (page) => {
   await page.locator('.wframe__tool').first().click()
   await page.waitForTimeout(500)
 }, { width: 1600, height: 1100 })
+
+await shot('focus-ring', async (page) => {
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+  // Tab into the tile grid and step across it with the arrow keys.
+  for (let i = 0; i < 4; i += 1) await page.keyboard.press('Tab')
+  await page.keyboard.press('ArrowRight')
+  await page.waitForTimeout(300)
+})
 
 await shot('palette', async (page) => {
   await page.goto(`${base}/newtab.html`)

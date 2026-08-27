@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { Icon } from '@/core/icons'
 import { BackgroundLayer } from '@/features/background/BackgroundLayer'
-import { CommandPalette } from '@/features/palette/CommandPalette'
+
+/** On demand: nothing about the palette is needed until it is opened. */
+const CommandPalette = lazy(() =>
+  import('@/features/palette/CommandPalette').then((m) => ({ default: m.CommandPalette })),
+)
 import { SearchBar } from '@/features/search/SearchBar'
 import { SettingsOverlay } from '@/features/settings-ui/SettingsOverlay'
 import { TileGrid } from '@/features/tiles/TileGrid'
@@ -72,7 +76,9 @@ export function App() {
 
       {/* Mounted only while open, so its state starts fresh every time. */}
       {paletteEnabled && paletteOpen ? (
-        <CommandPalette onClose={() => setPaletteOpen(false)} />
+        <Suspense fallback={null}>
+          <CommandPalette onClose={() => setPaletteOpen(false)} />
+        </Suspense>
       ) : null}
     </div>
   )

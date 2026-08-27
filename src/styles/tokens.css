@@ -66,6 +66,36 @@
   --z-toast: 300;
 }
 
+/*
+ * Light defaults, applied before any JavaScript runs. `ThemeProvider` overwrites
+ * these a moment later, but without them a light-mode user gets a dark flash on
+ * every single new tab — the one thing this page cannot afford.
+ */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --bg: #f4f5f8;
+    --bg-elevated: #ffffff;
+    --fg: #171a21;
+    --fg-muted: #525a68;
+    --fg-subtle: #858d9c;
+    --accent: #2f6fed;
+    --accent-fg: #ffffff;
+    --line: rgb(0 0 0 / 12%);
+    --surface-tint: 17 22 32;
+    --surface-base: 255 255 255;
+  }
+}
+
+/* An explicit choice must beat the media query above. */
+:root[data-mode='dark'] {
+  color-scheme: dark;
+}
+
+:root[data-mode='light'] {
+  color-scheme: light;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion: 0;

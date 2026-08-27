@@ -20,6 +20,17 @@ export default defineConfig({
       output: {
         entryFileNames: (chunk) =>
           chunk.name === 'background' ? 'background.js' : 'assets/[name]-[hash].js',
+        // Split the vendors so the new tab's critical path is legible in the
+        // build output, and so a change to one does not invalidate the others.
+        manualChunks: (id) => {
+          if (!id.includes('node_modules')) return undefined
+          if (id.includes('react-grid-layout') || id.includes('/react-draggable/')) return 'vendor-grid'
+          if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/scheduler/')) return 'vendor-react'
+          if (id.includes('/zod/')) return 'vendor-zod'
+          if (id.includes('@fortawesome')) return 'vendor-icons'
+          if (id.includes('@dnd-kit')) return 'vendor-dnd'
+          return 'vendor'
+        },
       },
     },
   },

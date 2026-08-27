@@ -67,12 +67,12 @@ requested per widget.
 - [x] Keyboard nav across tiles (arrows + digits 1–9 to open)
 
 ## Phase 7 — Polish & ship
-- [ ] Full settings page: tabbed, search, live preview
-- [ ] Export/import config JSON; reset to defaults
-- [ ] Theme presets + shareable theme strings
-- [ ] Perf pass: fast paint, lazy widgets, preload wallpaper
-- [ ] A11y: focus rings, reduced motion, contrast check
-- [ ] Store assets + single-purpose justification (new tab overrides get manual review)
+- [x] Full settings page: tabbed, search, live preview
+- [x] Export/import config JSON; reset to defaults
+- [x] Theme presets + shareable theme strings
+- [x] Perf pass: fast paint, lazy widgets, preload wallpaper
+- [x] A11y: focus rings, reduced motion, contrast check
+- [x] Store assets + single-purpose justification (new tab overrides get manual review)
 
 ## Phase 8 — Optional / later
 - [ ] Google Calendar + Gmail unread (OAuth)
@@ -113,6 +113,22 @@ requested per widget.
   dashboard and avoids sending every keystroke to a third party.
 - The calculator is a hand-written recursive-descent parser. MV3 forbids `eval`
   and `new Function` outright, and the grammar is then exactly what is documented.
+- Font Awesome icon *definitions* are plain path data, so `Icon` renders them with
+  one `<svg>` instead of shipping `fontawesome-svg-core` and `react-fontawesome`.
+  That took the icon bundle from 128KB to 34KB. Font Awesome is still the only
+  icon source, and `npm run icons:check` fails on any unreferenced entry.
+- The eager bundle for a new tab is ~459KB raw / ~140KB gzip, down from ~610KB:
+  the drag library, the palette and every dialog load on demand. zod stays eager
+  because settings are parsed before first paint.
+- Light-mode token defaults live in `tokens.css` under `prefers-color-scheme`, so
+  a light-mode user never sees a dark flash in the moment before JS runs.
+- Tile columns use `auto-fit`, not a fixed track count: fixed tracks stay reserved
+  when empty, which left a short grid visibly off-centre.
+- `npm test` covers the pure logic screenshots cannot — calculator, bangs, address
+  detection, migrations, theme codes, timezone maths, contrast. 83 checks.
+- `npm run store:shots` captures the store screenshots from the built extension in
+  a real extension context, which also serves as the end-to-end check that the
+  manifest, service worker and favicon API all work.
 - Clock faces are hand-built. The maintained analog-clock packages each give one
   fixed look, and the requirement was a range of faces all reading from the theme
   tokens. Faces size themselves in container query units, so resizing scales them.

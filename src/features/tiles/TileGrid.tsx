@@ -1,21 +1,17 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  DndContext,
-  KeyboardSensor,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core'
-import { restrictToParentElement } from '@dnd-kit/modifiers'
-import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/core/icons'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import type { Tile as TileModel } from '@/core/settings/schema'
 import { openUrl } from '@/core/platform/browser'
 import { Tile } from './Tile'
-import { TileEditor } from './TileEditor'
+
+/** On demand: the editor carries the brand picker and the media store. */
+const TileEditor = lazy(() => import('./TileEditor').then((m) => ({ default: m.TileEditor })))
+
+/** On demand: the drag library is only needed once Arrange mode is entered. */
+const SortableTiles = lazy(() =>
+  import('./SortableTiles').then((m) => ({ default: m.SortableTiles })),
+)
 import { seedTilesFromBrowser } from './seed'
 import { useGridArrows } from './useGridArrows'
 import './tiles.css'
@@ -37,14 +33,7 @@ export function TileGrid() {
 
   useGridArrows(gridRef, 'a.tile__plate')
 
-  const sensors = useSensors(
-    // A short distance threshold keeps clicks clicking and drags dragging.
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  )
-
   const items = tiles.items
-  const ids = useMemo(() => items.map((t) => t.id), [items])
 
   // First run: offer the browser's own most-visited sites rather than a blank page.
   useEffect(() => {
@@ -97,14 +86,6 @@ export function TileGrid() {
     return () => window.removeEventListener('keydown', onKey)
   }, [items, tiles.openIn, shortcuts])
 
-  const onDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return
-    const from = ids.indexOf(String(active.id))
-    const to = ids.indexOf(String(over.id))
-    if (from < 0 || to < 0) return
-    write(arrayMove(items, from, to))
-  }
-
   const remove = (id: string) => write(items.filter((t) => t.id !== id))
 
   if (!tiles.enabled) return null
@@ -128,32 +109,40 @@ export function TileGrid() {
             '--tile-pad': `${tiles.imagePadding}px`,
             '--tile-fit': tiles.imageFit,
             '--favicon-size': `${tiles.faviconSize}px`,
-            '--tile-cols': tiles.columns === 0 ? 'auto-fill' : tiles.columns,
+            // Zero columns means "as many as fit", so leave the width uncapped.
+            '--tile-max-width':
+              tiles.columns === 0
+                ? 'none'
+                : `${tiles.columns * (tiles.width + tiles.gap) - tiles.gap}px`,
             '--tile-label-align': tiles.labelAlign,
           } as React.CSSProperties
         }
       >
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          modifiers={[restrictToParentElement]}
-          onDragEnd={onDragEnd}
-        >
-          <SortableContext items={ids} strategy={rectSortingStrategy}>
-            {items.map((tile, index) => (
-              <Tile
-                key={tile.id}
-                tile={tile}
-                index={index}
-                settings={tiles}
-                editing={editing}
-                showHint={shortcuts}
-                onEdit={setEditorId}
-                onRemove={remove}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
+        {editing ? (
+          <Suspense fallback={null}>
+            <SortableTiles
+              items={items}
+              settings={tiles}
+              showHint={shortcuts}
+              onReorder={write}
+              onEdit={setEditorId}
+              onRemove={remove}
+            />
+          </Suspense>
+        ) : (
+          items.map((tile, index) => (
+            <Tile
+              key={tile.id}
+              tile={tile}
+              index={index}
+              settings={tiles}
+              editing={false}
+              showHint={shortcuts}
+              onEdit={setEditorId}
+              onRemove={remove}
+            />
+          ))
+        )}
 
         {tiles.showAddButton ? (
           <button
@@ -182,6 +171,7 @@ export function TileGrid() {
       </div>
 
       {editorId || creating ? (
+        <Suspense fallback={null}>
         <TileEditor
           tile={items.find((t) => t.id === editorId) ?? null}
           onClose={() => {
@@ -203,6 +193,7 @@ export function TileGrid() {
               : undefined
           }
         />
+        </Suspense>
       ) : null}
     </div>
   )

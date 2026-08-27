@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
 import {
   ResponsiveGridLayout,
   horizontalCompactor,
@@ -16,8 +16,16 @@ import type { AnyWidgetDefinition } from '@/core/widgets/types'
 import { setPath } from '@/core/util/path'
 import { uid } from '@/core/util/id'
 import { WidgetFrame } from './WidgetFrame'
-import { WidgetPicker } from './WidgetPicker'
-import { WidgetConfigDialog } from './WidgetConfigDialog'
+
+/*
+ * Both dialogs are loaded on demand. The config dialog in particular reaches
+ * into the settings-UI field renderer, which would otherwise drag the entire
+ * settings layer into the new tab's first paint.
+ */
+const WidgetPicker = lazy(() => import('./WidgetPicker').then((m) => ({ default: m.WidgetPicker })))
+const WidgetConfigDialog = lazy(() =>
+  import('./WidgetConfigDialog').then((m) => ({ default: m.WidgetConfigDialog })),
+)
 import 'react-grid-layout/css/styles.css'
 import './widgets.css'
 
@@ -204,9 +212,14 @@ export function WidgetCanvas() {
         </button>
       </div>
 
-      {picking ? <WidgetPicker onAdd={addWidget} onClose={() => setPicking(false)} /> : null}
+      {picking ? (
+        <Suspense fallback={null}>
+          <WidgetPicker onAdd={addWidget} onClose={() => setPicking(false)} />
+        </Suspense>
+      ) : null}
 
       {configuringInstance && configuringDefinition ? (
+        <Suspense fallback={null}>
         <WidgetConfigDialog
           definition={configuringDefinition}
           instance={configuringInstance}
@@ -222,6 +235,7 @@ export function WidgetCanvas() {
           }
           onClose={() => setConfiguring(null)}
         />
+        </Suspense>
       ) : null}
 
       {widgets.instances.length === 0 && !picking ? (

@@ -26,10 +26,16 @@ const MAX_SEEDED = 10
 const makeTile = (url: string, title: string): TileModel =>
   Tile.parse({ id: uid('tile'), url, title })
 
+/**
+ * The browser's own most-visited list comes first, since it is already personal.
+ * A fresh profile returns one or two entries at most, so the list is topped up
+ * from the fallback set rather than left as a near-empty grid.
+ */
 export async function seedTilesFromBrowser(): Promise<TileModel[]> {
   const sites = await readTopSites()
-  const source = sites.length > 0 ? sites : FALLBACK
-  return source.slice(0, MAX_SEEDED).map(([url, title]) => makeTile(url, title))
+  const seen = new Set(sites.map(([url]) => normalise(url)))
+  const topUp = FALLBACK.filter(([url]) => !seen.has(normalise(url)))
+  return [...sites, ...topUp].slice(0, MAX_SEEDED).map(([url, title]) => makeTile(url, title))
 }
 
 async function readTopSites(): Promise<Array<[string, string]>> {

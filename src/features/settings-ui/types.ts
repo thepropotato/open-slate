@@ -37,7 +37,13 @@ export type FieldControl =
   | { kind: 'select'; options: Choice[] }
   | { kind: 'color' }
   | { kind: 'text'; placeholder?: string; wide?: boolean }
-  | { kind: 'custom'; render: () => ReactNode; stacked?: boolean }
+  | {
+      kind: 'custom'
+      render: () => ReactNode
+      stacked?: boolean
+      /** Renders the node with no surrounding label row, for panels with their own headings. */
+      bare?: boolean
+    }
 
 export interface Field {
   /** Dot-path into `Settings`. Omitted only for `custom` controls. */

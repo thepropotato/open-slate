@@ -39,6 +39,7 @@ export function FieldRenderer({ field, scope }: { field: Field; scope?: FieldSco
   }
 
   if (control.kind === 'custom') {
+    if (control.bare) return <>{control.render()}</>
     return (
       <Row title={field.label} help={field.help} stacked={control.stacked}>
         {control.render()}

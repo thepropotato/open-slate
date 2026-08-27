@@ -1,20 +1,30 @@
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import type { CSSProperties, HTMLAttributes, Ref } from 'react'
 import { Icon } from '@/core/icons'
 import { openUrl } from '@/core/platform/browser'
 import type { Tile as TileModel, Tiles as TilesSettings } from '@/core/settings/schema'
-import { useTileVisual } from './useTileVisual'
+import { useTileVisual, type TileArt } from './useTileVisual'
 
 /**
- * One speed-dial tile. Renders as an anchor so middle-click, cmd-click and
- * "copy link address" all behave the way the user expects from a link.
+ * One speed-dial tile.
+ *
+ * Presentational only: it knows nothing about dragging. The sortable wrapper
+ * passes drag plumbing in through `drag`, which keeps the drag library off the
+ * page entirely until the user actually enters Arrange mode.
  */
+export interface TileDrag {
+  ref: Ref<HTMLDivElement>
+  handleProps: HTMLAttributes<HTMLElement>
+  style: CSSProperties
+  dragging: boolean
+}
+
 export function Tile({
   tile,
   settings,
   index,
   editing,
   showHint,
+  drag,
   onEdit,
   onRemove,
 }: {
@@ -23,30 +33,20 @@ export function Tile({
   index: number
   editing: boolean
   showHint: boolean
+  drag?: TileDrag
   onEdit: (id: string) => void
   onRemove: (id: string) => void
 }) {
   const visual = useTileVisual(tile, settings)
-  const { setNodeRef, transform, transition, isDragging, attributes, listeners } = useSortable({
-    id: tile.id,
-    disabled: !editing,
-  })
   const placement = tile.labelPlacement ?? settings.labelPlacement
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition ?? undefined,
-    opacity: isDragging ? 0.85 : undefined,
-  }
 
   return (
     <div
       className="tile"
-      ref={setNodeRef}
-      style={style}
-      data-dragging={isDragging}
-      {...(editing ? attributes : {})}
-      {...(editing ? listeners : {})}
+      ref={drag?.ref}
+      style={drag?.style}
+      data-dragging={drag?.dragging}
+      {...(drag?.handleProps ?? {})}
     >
       <a
         className="tile__plate"
@@ -60,7 +60,7 @@ export function Tile({
           openUrl(tile.url, settings.openIn)
         }}
       >
-        <TileArt art={visual.art} title={visual.title} />
+        <TileArtwork art={visual.art} title={visual.title} />
 
         {showHint && index < 9 ? <span className="tile__hint">{index + 1}</span> : null}
 
@@ -73,8 +73,10 @@ export function Tile({
         />
 
         {placement === 'inside-bottom' || placement === 'inside-top' ? (
-          <span className={`tile__label tile__label--inside tile__label--${placement}`}
-            style={{ color: '#fff' }}>
+          <span
+            className={`tile__label tile__label--inside tile__label--${placement}`}
+            style={{ color: '#fff' }}
+          >
             {visual.title}
           </span>
         ) : null}
@@ -110,7 +112,7 @@ export function Tile({
   )
 }
 
-function TileArt({ art, title }: { art: ReturnType<typeof useTileVisual>['art']; title: string }) {
+function TileArtwork({ art, title }: { art: TileArt; title: string }) {
   if (art.kind === 'brand') {
     return (
       <svg

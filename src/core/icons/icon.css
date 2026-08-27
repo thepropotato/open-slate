@@ -1,0 +1,30 @@
+/*
+ * Matches Font Awesome's own sizing behaviour: an icon is one em tall, keeps its
+ * own aspect ratio, and sits on the text baseline rather than below it.
+ */
+.icon {
+  display: inline-block;
+  height: 1em;
+  width: auto;
+  max-width: none;
+  vertical-align: -0.125em;
+  fill: currentColor;
+  flex: none;
+  overflow: visible;
+}
+
+.icon--spin {
+  animation: icon-spin 1.1s linear infinite;
+}
+
+@keyframes icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon--spin {
+    animation-duration: 2.4s;
+  }
+}

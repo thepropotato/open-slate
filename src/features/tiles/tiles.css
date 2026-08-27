@@ -16,10 +16,18 @@
   --favicon-size: 22px;
 
   display: grid;
-  grid-template-columns: repeat(var(--tile-cols, auto-fill), minmax(0, var(--tile-w)));
+  /*
+   * `auto-fit`, not a fixed track count and not `auto-fill`: both of those keep
+   * empty tracks, which pushes a short grid off-centre. `auto-fit` collapses the
+   * unused ones so `justify-content` can centre what is actually there, while
+   * the container's max-width still caps how many columns can appear.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(0, var(--tile-w)));
   justify-content: center;
   gap: var(--tile-gap);
   width: 100%;
+  max-width: var(--tile-max-width, none);
+  margin-inline: auto;
 }
 
 .tile {

@@ -20,7 +20,12 @@ export default tseslint.config(
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        // `_`-prefixed bindings are intentional: omitting keys via destructuring
+        // is the clearest way to strip fields from an object.
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', ignoreRestSiblings: true },
+      ],
 
       // Font Awesome is the app's only icon source, and it may only be reached
       // through the central registry in src/core/icons.

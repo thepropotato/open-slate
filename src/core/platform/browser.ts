@@ -48,35 +48,49 @@ function chromeStore(area: StorageArea): KeyValueStore {
   }
 }
 
-/** localStorage-backed stand-in used when running outside the extension. */
+/**
+ * localStorage-backed stand-in used when running outside the extension.
+ *
+ * Nothing here touches `window` at import time: the cross-tab listener is
+ * attached on first subscribe. That keeps this module importable from plain Node,
+ * which is what lets the self-test exercise the pure logic that depends on it.
+ */
 function webStore(area: StorageArea): KeyValueStore {
   const prefix = `newtab:${area}:`
   const listeners = new Map<string, Set<(v: unknown) => void>>()
+  let listening = false
 
   const emit = (key: string, value: unknown) =>
     listeners.get(key)?.forEach((fn) => fn(value))
 
-  // Pick up writes from other tabs of the dev server.
-  window.addEventListener('storage', (e) => {
-    if (!e.key?.startsWith(prefix)) return
-    const key = e.key.slice(prefix.length)
-    emit(key, e.newValue === null ? undefined : JSON.parse(e.newValue))
-  })
+  const startListening = () => {
+    if (listening || typeof window === 'undefined') return
+    listening = true
+    window.addEventListener('storage', (event) => {
+      if (!event.key?.startsWith(prefix)) return
+      const key = event.key.slice(prefix.length)
+      emit(key, event.newValue === null ? undefined : JSON.parse(event.newValue))
+    })
+  }
 
   return {
     async get(key) {
+      if (typeof localStorage === 'undefined') return undefined
       const raw = localStorage.getItem(prefix + key)
       return raw === null ? undefined : (JSON.parse(raw) as never)
     },
     async set(key, value) {
+      if (typeof localStorage === 'undefined') return
       localStorage.setItem(prefix + key, JSON.stringify(value))
       emit(key, value)
     },
     async remove(key) {
+      if (typeof localStorage === 'undefined') return
       localStorage.removeItem(prefix + key)
       emit(key, undefined)
     },
     subscribe(key, fn) {
+      startListening()
       const set = listeners.get(key) ?? new Set()
       listeners.set(key, set)
       set.add(fn)

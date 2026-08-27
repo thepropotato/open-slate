@@ -1,0 +1,35 @@
+.data {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.data > .ctl-row + .ctl-row {
+  border-top: 1px solid var(--line);
+}
+
+.data__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.data__msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin-bottom: var(--space-sm);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-xs);
+  background: rgb(var(--surface-tint) / 8%);
+}
+
+.data__msg[data-kind='ok'] {
+  color: var(--fg-muted);
+}
+
+.data__msg[data-kind='bad'] {
+  color: #ffb08a;
+}

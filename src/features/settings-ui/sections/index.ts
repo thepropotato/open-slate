@@ -2,6 +2,7 @@ import type { Section } from '../types'
 import { appearanceSection } from './appearance'
 import { backgroundSection } from './background'
 import { behaviorSection } from './behavior'
+import { dataSection } from './data'
 import { layoutSection } from './layout'
 import { searchSection } from './search'
 import { tilesSection } from './tiles'
@@ -19,4 +20,5 @@ export const sections: Section[] = [
   tilesSection,
   widgetsSection,
   behaviorSection,
+  dataSection,
 ]
