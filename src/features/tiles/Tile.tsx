@@ -72,17 +72,6 @@ export function Tile({
 
         {showHint && index < 9 ? <span className="tile__hint">{index + 1}</span> : null}
 
-        {/* A folder has no site of its own, so no favicon badge either. */}
-        {isFolder ? null : (
-          <img
-            className="tile__favicon"
-            data-corner={settings.faviconCorner}
-            src={visual.faviconSrc}
-            alt=""
-            loading="lazy"
-          />
-        )}
-
         {placement === 'inside-bottom' || placement === 'inside-top' ? (
           <span
             className={`tile__label tile__label--inside tile__label--${placement}`}
@@ -188,8 +177,16 @@ function TileArtwork({ art, title }: { art: TileArt; title: string }) {
       </svg>
     )
   }
-  if (art.kind === 'image') {
-    return <img className="tile__mark" src={art.src} alt="" loading="lazy" decoding="async" />
+  if (art.kind === 'image' || art.kind === 'favicon') {
+    return (
+      <img
+        className={`tile__mark${art.kind === 'favicon' ? ' tile__mark--favicon' : ''}`}
+        src={art.src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+      />
+    )
   }
   return (
     <span className="tile__monogram" style={{ color: art.colour }} aria-label={title}>

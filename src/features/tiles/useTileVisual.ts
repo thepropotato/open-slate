@@ -10,6 +10,12 @@ import { faviconTint, hostOf, monogram, resolveBrand } from './brand'
 export type TileArt =
   | { kind: 'brand'; path: string; colour: string }
   | { kind: 'image'; src: string }
+  /*
+   * A site icon standing in for artwork. Kept separate from `image` because a
+   * favicon is a tiny source bitmap: it is drawn near its own size and never
+   * cropped, where a real image fills the plate however the user asked.
+   */
+  | { kind: 'favicon'; src: string }
   | { kind: 'monogram'; text: string; colour: string }
   /** A folder shows a small grid of the favicons it contains. */
   | { kind: 'folder'; icons: string[]; count: number }
@@ -39,6 +45,9 @@ export function useTileVisual(
   const palette = usePalette()
   const host = hostOf(tile.url)
   const faviconSrc = useMemo(() => faviconUrl(tile.url, 64), [tile.url])
+  // The artwork copy asks for the largest icon the cache might hold, so the
+  // slightly bigger on-plate rendering still has real pixels behind it.
+  const faviconArt = useMemo(() => faviconUrl(tile.url, 128), [tile.url])
 
   const isFolder = tile.kind === 'folder'
   const kind = tile.image.kind
@@ -116,8 +125,8 @@ export function useTileVisual(
               ? { kind: 'brand', path: brand.path, colour: ink }
               : kind === 'brand'
                 ? { kind: 'monogram', text: monogram(tile.url, tile.title), colour: ink }
-                : { kind: 'image', src: faviconSrc }
+                : { kind: 'favicon', src: faviconArt }
 
     return { faviconSrc, plate, ink, art, title }
-  }, [tile, brand, tint, blobUrl, kind, host, faviconSrc, settings.plateStyle, palette, isFolder, childKey])
+  }, [tile, brand, tint, blobUrl, kind, host, faviconSrc, faviconArt, settings.plateStyle, palette, isFolder, childKey])
 }

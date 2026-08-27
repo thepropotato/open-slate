@@ -69,12 +69,14 @@ export const tilesSection: Section = {
         {
           path: 'tiles.columns',
           label: 'Columns',
-          help: 'Zero fits as many as the width allows.',
+          help: 'A row of this many, filling the width. Zero fits as many as the tile width allows.',
           control: { kind: 'slider', min: 0, max: 16, format: (v) => (v === 0 ? 'Auto' : String(v)) },
         },
         {
           path: 'tiles.width',
           label: 'Tile width',
+          help: 'With a column count the tiles fill the row instead, matching the widgets.',
+          when: (s) => s.tiles.columns === 0,
           control: { kind: 'slider', min: 60, max: 400, step: 2, unit: 'px' },
         },
         {
@@ -157,7 +159,7 @@ export const tilesSection: Section = {
     },
     {
       id: 'labels',
-      label: 'Labels and favicons',
+      label: 'Labels',
       when: (s) => s.tiles.enabled,
       fields: [
         {
@@ -198,38 +200,6 @@ export const tilesSection: Section = {
             ],
           },
           when: (s) => s.tiles.labelPlacement !== 'none',
-        },
-        {
-          path: 'tiles.faviconVisibility',
-          label: 'Show favicon badge',
-          control: {
-            kind: 'segmented',
-            options: [
-              { value: 'always', label: 'Always' },
-              { value: 'hover', label: 'On hover' },
-              { value: 'never', label: 'Never' },
-            ],
-          },
-        },
-        {
-          path: 'tiles.faviconCorner',
-          label: 'Favicon corner',
-          control: {
-            kind: 'select',
-            options: [
-              { value: 'top-left', label: 'Top left' },
-              { value: 'top-right', label: 'Top right' },
-              { value: 'bottom-left', label: 'Bottom left' },
-              { value: 'bottom-right', label: 'Bottom right' },
-            ],
-          },
-          when: (s) => s.tiles.faviconVisibility !== 'never',
-        },
-        {
-          path: 'tiles.faviconSize',
-          label: 'Favicon size',
-          control: { kind: 'slider', min: 12, max: 48, unit: 'px' },
-          when: (s) => s.tiles.faviconVisibility !== 'never',
         },
       ],
     },

@@ -9,24 +9,28 @@
 
 .tiles {
   --tile-w: 190px;
+  /*
+   * One grid track. The tile width by default, which is what "as many as fit"
+   * means; the grid overrides it with an equal share of the band when a column
+   * count fixes how many tiles a row holds.
+   */
+  --tile-track: var(--tile-w);
   --tile-aspect: 1.75;
   --tile-gap: 18px;
   --tile-radius: var(--radius);
   --tile-pad: 14px;
-  --favicon-size: 22px;
 
   display: grid;
   /*
    * `auto-fit`, not a fixed track count and not `auto-fill`: both of those keep
    * empty tracks, which pushes a short grid off-centre. `auto-fit` collapses the
    * unused ones so `justify-content` can centre what is actually there, while
-   * the container's max-width still caps how many columns can appear.
+   * the track width decides how many can appear at all.
    */
-  grid-template-columns: repeat(auto-fit, minmax(0, var(--tile-w)));
+  grid-template-columns: repeat(auto-fit, minmax(0, var(--tile-track)));
   justify-content: center;
   gap: var(--tile-gap);
   width: 100%;
-  max-width: var(--tile-max-width, none);
   margin-inline: auto;
 }
 
@@ -44,6 +48,8 @@
   display: grid;
   place-items: center;
   aspect-ratio: var(--tile-aspect);
+  /* So the monogram can size off the plate itself, which now stretches. */
+  container-type: inline-size;
   border-radius: var(--tile-radius);
   overflow: hidden;
   isolation: isolate;
@@ -66,63 +72,35 @@
   object-position: center;
 }
 
+/*
+ * A favicon standing in for artwork. Source icons are 32-128px, so filling the
+ * plate with one only makes it blurry: it is drawn a little larger than life,
+ * centred, and capped at the pixels we actually fetched. `contain` is hard-coded
+ * rather than following `--tile-fit`, because `cover` on a square icon in a wide
+ * plate crops it into an unrecognisable close-up.
+ */
+.tile__mark--favicon {
+  --tile-favicon-art: min(40cqi, 96px);
+
+  width: var(--tile-favicon-art);
+  height: var(--tile-favicon-art);
+  max-width: calc(100% - 2 * var(--tile-pad));
+  max-height: calc(100% - 2 * var(--tile-pad));
+  padding: 0;
+  object-fit: contain;
+}
+
 .tile__mark--svg {
   display: block;
   fill: currentColor;
 }
 
 .tile__monogram {
-  font-size: calc(var(--tile-w) * 0.26);
+  font-size: 26cqi;
   font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
   user-select: none;
-}
-
-/* --- favicon badge --- */
-
-.tile__favicon {
-  position: absolute;
-  width: var(--favicon-size);
-  height: var(--favicon-size);
-  border-radius: calc(var(--tile-radius) * 0.32 + 2px);
-  background: rgb(255 255 255 / 88%);
-  padding: 2px;
-  box-shadow: 0 2px 6px rgb(0 0 0 / 28%);
-  opacity: 0;
-  transform: scale(0.9);
-  transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease);
-}
-
-.tile__favicon[data-corner='top-left'] {
-  top: 8px;
-  left: 8px;
-}
-
-.tile__favicon[data-corner='top-right'] {
-  top: 8px;
-  right: 8px;
-}
-
-.tile__favicon[data-corner='bottom-left'] {
-  bottom: 8px;
-  left: 8px;
-}
-
-.tile__favicon[data-corner='bottom-right'] {
-  bottom: 8px;
-  right: 8px;
-}
-
-.tiles[data-favicon-vis='always'] .tile__favicon,
-.tiles[data-favicon-vis='hover'] .tile:hover .tile__favicon,
-.tiles[data-favicon-vis='hover'] .tile:focus-within .tile__favicon {
-  opacity: 1;
-  transform: none;
-}
-
-.tiles[data-favicon-vis='never'] .tile__favicon {
-  display: none;
 }
 
 /* --- labels --- */

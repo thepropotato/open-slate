@@ -1,11 +1,12 @@
-import { Suspense, lazy } from 'react'
+import { Suspense } from 'react'
+import { lazyChunk } from '@/core/util/lazyChunk'
 import { Icon } from '@/core/icons'
 import { Modal } from '@/core/ui'
 import type { Tile as TileModel, Tiles as TilesSettings } from '@/core/settings/schema'
 import { Tile } from './Tile'
 import { folderChildren } from './folders'
 
-const SortableTiles = lazy(() =>
+const SortableTiles = lazyChunk(() =>
   import('./SortableTiles').then((m) => ({ default: m.SortableTiles })),
 )
 
@@ -48,8 +49,6 @@ export function FolderView({
     '--tile-radius': settings.radius === null ? 'var(--radius)' : `${settings.radius}px`,
     '--tile-pad': `${settings.imagePadding}px`,
     '--tile-fit': settings.imageFit,
-    '--favicon-size': `${settings.faviconSize}px`,
-    '--tile-max-width': 'none',
   } as React.CSSProperties
 
   return (
@@ -63,7 +62,6 @@ export function FolderView({
         <div
           className="tiles"
           data-label-vis="always"
-          data-favicon-vis={settings.faviconVisibility === 'never' ? 'never' : 'hover'}
           data-hover={settings.hoverEffect}
           data-plate={settings.plateStyle}
           style={gridStyle}

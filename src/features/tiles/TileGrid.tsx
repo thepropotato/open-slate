@@ -1,4 +1,5 @@
-import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazyChunk } from '@/core/util/lazyChunk'
 import { Icon } from '@/core/icons'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import type { Tile as TileModel } from '@/core/settings/schema'
@@ -19,14 +20,14 @@ import { useGridArrows } from './useGridArrows'
 import './tiles.css'
 
 /** On demand: the editor carries the brand picker and the media store. */
-const TileEditor = lazy(() => import('./TileEditor').then((m) => ({ default: m.TileEditor })))
+const TileEditor = lazyChunk(() => import('./TileEditor').then((m) => ({ default: m.TileEditor })))
 
 /** On demand: the drag library is only needed once Arrange mode is entered. */
-const SortableTiles = lazy(() =>
+const SortableTiles = lazyChunk(() =>
   import('./SortableTiles').then((m) => ({ default: m.SortableTiles })),
 )
 
-const FolderView = lazy(() => import('./FolderView').then((m) => ({ default: m.FolderView })))
+const FolderView = lazyChunk(() => import('./FolderView').then((m) => ({ default: m.FolderView })))
 
 /**
  * The speed dial band.
@@ -129,10 +130,18 @@ export function TileGrid() {
     '--tile-radius': tiles.radius === null ? 'var(--radius)' : `${tiles.radius}px`,
     '--tile-pad': `${tiles.imagePadding}px`,
     '--tile-fit': tiles.imageFit,
-    '--favicon-size': `${tiles.faviconSize}px`,
-    // Zero columns means "as many as fit", so leave the width uncapped.
-    '--tile-max-width':
-      tiles.columns === 0 ? 'none' : `${tiles.columns * (tiles.width + tiles.gap) - tiles.gap}px`,
+    /*
+     * A column count means a row of exactly that many tiles filling the band,
+     * so the grid ends where the widget canvas above it does — the same deal
+     * the widget grid makes, where the column count is the only size control.
+     * The share is a percentage of the grid's own width, which is what keeps
+     * the fitted count at exactly `columns` as the window changes. Zero
+     * columns is "as many as fit", where the tile width sets the track.
+     */
+    '--tile-track':
+      tiles.columns === 0
+        ? 'var(--tile-w)'
+        : `calc((100% - ${tiles.gap * (tiles.columns - 1)}px) / ${tiles.columns})`,
     '--tile-label-align': tiles.labelAlign,
   } as React.CSSProperties
 
@@ -142,7 +151,6 @@ export function TileGrid() {
         className="tiles"
         ref={gridRef}
         data-label-vis={tiles.labelVisibility}
-        data-favicon-vis={tiles.faviconVisibility}
         data-hover={tiles.hoverEffect}
         data-plate={tiles.plateStyle}
         data-hints={hints}

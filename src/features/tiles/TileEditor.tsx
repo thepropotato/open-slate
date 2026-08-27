@@ -131,7 +131,6 @@ export function TileEditor({
           <div
             className="tiles"
             data-label-vis="always"
-            data-favicon-vis={tiles.faviconVisibility === 'never' ? 'never' : 'always'}
             data-hover="none"
             data-plate={tiles.plateStyle}
             style={
@@ -141,8 +140,6 @@ export function TileEditor({
                 '--tile-radius': tiles.radius === null ? 'var(--radius)' : `${tiles.radius}px`,
                 '--tile-pad': `${tiles.imagePadding}px`,
                 '--tile-fit': tiles.imageFit,
-                '--favicon-size': `${tiles.faviconSize}px`,
-                '--tile-cols': 1,
               } as React.CSSProperties
             }
           >
@@ -347,8 +344,12 @@ function PreviewTile({ tile }: { tile: TileModel }) {
           <svg className="tile__mark tile__mark--svg" viewBox="0 0 24 24" aria-hidden="true">
             <path d={visual.art.path} />
           </svg>
-        ) : visual.art.kind === 'image' ? (
-          <img className="tile__mark" src={visual.art.src} alt="" />
+        ) : visual.art.kind === 'image' || visual.art.kind === 'favicon' ? (
+          <img
+            className={`tile__mark${visual.art.kind === 'favicon' ? ' tile__mark--favicon' : ''}`}
+            src={visual.art.src}
+            alt=""
+          />
         ) : visual.art.kind === 'monogram' ? (
           <span className="tile__monogram">{visual.art.text}</span>
         ) : (
@@ -356,12 +357,6 @@ function PreviewTile({ tile }: { tile: TileModel }) {
             <Icon name="folder" className="tile__folderempty" />
           </span>
         )}
-        <img
-          className="tile__favicon"
-          data-corner={tiles.faviconCorner}
-          src={visual.faviconSrc}
-          alt=""
-        />
         {placement === 'inside-bottom' || placement === 'inside-top' ? (
           <span
             className={`tile__label tile__label--inside tile__label--${placement}`}
