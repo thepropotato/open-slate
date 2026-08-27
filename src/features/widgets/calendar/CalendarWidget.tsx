@@ -178,8 +178,8 @@ registerWidget<CalendarConfig>({
   description: 'This month at a glance.',
   icon: 'calendar',
   configSchema: CalendarConfig,
-  defaultSize: { w: 6, h: 5 },
-  minSize: { w: 4, h: 4 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   Component: CalendarWidget,
   fields: [
     {

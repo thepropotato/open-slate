@@ -24,14 +24,9 @@ export const widgetsSection: Section = {
       fields: [
         {
           path: 'widgets.columns',
-          label: 'Columns',
-          help: 'More columns means finer positioning.',
-          control: { kind: 'slider', min: 4, max: 48 },
-        },
-        {
-          path: 'widgets.rowHeight',
-          label: 'Row height',
-          control: { kind: 'slider', min: 20, max: 160, unit: 'px' },
+          label: 'Widgets across',
+          help: 'How many small widgets fit in a row. Fewer means bigger widgets.',
+          control: { kind: 'slider', min: 4, max: 10 },
         },
         {
           path: 'widgets.margin',

@@ -108,8 +108,8 @@ registerWidget<CryptoConfig>({
   description: 'Prices and 24-hour change from CoinGecko. No account needed.',
   icon: 'stocks',
   configSchema: CryptoConfig,
-  defaultSize: { w: 6, h: 4 },
-  minSize: { w: 3, h: 2 },
+  sizes: ['small', 'medium', 'large'],
+  defaultSize: 'medium',
   origins: CRYPTO_ORIGINS,
   Component: CryptoWidget,
   fields: [

@@ -158,8 +158,8 @@ registerWidget<FeedConfig>({
   description: 'Headlines from the RSS or Atom feeds you follow.',
   icon: 'feed',
   configSchema: FeedConfig,
-  defaultSize: { w: 8, h: 6 },
-  minSize: { w: 5, h: 3 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   Component: FeedWidget,
   fields: [
     {

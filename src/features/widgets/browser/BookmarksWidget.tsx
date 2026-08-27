@@ -121,8 +121,8 @@ registerWidget<BookmarksConfig>({
   description: 'Browse a bookmarks folder without opening the manager.',
   icon: 'bookmark',
   configSchema: BookmarksConfig,
-  defaultSize: { w: 7, h: 6 },
-  minSize: { w: 4, h: 3 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   permissions: ['bookmarks'],
   Component: BookmarksWidget,
   fields: [

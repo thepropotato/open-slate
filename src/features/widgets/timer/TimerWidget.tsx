@@ -242,8 +242,8 @@ registerWidget<TimerConfig>({
   description: 'Pomodoro, a plain countdown, or a stopwatch. Keeps running between tabs.',
   icon: 'timer',
   configSchema: TimerConfig,
-  defaultSize: { w: 6, h: 4 },
-  minSize: { w: 3, h: 3 },
+  sizes: ['small', 'medium', 'large'],
+  defaultSize: 'medium',
   Component: TimerWidget,
   fields: [
     {

@@ -128,8 +128,8 @@ registerWidget<ClockConfig>({
   description: 'The time, in one of ten faces — digital, analog, flip, text and more.',
   icon: 'clock',
   configSchema: ClockConfig,
-  defaultSize: { w: 8, h: 3 },
-  minSize: { w: 3, h: 2 },
+  sizes: ['small', 'medium', 'large', 'wide'],
+  defaultSize: 'medium',
   Component: ClockWidget,
   fields: [
     {

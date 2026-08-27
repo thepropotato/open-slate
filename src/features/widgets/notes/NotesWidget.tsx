@@ -43,8 +43,8 @@ registerWidget<NotesConfig>({
   description: 'A scratchpad that saves as you type.',
   icon: 'notes',
   configSchema: NotesConfig,
-  defaultSize: { w: 6, h: 5 },
-  minSize: { w: 3, h: 2 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   Component: NotesWidget,
   fields: [
     {

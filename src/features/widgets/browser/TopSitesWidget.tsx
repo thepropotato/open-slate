@@ -86,8 +86,8 @@ registerWidget<TopSitesConfig>({
   description: "The browser's own top sites, kept up to date for you.",
   icon: 'star',
   configSchema: TopSitesConfig,
-  defaultSize: { w: 7, h: 4 },
-  minSize: { w: 3, h: 2 },
+  sizes: ['medium', 'large', 'wide', 'xlarge'],
+  defaultSize: 'medium',
   Component: TopSitesWidget,
   fields: [
     {

@@ -54,8 +54,8 @@ registerWidget<GreetingConfig>({
   description: 'A line that changes with the time of day.',
   icon: 'star',
   configSchema: GreetingConfig,
-  defaultSize: { w: 8, h: 2 },
-  minSize: { w: 4, h: 1 },
+  sizes: ['medium', 'wide', 'xlarge'],
+  defaultSize: 'wide',
   Component: GreetingWidget,
   fields: [
     {

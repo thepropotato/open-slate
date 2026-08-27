@@ -105,8 +105,8 @@ registerWidget<TodoConfig>({
   description: 'A short list of what needs doing.',
   icon: 'todo',
   configSchema: TodoConfig,
-  defaultSize: { w: 6, h: 5 },
-  minSize: { w: 3, h: 3 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   Component: TodoWidget,
   fields: [
     { path: 'hideDone', label: 'Hide completed', control: { kind: 'toggle' } },

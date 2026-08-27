@@ -3,8 +3,15 @@ import { Icon, type IconName } from '@/core/icons'
 
 /**
  * Chrome around a widget: the surface, and the controls that only appear while
- * the canvas is unlocked. The drag handle is deliberately a small grip rather
- * than the whole widget, so a widget with its own inputs stays usable.
+ * the canvas is unlocked.
+ *
+ * The bar lives *inside* the widget. It used to float in the gutter above,
+ * which put it on top of whatever was in the row above it and clipped it off
+ * the page entirely for the top row — so the control you reached for often
+ * belonged to a different widget than the one under the pointer.
+ *
+ * Dragging is the whole widget rather than the grip alone (see the canvas's
+ * `dragConfig`); the grip stays as the affordance that says so.
  */
 export function WidgetFrame({
   title,
@@ -31,7 +38,7 @@ export function WidgetFrame({
 
       {editing ? (
         <div className="wframe__bar">
-          <span className="wframe__drag" title={`Move ${title}`}>
+          <span className="wframe__drag" aria-hidden="true">
             <Icon name="drag" />
           </span>
           <span className="wframe__title">

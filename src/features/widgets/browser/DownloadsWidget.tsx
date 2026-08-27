@@ -109,8 +109,8 @@ registerWidget<DownloadsConfig>({
   description: 'The files you just saved, with progress on anything still running.',
   icon: 'download',
   configSchema: DownloadsConfig,
-  defaultSize: { w: 7, h: 4 },
-  minSize: { w: 4, h: 2 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'medium',
   permissions: ['downloads'],
   Component: DownloadsWidget,
   fields: [

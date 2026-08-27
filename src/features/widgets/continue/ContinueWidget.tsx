@@ -124,8 +124,8 @@ registerWidget<ContinueConfig>({
   description: 'Reopen a tab or window you just closed, with its history intact.',
   icon: 'history',
   configSchema: ContinueConfig,
-  defaultSize: { w: 7, h: 5 },
-  minSize: { w: 4, h: 3 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   permissions: ['sessions'],
   Component: ContinueWidget,
   fields: [

@@ -160,8 +160,8 @@ registerWidget<TabsConfig>({
   description: 'Jump to any open tab, and close the duplicates in one click.',
   icon: 'tabs',
   configSchema: TabsConfig,
-  defaultSize: { w: 8, h: 6 },
-  minSize: { w: 4, h: 4 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   permissions: ['tabs'],
   Component: TabsWidget,
   fields: [

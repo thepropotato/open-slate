@@ -3,10 +3,56 @@
 .canvas {
   position: relative;
   width: 100%;
+  /* Height of the in-widget edit bar. Referenced by the frame and its body. */
+  --wframe-bar: 26px;
+}
+
+/* Holds the grid and the slot overlay, and grows past the grid while editing. */
+.canvas__stage {
+  position: relative;
+  width: 100%;
+  transition: min-height var(--dur) var(--ease), max-height var(--dur) var(--ease);
 }
 
 .canvas__grid {
+  position: relative;
   width: 100%;
+}
+
+/*
+ * The cell grid, shown only while arranging.
+ *
+ * `--cell` and `--gutter` are set from the canvas's measured row height and
+ * margin, so the slots line up exactly with where a widget will land. Drawn as
+ * one rounded rect per cell rather than ruled lines: it reads as "here are the
+ * places a widget goes", which is the actual question while dragging.
+ */
+.canvas__slots {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.canvas[data-editing='true'] .canvas__slots {
+  opacity: 1;
+}
+
+/* Only the tile inside the pattern — the rect that paints it must keep its
+ * `url(#…)` fill, and a CSS `fill` here would win over the attribute. */
+.canvas__slot {
+  fill: rgb(var(--surface-tint) / 5%);
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+/* Grid items have to sit above the slots, which fill the whole container. */
+.canvas__grid > .react-grid-item {
+  z-index: 1;
 }
 
 /* --- frame --- */
@@ -32,6 +78,23 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  transition: padding-top var(--dur) var(--ease);
+}
+
+/*
+ * Room for the bar, and only while it is there — nothing shifts in normal use.
+ * A one-cell widget is short enough that overlaying the bar would cover its
+ * content, so the body moves down rather than hiding underneath.
+ *
+ * The body also goes inert: now that the whole widget is the drag target, a
+ * text box inside one would otherwise swallow the gesture that was meant to
+ * move it. Arranging and using a widget are separate modes, as they are on a
+ * phone — the bar's own buttons sit outside the body and keep working.
+ */
+.wframe[data-editing='true'] .wframe__body {
+  padding-top: calc(var(--wframe-bar) + var(--space-xs));
+  pointer-events: none;
+  user-select: none;
 }
 
 .wframe__missing {
@@ -43,15 +106,25 @@
 
 /* --- edit bar --- */
 
+/*
+ * Inside the widget, not above it. Anchored to the widget's own top edge and
+ * clipped to its radius, so the bar you reach for always belongs to the widget
+ * under the pointer — and the top row's bars are not cut off by the viewport.
+ */
 .wframe__bar {
   position: absolute;
   inset-inline: 0;
-  top: -26px;
+  top: 0;
   z-index: 3;
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-inline: 4px;
+  height: var(--wframe-bar);
+  padding-inline: 6px;
+  border-radius: var(--radius) var(--radius) 0 0;
+  border-bottom: 1px solid var(--line);
+  background: rgb(var(--surface-base) / 55%);
+  backdrop-filter: blur(14px);
   font-size: var(--text-xs);
   color: var(--fg-muted);
 }
@@ -59,15 +132,24 @@
 .wframe__drag {
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-sm);
-  background: rgb(var(--surface-tint) / 10%);
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--fg-subtle);
+}
+
+/* The whole widget is the drag target while editing, buttons excepted. */
+.canvas[data-editing='true'] .wframe {
   cursor: grab;
 }
 
-.wframe__drag:active {
+.canvas[data-editing='true'] .wframe:active {
   cursor: grabbing;
+}
+
+.canvas[data-editing='true'] .wframe__tool,
+.canvas[data-editing='true'] .react-resizable-handle {
+  cursor: pointer;
 }
 
 .wframe__title {
@@ -163,12 +245,35 @@
   opacity: 0.22;
 }
 
+/*
+ * The library's default handle is a bare hitbox with a background image. This
+ * one is a visible corner grabber, on theme, and only while the canvas is
+ * unlocked — there is nothing to grab when the layout is locked.
+ */
 .react-resizable-handle {
   opacity: 0;
+  background: none;
   transition: opacity var(--dur-fast) var(--ease);
 }
 
-.canvas[data-editing='true'] .wframe:hover .react-resizable-handle,
-.canvas[data-editing='true'] .react-grid-item:hover > .react-resizable-handle {
-  opacity: 0.6;
+.wgrab {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  background: rgb(var(--surface-base) / 55%);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  font-size: 9px;
+}
+
+.canvas[data-editing='true'] .react-grid-item:hover > .react-resizable-handle,
+.canvas[data-editing='true'] .react-grid-item:focus-within > .react-resizable-handle,
+.canvas[data-editing='true'] .react-grid-item.resizing > .react-resizable-handle {
+  opacity: 1;
 }

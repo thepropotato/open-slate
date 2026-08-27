@@ -108,8 +108,8 @@ registerWidget<HistoryConfig>({
   description: 'Find a page you had open earlier.',
   icon: 'history',
   configSchema: HistoryConfig,
-  defaultSize: { w: 8, h: 6 },
-  minSize: { w: 4, h: 3 },
+  sizes: ['medium', 'large', 'xlarge'],
+  defaultSize: 'large',
   permissions: ['history'],
   Component: HistoryWidget,
   fields: [
