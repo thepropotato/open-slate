@@ -8,10 +8,27 @@ import { localStore, permissions } from '@/core/platform/browser'
  * cached in storage so opening ten tabs is one request, not ten.
  */
 
-export const WEATHER_ORIGINS = ['https://*.open-meteo.com/*']
+/*
+ * Both hosts are granted together: auto-detection is part of the first run, so
+ * splitting them would mean two prompts to get one working widget.
+ */
+export const WEATHER_ORIGINS = [
+  'https://*.open-meteo.com/*',
+  'https://get.geojs.io/*',
+  'https://ipwho.is/*',
+]
 
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
 const GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'
+/*
+ * Two providers because both are free and unauthenticated, which means both are
+ * allowed to rate-limit or disappear. Whichever answers first wins; the shapes
+ * differ, so each gets its own reader.
+ */
+const IP_LOOKUPS = [
+  { url: 'https://get.geojs.io/v1/ip/geo.json', read: readGeojs },
+  { url: 'https://ipwho.is/', read: readIpwho },
+]
 const CACHE_KEY = 'weatherCache'
 const CACHE_TTL_MS = 20 * 60 * 1000
 
@@ -123,22 +140,120 @@ export async function searchPlaces(query: string): Promise<Place[]> {
   }
 }
 
-/** Browser geolocation, behind the optional `geolocation` permission. */
-export async function locate(): Promise<Place | null> {
-  if (!('geolocation' in navigator)) return null
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      (position) =>
-        resolve({
-          name: 'Current location',
-          country: '',
-          latitude: Number(position.coords.latitude.toFixed(3)),
-          longitude: Number(position.coords.longitude.toFixed(3)),
-        }),
-      () => resolve(null),
-      { timeout: 8000, maximumAge: 30 * 60 * 1000 },
-    )
+/**
+ * Where the widget places itself, with no prompt and no click.
+ *
+ * Deliberately never touches `navigator.geolocation`. The object exists on an
+ * extension page and `permissions.query` can even report it as granted from the
+ * browser-level setting, but the call still fails unless the manifest declares
+ * `geolocation` — and Chrome refuses to make that optional, so declaring it
+ * would put a "know your physical location" warning in front of every install
+ * for one widget. Calling it anyway is what logs Chrome's
+ * "Is the 'geolocation' permission appropriate?" warning to the console.
+ *
+ * So: an IP lookup, city-level, which is all a forecast needs; then the
+ * browser's own timezone geocoded by its city name, which needs no host beyond
+ * the one the forecast already uses. Null means both failed and the caller asks
+ * for a town by hand.
+ */
+export async function autoLocate(): Promise<Place | null> {
+  return (await locateByIp()) ?? (await locateByTimezone())
+}
+
+/** City-level, from whoever is serving the request. No prompt, no precision. */
+async function locateByIp(): Promise<Place | null> {
+  for (const provider of IP_LOOKUPS) {
+    try {
+      const response = await fetch(provider.url)
+      if (!response.ok) continue
+      const place = provider.read(await response.json())
+      if (place) return place
+    } catch {
+      // Blocked, offline or rate-limited: try the next one.
+    }
+  }
+  return null
+}
+
+/** GeoJS sends coordinates as strings, and names its country field `country`. */
+function readGeojs(body: unknown): Place | null {
+  const data = body as {
+    city?: string
+    region?: string
+    country?: string
+    latitude?: string
+    longitude?: string
+    timezone?: string
+  }
+  return toPlace({
+    city: data.city,
+    region: data.region,
+    country: data.country,
+    latitude: Number(data.latitude),
+    longitude: Number(data.longitude),
+    timezone: data.timezone,
   })
+}
+
+/** ipwho.is reports failure as `success: false` on a 200. */
+function readIpwho(body: unknown): Place | null {
+  const data = body as {
+    success?: boolean
+    city?: string
+    region?: string
+    country?: string
+    latitude?: number
+    longitude?: number
+    timezone?: { id?: string }
+  }
+  if (data.success === false) return null
+  return toPlace({
+    city: data.city,
+    region: data.region,
+    country: data.country,
+    latitude: data.latitude,
+    longitude: data.longitude,
+    timezone: data.timezone?.id,
+  })
+}
+
+function toPlace(parts: {
+  city?: string
+  region?: string
+  country?: string
+  latitude?: number
+  longitude?: number
+  timezone?: string
+}): Place | null {
+  const { latitude, longitude } = parts
+  // 0,0 is in the Atlantic: a provider that could not place the IP, not a place.
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
+  if (latitude === 0 && longitude === 0) return null
+  return {
+    name: parts.city || parts.region || parts.country || 'Current location',
+    country: parts.country ?? '',
+    admin: parts.region ?? '',
+    latitude: Number(latitude!.toFixed(3)),
+    longitude: Number(longitude!.toFixed(3)),
+    timezone: parts.timezone,
+  }
+}
+
+/**
+ * Last resort: `Asia/Kolkata` → "Kolkata" → the geocoder we already talk to.
+ * Lands on the zone's anchor city, which can be a long way off, but a nearby
+ * city's weather beats an empty widget.
+ */
+async function locateByTimezone(): Promise<Place | null> {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
+    const city = zone?.split('/').pop()?.replace(/_/g, ' ')
+    if (!city) return null
+    const [match] = await searchPlaces(city)
+    return match ?? null
+  } catch {
+    return null
+  }
 }
 
 /* ------------------------------------------------------------------ shaping */

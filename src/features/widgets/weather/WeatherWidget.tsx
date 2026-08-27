@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { Icon } from '@/core/icons'
 import { useAsyncValue } from '@/core/hooks'
@@ -9,8 +9,9 @@ import type { WidgetProps } from '@/core/widgets/types'
 import { resolveLocale } from '@/core/util/time'
 import {
   WEATHER_ORIGINS,
+  autoLocate,
   fetchWeather,
-  locate,
+  hasWeatherAccess,
   requestWeatherAccess,
   searchPlaces,
   type Place,
@@ -139,28 +140,92 @@ function WeatherWidget({ config, setConfig }: WidgetProps<WeatherConfig>) {
   )
 }
 
-/** First-run flow: ask for host access, then a place. */
+/**
+ * First-run flow.
+ *
+ * It tries to place itself before it asks anything: given host access, the
+ * detected city is filled in and the widget just starts working. The search box
+ * is the fallback for when detection fails, and for correcting it.
+ */
 function PlaceSetup({ onPick }: { onPick: (place: WeatherConfig['place']) => void }) {
   const [query, setQuery] = useState('')
   const [granted, setGranted] = useState<boolean | null>(null)
   const [busy, setBusy] = useState(false)
+  const [located, setLocated] = useState(true)
+  /** Null while the first automatic attempt is still in flight. */
+  const [detecting, setDetecting] = useState(false)
 
   const results = useAsyncValue(granted !== false && query.trim().length > 1 ? `geo:${query}` : null, () =>
     searchPlaces(query),
   )
 
+  const take = (place: Place) => onPick({ ...place, admin: place.admin ?? '' })
+
+  /*
+   * One attempt per mount, guarded by a ref: `onPick` writes settings, which
+   * re-renders this component until the write lands, and a second lookup would
+   * be a wasted request against a rate-limited host.
+   */
+  const tried = useRef(false)
+  useEffect(() => {
+    if (tried.current) return
+    tried.current = true
+    let alive = true
+    const detect = async () => {
+      // Without host access there is nothing to call yet; the grant button runs
+      // this again. Never prompts on its own — an unasked-for dialog on a new
+      // tab is worse than a search box.
+      if (!(await hasWeatherAccess())) {
+        if (alive) setGranted(false)
+        return
+      }
+      if (alive) setDetecting(true)
+      const place = await autoLocate()
+      if (!alive) return
+      setDetecting(false)
+      if (place) take(place)
+      else setLocated(false)
+    }
+    void detect()
+    return () => {
+      alive = false
+    }
+    // Mount-only: the ref above is the real guard, and `onPick` changes identity
+    // on every render of the parent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const grant = async () => {
     setBusy(true)
     const ok = await requestWeatherAccess()
     setGranted(ok)
+    if (ok) {
+      // Granting access is the moment detection becomes possible, so retry
+      // rather than making the user click a second button.
+      setDetecting(true)
+      const place = await autoLocate()
+      setDetecting(false)
+      if (place) take(place)
+      else setLocated(false)
+    }
     setBusy(false)
   }
 
   const pickCurrentLocation = async () => {
     setBusy(true)
-    const place = await locate()
+    const place = await autoLocate()
     setBusy(false)
-    if (place) onPick({ ...place, admin: '' })
+    setLocated(place !== null)
+    if (place) take(place)
+  }
+
+  if (detecting) {
+    return (
+      <div className="weather weather--empty">
+        <Icon name="spinner" spin />
+        <span>Finding your location</span>
+      </div>
+    )
   }
 
   return (
@@ -171,6 +236,12 @@ function PlaceSetup({ onPick }: { onPick: (place: WeatherConfig['place']) => voi
         </p>
       ) : null}
 
+      {located ? null : (
+        <p className="weather__hint">
+          <Icon name="warning" /> Could not detect your location. Type a town or city instead.
+        </p>
+      )}
+
       <div className="weather__setuprow">
         <TextInput
           value={query}
@@ -179,10 +250,10 @@ function PlaceSetup({ onPick }: { onPick: (place: WeatherConfig['place']) => voi
           wide
           type="search"
         />
-        <Button icon="location" onClick={() => void pickCurrentLocation()} title="Use my location" />
+        <Button icon="location" onClick={() => void pickCurrentLocation()} title="Detect my location" />
       </div>
 
-      {granted === null ? (
+      {granted === false ? (
         <Button icon={busy ? 'spinner' : 'check'} onClick={() => void grant()} disabled={busy}>
           Allow weather data
         </Button>
@@ -223,8 +294,8 @@ registerWidget<WeatherConfig>({
   description: 'Current conditions and a forecast, from Open-Meteo. No account needed.',
   icon: 'weather',
   configSchema: WeatherConfig,
-  defaultSize: { w: 8, h: 4 },
-  minSize: { w: 4, h: 2 },
+  sizes: ['small', 'medium', 'large', 'xlarge'],
+  defaultSize: 'medium',
   origins: WEATHER_ORIGINS,
   Component: WeatherWidget,
   fields: [

@@ -31,11 +31,12 @@
     "history",
     "downloads",
     "tabs",
-    "tabGroups",
-    "geolocation"
+    "tabGroups"
   ],
   "optional_host_permissions": [
     "https://*.open-meteo.com/*",
+    "https://get.geojs.io/*",
+    "https://ipwho.is/*",
     "https://api.coingecko.com/*",
     "https://*/*"
   ],
