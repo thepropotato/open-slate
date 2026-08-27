@@ -7,6 +7,7 @@ import { useSettings } from '@/core/settings/SettingsProvider'
 import { Tile as TileSchema, type Tile as TileModel } from '@/core/settings/schema'
 import { uid } from '@/core/util/id'
 import { allBrands, hostOf, resolveBrand, type Brand } from './brand'
+import { ROOT, foldersIn, pageIds, pageName } from './folders'
 import { useTileVisual } from './useTileVisual'
 import './TileEditor.css'
 
@@ -22,19 +23,28 @@ const IMAGE_KINDS = [
 /** Add or edit a single tile, with a live preview using the real tile renderer. */
 export function TileEditor({
   tile,
+  initialKind = 'link',
+  initialPageId = ROOT,
   onSave,
   onClose,
   onDelete,
 }: {
   tile: TileModel | null
+  /** Whether the Add button was for a link or a folder. */
+  initialKind?: 'link' | 'folder'
+  /** The page the user was looking at, so a new tile lands where expected. */
+  initialPageId?: string
   onSave: (tile: TileModel) => void
   onClose: () => void
   onDelete?: () => void
 }) {
   const { tiles } = useSettings()
   const [draft, setDraft] = useState<TileModel>(
-    () => tile ?? TileSchema.parse({ id: uid('tile'), url: '' }),
+    () =>
+      tile ??
+      TileSchema.parse({ id: uid('tile'), url: '', kind: initialKind, pageId: initialPageId }),
   )
+  const isFolder = draft.kind === 'folder'
   const [brandQuery, setBrandQuery] = useState('')
   const [brands, setBrands] = useState<Brand[]>([])
 
@@ -59,7 +69,8 @@ export function TileEditor({
   }, [brands, brandQuery])
 
   const normalisedUrl = normaliseUrl(draft.url)
-  const valid = normalisedUrl.length > 0
+  // A folder has no address, so its name is what has to be filled in.
+  const valid = isFolder ? draft.title.trim().length > 0 : normalisedUrl.length > 0
 
   // Tells the user whether "Auto" will actually find a logo. Keyed on the
   // normalised URL, since "netflix.com" alone has no parsable host.
@@ -67,7 +78,10 @@ export function TileEditor({
     resolveBrand(normalisedUrl),
   )
 
-  const preview = { ...draft, url: normalisedUrl || 'https://example.com' }
+  const preview = { ...draft, url: isFolder ? '' : normalisedUrl || 'https://example.com' }
+
+  const folders = foldersIn(tiles.items).filter((candidate) => candidate.id !== draft.id)
+  const pages = pageIds(tiles.pages)
 
   const onUpload = async (file: File | undefined) => {
     if (!file) return
@@ -79,7 +93,15 @@ export function TileEditor({
 
   return (
     <Modal
-      title={tile ? 'Edit tile' : 'Add tile'}
+      title={
+        tile
+          ? isFolder
+            ? 'Edit folder'
+            : 'Edit tile'
+          : isFolder
+            ? 'Add folder'
+            : 'Add tile'
+      }
       width={640}
       onClose={onClose}
       footer={
@@ -126,7 +148,7 @@ export function TileEditor({
           >
             <PreviewTile tile={preview} />
           </div>
-          {autoBrand ? (
+          {isFolder ? null : autoBrand ? (
             <p className="tile-editor__hint">
               <Icon name="check" /> Brand logo available: {autoBrand.title}
             </p>
@@ -139,20 +161,66 @@ export function TileEditor({
         </div>
 
         <div className="tile-editor__fields">
-          <Row title="Address" stacked>
-            <TextInput
-              value={draft.url}
-              onChange={(url) => patch({ url })}
-              placeholder="example.com"
-              wide
-              type="url"
-            />
-          </Row>
+          {isFolder ? (
+            <Row title="Name">
+              <TextInput
+                value={draft.title}
+                onChange={(title) => patch({ title })}
+                placeholder="Reading, Work, Music…"
+              />
+            </Row>
+          ) : (
+            <>
+              <Row title="Address" stacked>
+                <TextInput
+                  value={draft.url}
+                  onChange={(url) => patch({ url })}
+                  placeholder="example.com"
+                  wide
+                  type="url"
+                />
+              </Row>
 
-          <Row title="Title" help="Leave empty to use the brand or host name.">
-            <TextInput value={draft.title} onChange={(title) => patch({ title })} placeholder="Auto" />
-          </Row>
+              <Row title="Title" help="Leave empty to use the brand or host name.">
+                <TextInput
+                  value={draft.title}
+                  onChange={(title) => patch({ title })}
+                  placeholder="Auto"
+                />
+              </Row>
+            </>
+          )}
 
+          {pages.length > 1 ? (
+            <Row title="Page" help="Which page of tiles this belongs to.">
+              <Select
+                value={draft.pageId || ROOT}
+                onChange={(pageId) => patch({ pageId })}
+                options={pages.map((id, index) => ({
+                  value: id,
+                  label: pageName(tiles.pages, id, index) || 'Main',
+                }))}
+              />
+            </Row>
+          ) : null}
+
+          {!isFolder && folders.length > 0 ? (
+            <Row title="Folder" help="Or drag the tile onto a folder in Arrange mode.">
+              <Select
+                value={draft.parentId || ROOT}
+                onChange={(parentId) => patch({ parentId })}
+                options={[
+                  { value: ROOT, label: 'None' },
+                  ...folders.map((folder) => ({
+                    value: folder.id,
+                    label: folder.title || 'Folder',
+                  })),
+                ]}
+              />
+            </Row>
+          ) : null}
+
+          {isFolder ? null : (
           <Row title="Image" stacked>
             <Segmented
               value={draft.image.kind}
@@ -160,8 +228,9 @@ export function TileEditor({
               options={IMAGE_KINDS.map((k) => ({ value: k.value, label: k.label }))}
             />
           </Row>
+          )}
 
-          {draft.image.kind === 'brand' ? (
+          {!isFolder && draft.image.kind === 'brand' ? (
             <>
               <Row title="Find a brand" stacked>
                 <TextInput
@@ -195,7 +264,7 @@ export function TileEditor({
             </>
           ) : null}
 
-          {draft.image.kind === 'url' ? (
+          {!isFolder && draft.image.kind === 'url' ? (
             <Row title="Image address" stacked>
               <TextInput
                 value={draft.image.url}
@@ -207,7 +276,7 @@ export function TileEditor({
             </Row>
           ) : null}
 
-          {draft.image.kind === 'upload' ? (
+          {!isFolder && draft.image.kind === 'upload' ? (
             <Row title="File" help="Stored locally in the browser, never uploaded anywhere.">
               <label className="ctl-btn">
                 <Icon name="upload" />
@@ -280,8 +349,12 @@ function PreviewTile({ tile }: { tile: TileModel }) {
           </svg>
         ) : visual.art.kind === 'image' ? (
           <img className="tile__mark" src={visual.art.src} alt="" />
-        ) : (
+        ) : visual.art.kind === 'monogram' ? (
           <span className="tile__monogram">{visual.art.text}</span>
+        ) : (
+          <span className="tile__folder">
+            <Icon name="folder" className="tile__folderempty" />
+          </span>
         )}
         <img
           className="tile__favicon"

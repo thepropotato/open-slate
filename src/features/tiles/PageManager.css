@@ -1,0 +1,43 @@
+.pages {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  align-items: flex-start;
+  width: 100%;
+}
+
+.pages__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.pages__name {
+  font-size: var(--text-sm);
+  font-weight: 550;
+  padding: 7px 0;
+}
+
+.pages__count {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
+.pages__remove {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  color: var(--fg-subtle);
+  font-size: 11px;
+}
+
+.pages__remove:hover {
+  color: #ff8080;
+  background: rgb(255 128 128 / 12%);
+}

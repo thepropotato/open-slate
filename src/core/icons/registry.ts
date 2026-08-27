@@ -11,6 +11,7 @@
  */
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
+  faArrowRightFromBracket,
   faArrowRotateLeft,
   faBoxArchive,
   faArrowUpRightFromSquare,
@@ -42,6 +43,7 @@ import {
   faFolderOpen,
   faFont,
   faGear,
+  faHourglassHalf,
   faGrip,
   faImage,
   faKeyboard,
@@ -55,7 +57,9 @@ import {
   faMoon,
   faNoteSticky,
   faPalette,
+  faPause,
   faPen,
+  faPlay,
   faPlus,
   faSliders,
   faSmog,
@@ -81,6 +85,7 @@ export const icons = {
   close: faXmark,
   check: faCheck,
   edit: faPen,
+  open: faArrowRightFromBracket,
   remove: faTrash,
   copy: faCopy,
   duplicate: faClone,
@@ -113,6 +118,9 @@ export const icons = {
   import: faFileImport,
   search: faMagnifyingGlass,
   clock: faClock,
+  timer: faHourglassHalf,
+  play: faPlay,
+  pause: faPause,
   history: faClockRotateLeft,
   calendar: faCalendarDays,
   archive: faBoxArchive,

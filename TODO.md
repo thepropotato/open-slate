@@ -77,8 +77,8 @@ requested per widget.
 ## Phase 8 — Optional / later
 - [ ] Google Calendar + Gmail unread (OAuth)
 - [ ] RSS reader, stocks/crypto ticker
-- [ ] Pomodoro / timer / stopwatch
-- [ ] Tile folders and multiple pages
+- [x] Pomodoro / timer / stopwatch
+- [x] Tile folders and multiple pages
 - [ ] Sync layout across devices
 
 ---
@@ -129,6 +129,13 @@ requested per widget.
 - `npm run store:shots` captures the store screenshots from the built extension in
   a real extension context, which also serves as the end-to-end check that the
   manifest, service worker and favicon API all work.
+- Folder and page membership is stored flat, as `parentId` and `pageId` on each
+  tile, rather than as nested children. Reordering, moving and validation all stay
+  trivial, zod never has to describe a recursive shape, and a dangling reference
+  is unrepresentable — a tile whose folder was deleted just reads as a root tile.
+- Deleting a folder or a page moves its contents out rather than deleting them.
+- The timer stores absolute timestamps, not a decremented countdown, so it
+  survives the page being torn down on navigation and every open tab agrees.
 - Clock faces are hand-built. The maintained analog-clock packages each give one
   fixed look, and the requirement was a range of faces all reading from the theme
   tokens. Faces size themselves in container query units, so resizing scales them.

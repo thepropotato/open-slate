@@ -1,3 +1,4 @@
+import { PageManager } from '@/features/tiles/PageManager'
 import { TopSitesAction } from '@/features/tiles/TopSitesAction'
 import type { Section } from '../types'
 
@@ -31,6 +32,32 @@ export const tilesSection: Section = {
           help: 'Adds the sites you visit most, skipping any already pinned.',
           control: { kind: 'custom', render: () => <TopSitesAction /> },
           keywords: 'top sites frequent',
+        },
+      ],
+    },
+    {
+      id: 'pages',
+      label: 'Pages',
+      help: 'Split your tiles across pages. Deleting a page moves its tiles to Main.',
+      when: (s) => s.tiles.enabled,
+      fields: [
+        {
+          label: 'Your pages',
+          control: { kind: 'custom', render: () => <PageManager />, stacked: true },
+          keywords: 'page multiple screens groups',
+        },
+        {
+          path: 'tiles.pageSwitcher',
+          label: 'Page switcher',
+          control: {
+            kind: 'segmented',
+            options: [
+              { value: 'dots', label: 'Dots' },
+              { value: 'tabs', label: 'Names' },
+              { value: 'hidden', label: 'Hidden' },
+            ],
+          },
+          when: (s) => s.tiles.pages.length > 0,
         },
       ],
     },

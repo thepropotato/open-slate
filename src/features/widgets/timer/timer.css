@@ -1,0 +1,110 @@
+.timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  height: 100%;
+  min-height: 0;
+  container-type: size;
+}
+
+.timer__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: clamp(9px, 7cqh, 15px);
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--fg-subtle);
+}
+
+.timer[data-phase='work'] .timer__label {
+  color: var(--accent);
+}
+
+.timer__rounds {
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 12%);
+  font-size: 0.85em;
+  letter-spacing: 0;
+  color: var(--fg-muted);
+}
+
+.timer__readout {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.timer__ring {
+  position: absolute;
+  height: 100%;
+  max-height: 100%;
+  aspect-ratio: 1;
+}
+
+.timer__ringtrack {
+  fill: none;
+  stroke: rgb(var(--surface-tint) / 10%);
+  stroke-width: 4;
+}
+
+.timer__ringvalue {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dasharray 250ms linear;
+}
+
+.timer[data-phase='break'] .timer__ringvalue,
+.timer[data-phase='longBreak'] .timer__ringvalue {
+  stroke: var(--fg-muted);
+}
+
+.timer__time {
+  position: relative;
+  font-size: clamp(18px, min(26cqh, 20cqw), 64px);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.timer__controls {
+  display: flex;
+  gap: 5px;
+}
+
+.timer__btn {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  color: var(--fg-muted);
+  font-size: 10px;
+}
+
+.timer__btn:hover {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 12%);
+}
+
+.timer__btn--primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-fg);
+}
+
+.timer__btn--primary:hover {
+  color: var(--accent-fg);
+  filter: brightness(1.08);
+}

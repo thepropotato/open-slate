@@ -1,4 +1,4 @@
-import type { CSSProperties, HTMLAttributes, Ref } from 'react'
+import type { CSSProperties, HTMLAttributes, ReactNode, Ref } from 'react'
 import { Icon } from '@/core/icons'
 import { openUrl } from '@/core/platform/browser'
 import type { Tile as TileModel, Tiles as TilesSettings } from '@/core/settings/schema'
@@ -16,6 +16,8 @@ export interface TileDrag {
   handleProps: HTMLAttributes<HTMLElement>
   style: CSSProperties
   dragging: boolean
+  /** True while a dragged tile hovers this folder. */
+  dropTarget?: boolean
 }
 
 export function Tile({
@@ -25,6 +27,8 @@ export function Tile({
   editing,
   showHint,
   drag,
+  childUrls,
+  onOpenFolder,
   onEdit,
   onRemove,
 }: {
@@ -34,10 +38,14 @@ export function Tile({
   editing: boolean
   showHint: boolean
   drag?: TileDrag
+  /** URLs inside this folder, for its preview grid. */
+  childUrls?: string[]
+  onOpenFolder?: (id: string) => void
   onEdit: (id: string) => void
   onRemove: (id: string) => void
 }) {
-  const visual = useTileVisual(tile, settings)
+  const visual = useTileVisual(tile, settings, childUrls)
+  const isFolder = tile.kind === 'folder'
   const placement = tile.labelPlacement ?? settings.labelPlacement
 
   return (
@@ -46,31 +54,34 @@ export function Tile({
       ref={drag?.ref}
       style={drag?.style}
       data-dragging={drag?.dragging}
+      data-drop-target={drag?.dropTarget}
       {...(drag?.handleProps ?? {})}
     >
-      <a
-        className="tile__plate"
-        href={tile.url}
-        style={{ background: visual.plate ?? 'transparent', color: visual.ink }}
+      {/*
+        A site tile is an anchor so middle-click, cmd-click and "copy link
+        address" behave as expected. A folder has no address, so it is a button.
+      */}
+      <Plate
+        isFolder={isFolder}
+        url={tile.url}
         title={visual.title}
-        onClick={(event) => {
-          // Let the browser handle modified clicks natively.
-          if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
-          event.preventDefault()
-          openUrl(tile.url, settings.openIn)
-        }}
+        style={{ background: visual.plate ?? 'transparent', color: visual.ink }}
+        onActivate={() => (isFolder ? onOpenFolder?.(tile.id) : openUrl(tile.url, settings.openIn))}
       >
         <TileArtwork art={visual.art} title={visual.title} />
 
         {showHint && index < 9 ? <span className="tile__hint">{index + 1}</span> : null}
 
-        <img
-          className="tile__favicon"
-          data-corner={settings.faviconCorner}
-          src={visual.faviconSrc}
-          alt=""
-          loading="lazy"
-        />
+        {/* A folder has no site of its own, so no favicon badge either. */}
+        {isFolder ? null : (
+          <img
+            className="tile__favicon"
+            data-corner={settings.faviconCorner}
+            src={visual.faviconSrc}
+            alt=""
+            loading="lazy"
+          />
+        )}
 
         {placement === 'inside-bottom' || placement === 'inside-top' ? (
           <span
@@ -80,7 +91,7 @@ export function Tile({
             {visual.title}
           </span>
         ) : null}
-      </a>
+      </Plate>
 
       {editing ? (
         <div className="tile__actions">
@@ -112,7 +123,58 @@ export function Tile({
   )
 }
 
+function Plate({
+  isFolder,
+  url,
+  title,
+  style,
+  onActivate,
+  children,
+}: {
+  isFolder: boolean
+  url: string
+  title: string
+  style: CSSProperties
+  onActivate: () => void
+  children: ReactNode
+}) {
+  if (isFolder) {
+    return (
+      <button type="button" className="tile__plate" style={style} title={title} onClick={onActivate}>
+        {children}
+      </button>
+    )
+  }
+  return (
+    <a
+      className="tile__plate"
+      href={url}
+      style={style}
+      title={title}
+      onClick={(event) => {
+        // Let the browser handle modified clicks natively.
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
+        event.preventDefault()
+        onActivate()
+      }}
+    >
+      {children}
+    </a>
+  )
+}
+
 function TileArtwork({ art, title }: { art: TileArt; title: string }) {
+  if (art.kind === 'folder') {
+    return (
+      <span className="tile__folder" aria-label={`${title}, ${art.count} items`}>
+        {art.icons.length === 0 ? (
+          <Icon name="folder" className="tile__folderempty" />
+        ) : (
+          art.icons.map((src, index) => <img key={index} src={src} alt="" loading="lazy" />)
+        )}
+      </span>
+    )
+  }
   if (art.kind === 'brand') {
     return (
       <svg

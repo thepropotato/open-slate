@@ -11,6 +11,8 @@ export type TileArt =
   | { kind: 'brand'; path: string; colour: string }
   | { kind: 'image'; src: string }
   | { kind: 'monogram'; text: string; colour: string }
+  /** A folder shows a small grid of the favicons it contains. */
+  | { kind: 'folder'; icons: string[]; count: number }
 
 export interface TileVisual {
   faviconSrc: string
@@ -28,13 +30,19 @@ export interface TileVisual {
  * The favicon is available synchronously, so a tile is never blank: brand logos,
  * uploaded images and sampled plate colours all arrive later and swap in.
  */
-export function useTileVisual(tile: Tile, settings: TilesSettings): TileVisual {
+export function useTileVisual(
+  tile: Tile,
+  settings: TilesSettings,
+  /** URLs of a folder's contents, used to draw its preview. */
+  childUrls: string[] = [],
+): TileVisual {
   const palette = usePalette()
   const host = hostOf(tile.url)
   const faviconSrc = useMemo(() => faviconUrl(tile.url, 64), [tile.url])
 
+  const isFolder = tile.kind === 'folder'
   const kind = tile.image.kind
-  const wantsBrand = kind === 'auto' || kind === 'brand'
+  const wantsBrand = !isFolder && (kind === 'auto' || kind === 'brand')
 
   const brand = useAsyncValue(
     wantsBrand && tile.url ? `brand:${tile.url}:${tile.image.brandSlug}` : null,
@@ -47,10 +55,15 @@ export function useTileVisual(tile: Tile, settings: TilesSettings): TileVisual {
   )
 
   // Only sample the favicon when its colour would actually be used.
-  const needsTint = !tile.background && !brand && settings.plateStyle !== 'transparent'
+  const needsTint =
+    !isFolder && !tile.background && !brand && settings.plateStyle !== 'transparent'
   const tint = useAsyncValue(needsTint && host ? `tint:${host}` : null, () =>
     faviconTint(host, faviconSrc),
   )
+
+  // A stable key for the child list, so the memo below is not defeated by a new
+  // array arriving on every render.
+  const childKey = childUrls.join('|')
 
   return useMemo(() => {
     const title = tile.title || brand?.title || host
@@ -58,6 +71,21 @@ export function useTileVisual(tile: Tile, settings: TilesSettings): TileVisual {
 
     let plate: string | null
     let ink: string
+
+    if (isFolder) {
+      plate = tile.background ?? palette.bgElevated
+      return {
+        faviconSrc,
+        plate: settings.plateStyle === 'transparent' ? null : plate,
+        ink: readableOn(plate),
+        art: {
+          kind: 'folder',
+          icons: (childKey ? childKey.split('|') : []).slice(0, 4).map((url) => faviconUrl(url, 32)),
+          count: childKey ? childKey.split('|').length : 0,
+        },
+        title: tile.title || 'Folder',
+      }
+    }
 
     switch (settings.plateStyle) {
       case 'transparent':
@@ -91,5 +119,5 @@ export function useTileVisual(tile: Tile, settings: TilesSettings): TileVisual {
                 : { kind: 'image', src: faviconSrc }
 
     return { faviconSrc, plate, ink, art, title }
-  }, [tile, brand, tint, blobUrl, kind, host, faviconSrc, settings.plateStyle, palette])
+  }, [tile, brand, tint, blobUrl, kind, host, faviconSrc, settings.plateStyle, palette, isFolder, childKey])
 }

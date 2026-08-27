@@ -63,6 +63,8 @@ export type TileImage = z.infer<typeof TileImage>
 
 export const Tile = z.object({
   id: z.string(),
+  /** A folder has no URL of its own; it groups the tiles whose parent it is. */
+  kind: z.enum(['link', 'folder']).default('link'),
   url: z.string(),
   title: z.string().default(''),
   image: TileImage.prefault({}),
@@ -71,12 +73,30 @@ export const Tile = z.object({
   /** Per-tile override of the global label/favicon rules. */
   labelPlacement: z.enum(['below', 'inside-bottom', 'inside-top', 'none']).nullable().default(null),
   pinned: z.boolean().default(false),
+  /**
+   * Membership is stored flat, as a parent id rather than nested children.
+   * Reordering, moving between folders and validation all stay trivial that way,
+   * and zod does not have to describe a recursive shape.
+   */
+  parentId: z.string().default(''),
+  /** Empty means the first page. */
+  pageId: z.string().default(''),
 })
 export type Tile = z.infer<typeof Tile>
+
+export const TilePage = z.object({
+  id: z.string(),
+  name: z.string().default(''),
+})
+export type TilePage = z.infer<typeof TilePage>
 
 export const Tiles = z.object({
   enabled: z.boolean().default(true),
   items: z.array(Tile).default([]),
+  /** Extra pages beyond the first. An empty list means a single page. */
+  pages: z.array(TilePage).default([]),
+  /** How to move between pages when there is more than one. */
+  pageSwitcher: z.enum(['dots', 'tabs', 'hidden']).default('dots'),
   /** `0` means fit as many as the viewport allows. */
   columns: z.number().min(0).max(16).default(5),
   width: z.number().min(60).max(400).default(190),

@@ -29,14 +29,21 @@ export function SortableTiles({
   items,
   settings,
   showHint,
+  childUrlsFor,
   onReorder,
+  onMoveToFolder,
+  onOpenFolder,
   onEdit,
   onRemove,
 }: {
   items: TileModel[]
   settings: TilesSettings
   showHint: boolean
+  childUrlsFor?: (id: string) => string[]
   onReorder: (next: TileModel[]) => void
+  /** Called when a tile is dropped onto a folder. */
+  onMoveToFolder?: (tileId: string, folderId: string) => void
+  onOpenFolder?: (id: string) => void
   onEdit: (id: string) => void
   onRemove: (id: string) => void
 }) {
@@ -50,8 +57,20 @@ export function SortableTiles({
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return
-    const from = ids.indexOf(String(active.id))
-    const to = ids.indexOf(String(over.id))
+    const activeId = String(active.id)
+    const overId = String(over.id)
+
+    // Dropping onto a folder files the tile away instead of reordering. Folders
+    // do not nest, so a folder dropped on a folder still just reorders.
+    const target = items.find((tile) => tile.id === overId)
+    const dragged = items.find((tile) => tile.id === activeId)
+    if (onMoveToFolder && target?.kind === 'folder' && dragged?.kind !== 'folder') {
+      onMoveToFolder(activeId, overId)
+      return
+    }
+
+    const from = ids.indexOf(activeId)
+    const to = ids.indexOf(overId)
     if (from < 0 || to < 0) return
     onReorder(arrayMove(items, from, to))
   }
@@ -71,6 +90,8 @@ export function SortableTiles({
             index={index}
             settings={settings}
             showHint={showHint}
+            childUrls={childUrlsFor?.(tile.id)}
+            onOpenFolder={onOpenFolder}
             onEdit={onEdit}
             onRemove={onRemove}
           />
@@ -85,6 +106,8 @@ function SortableTile({
   index,
   settings,
   showHint,
+  childUrls,
+  onOpenFolder,
   onEdit,
   onRemove,
 }: {
@@ -92,12 +115,13 @@ function SortableTile({
   index: number
   settings: TilesSettings
   showHint: boolean
+  childUrls?: string[]
+  onOpenFolder?: (id: string) => void
   onEdit: (id: string) => void
   onRemove: (id: string) => void
 }) {
-  const { setNodeRef, transform, transition, isDragging, attributes, listeners } = useSortable({
-    id: tile.id,
-  })
+  const { setNodeRef, transform, transition, isDragging, isOver, attributes, listeners } =
+    useSortable({ id: tile.id })
 
   return (
     <Tile
@@ -106,6 +130,8 @@ function SortableTile({
       settings={settings}
       editing
       showHint={showHint}
+      childUrls={childUrls}
+      onOpenFolder={onOpenFolder}
       onEdit={onEdit}
       onRemove={onRemove}
       drag={{
@@ -117,6 +143,8 @@ function SortableTile({
           opacity: isDragging ? 0.85 : undefined,
         },
         dragging: isDragging,
+        // Highlights a folder that is about to receive the dragged tile.
+        dropTarget: isOver && tile.kind === 'folder',
       }}
     />
   )
