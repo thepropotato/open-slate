@@ -6,9 +6,10 @@ justifications, so this is the material that has to be ready before uploading.
 ## Single purpose
 
 Replace the browser's new tab page with a customisable speed dial and dashboard:
-a grid of user-chosen site tiles, a search box, and widgets showing the user's own
-browser data (recently closed tabs, open tabs, bookmarks, history, downloads,
-most-visited sites) alongside a clock, calendar, weather, notes and tasks.
+a grid of user-chosen site tiles (optionally in folders and across pages), a
+search box, and widgets showing the user's own browser data (recently closed tabs,
+open tabs, bookmarks, history, downloads, most-visited sites) alongside a clock,
+calendar, weather, notes, tasks, a timer, feeds and crypto prices.
 
 Everything the extension does serves that one page. It has no content scripts, no
 remote code, and no analytics.
