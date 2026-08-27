@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { z } from 'zod'
 import { Icon } from '@/core/icons'
 import { useAsyncValue, useNow } from '@/core/hooks'
@@ -394,12 +394,35 @@ function DayView({
   const timed = events.filter((event) => !event.allDay)
   const { start, end } = hourRange(events, day, now)
   const span = (end - start) * HOUR
+  /*
+   * The axis is zoomed to a fixed height per hour rather than squeezed into the
+   * card, so a block's height is legible on its own terms — a 20-minute meeting
+   * is a fifth of an hour's worth of room, and a 5-minute one is visibly
+   * smaller still. The track scrolls when the day does not fit, which is the
+   * trade: an honest scale over a whole day at a glance.
+   */
+  const trackHeight = `${(end - start) * 3.4}em`
   const axis = []
   for (let hour = start; hour <= end; hour += 1) axis.push(hour)
 
   /** Where a time falls down the track, as a percentage of the drawn span. */
   const offset = (at: number) => ((at - (day + start * HOUR)) / span) * 100
   const nowAt = isToday && now >= day + start * HOUR && now <= day + end * HOUR ? offset(now) : null
+
+  /*
+   * Opens looking at the part of the day that matters — now, if the day is
+   * today, and otherwise the first thing on it. Without this a zoomed axis
+   * opens at midnight, which is never what is being asked.
+   */
+  const trackRef = useRef<HTMLDivElement>(null)
+  const focus = nowAt ?? (timed.length > 0 ? offset(Math.min(...timed.map((e) => e.start))) : null)
+  useEffect(() => {
+    const track = trackRef.current
+    if (!track || focus === null) return
+    const target = (focus / 100) * track.scrollHeight - track.clientHeight / 2
+    track.scrollTop = Math.max(0, target)
+    // Re-runs when the day changes; `focus` moves with it.
+  }, [focus, day])
 
   return (
     <div className="cal__day">
@@ -463,8 +486,8 @@ function DayView({
       ) : events.length === 0 ? (
         <p className="cal__dayempty">Nothing on.</p>
       ) : (
-        <div className="cal__track scroll-y">
-          <div className="cal__hours">
+        <div className="cal__track scroll-y" ref={trackRef}>
+          <div className="cal__hours" style={{ height: trackHeight }}>
             {axis.map((hour) => (
               <div
                 key={hour}
@@ -483,14 +506,32 @@ function DayView({
               // stays inside the track instead of overflowing it.
               const top = Math.max(0, offset(event.start))
               const bottom = Math.min(100, offset(event.end))
+              /*
+               * How many lines the block can hold, from the share of the axis
+               * it covers — the widget's own height says nothing about it,
+               * since a half-hour meeting is short on any size of card.
+               */
+              const hours = ((bottom - top) / 100) * (end - start)
               return (
-                <div
+                <button
+                  type="button"
                   key={event.id}
                   className="cal__slot"
+                  data-lines={hours < 0.75 ? 'one' : hours < 1.5 ? 'two' : 'many'}
+                  // Only a linked event is a control; the rest are just drawn.
+                  data-link={event.url ? true : undefined}
+                  disabled={!event.url}
+                  onClick={() => event.url && openUrl(event.url)}
+                  title={event.url ? `Open ${event.title}` : undefined}
                   style={{
                     top: `${top}%`,
-                    // A floor, so a 15-minute event is still a readable block.
-                    height: `max(1.5em, ${bottom - top}%)`,
+                    /*
+                     * The block is exactly as tall as the event is long. There
+                     * is no minimum: a floor made a 20-minute meeting draw down
+                     * past 13:00, so the block stopped meaning what its position
+                     * said. The axis is zoomed instead — see `hourRange`.
+                     */
+                    height: `${bottom - top}%`,
                     /*
                      * Offset and width are shares of the room left of the hour
                      * labels, so a block can never overhang the track — the
@@ -503,11 +544,18 @@ function DayView({
                     // so the title stays readable in either theme.
                     ['--slot' as string]: colorOf(event.color),
                   }}
-                  title={`${time.format(event.start)} ${event.title}`}
                 >
+                  <span className="cal__slotdot" />
                   <span className="cal__slottitle">{event.title}</span>
-                  <span className="cal__slotwhen">{time.format(event.start)}</span>
-                </div>
+                  {/* Both ends, always: when a thing starts and stops is the
+                      detail the block exists to carry. */}
+                  <span className="cal__slotwhen">
+                    {time.format(event.start)} – {time.format(event.end)}
+                  </span>
+                  {event.location ? (
+                    <span className="cal__slotwhere">{event.location}</span>
+                  ) : null}
+                </button>
               )
             })}
 
@@ -688,14 +736,13 @@ function hourRange(events: DayEvent[], day: number, now: number): { start: numbe
     last = Math.max(last, nowHour)
   }
 
-  let start = Math.max(0, Math.floor(first) - 1)
-  let end = Math.min(24, Math.ceil(last) + 1)
-  // A floor, so one 30-minute meeting does not become a full-height block.
-  while (end - start < 5) {
-    if (end < 24) end += 1
-    else if (start > 0) start -= 1
-    else break
-  }
+  /*
+   * Padded generously and never narrower than a working day. The axis is drawn
+   * at a fixed scale and scrolls, so extra hours cost nothing but a little
+   * scrolling — where too few would clip an event added later in the day.
+   */
+  const start = Math.max(0, Math.min(Math.floor(first) - 1, 8))
+  const end = Math.min(24, Math.max(Math.ceil(last) + 1, 19))
   return { start, end }
 }
 

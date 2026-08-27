@@ -520,8 +520,16 @@
  */
 .cal__hours {
   position: relative;
-  min-height: 100%;
-  height: 100%;
+  /*
+   * Half a line of room at each end. The hour labels are centred on their own
+   * lines, so the first and last overhang the track by half their height —
+   * without this they are clipped at the ends of the scroll.
+   *
+   * The height itself is set inline, from the number of hours drawn: the axis
+   * runs at a fixed scale and scrolls rather than compressing to fit, so that a
+   * block's height means its actual duration.
+   */
+  margin-block: 0.6em;
   /*
    * The label column is reserved here, once, so the percentage offsets and
    * widths of the blocks below resolve against the room actually left to them.
@@ -564,9 +572,8 @@
  */
 .cal__slot {
   position: absolute;
-  padding: 2px 6px;
+  padding: 2px 7px;
   border-radius: var(--radius-sm);
-  border-inline-start: 2.5px solid var(--slot);
   /*
    * Tinted, not filled. A solid block in the calendar's colour would set the
    * title on an arbitrary hue in both themes; a wash keeps the card's own
@@ -574,12 +581,88 @@
    */
   background: color-mix(in srgb, var(--slot) 18%, rgb(var(--surface-base)));
   overflow: hidden;
+  /*
+   * The title leads, with the times after it — the title is what you scan for,
+   * the times confirm it. On a block with only one line they share that line;
+   * given more, they stack.
+   */
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 5px;
   min-width: 0;
   font-size: var(--text-xs);
   line-height: 1.25;
+  text-align: start;
+  transition:
+    box-shadow var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+/*
+ * A one-line block puts the times on the same line as the title and drops the
+ * location; it has no second line to put either on.
+ */
+.cal__slot[data-lines='one'] .cal__slotwhere {
+  display: none;
+}
+
+/* With two lines the times get their own; with more, the location follows. */
+.cal__slot[data-lines='two'] .cal__slotwhen,
+.cal__slot[data-lines='many'] .cal__slotwhen {
+  flex-basis: 100%;
+}
+
+.cal__slot[data-lines='two'] .cal__slotwhere {
+  display: none;
+}
+
+.cal__slot[data-lines='many'] .cal__slotwhere {
+  flex-basis: 100%;
+}
+
+/*
+ * Only an event with somewhere to go is a control. The rest are drawn, not
+ * clickable — a pointer over a block that does nothing is a promise broken.
+ */
+.cal__slot:disabled {
+  cursor: default;
+}
+
+.cal__slot[data-link] {
+  cursor: pointer;
+}
+
+.cal__slot[data-link]:hover {
+  box-shadow: 0 0 0 1px rgb(var(--surface-tint) / 22%);
+  background: color-mix(in srgb, var(--slot) 26%, rgb(var(--surface-base)));
+}
+
+/*
+ * A flat strip down the block's leading edge, full height.
+ *
+ * It must not be inset to dodge the block's rounded corners: on a short block
+ * an inset is most of the available height, and the strip collapses to a
+ * floating stub. The block does not clip it either — see `overflow` there — so
+ * the strip keeps its square ends and the block keeps its round ones.
+ */
+/*
+ * A dot, not a strip down the edge.
+ *
+ * An edge marker inside a rounded, clipped block could be square-ended or
+ * full-height but never both — the corner radius shaved it either into a curve
+ * or, when inset to dodge that, into a floating stub. A dot has no edge to
+ * clip, so the block's shape stops mattering, and it is the same mark the month
+ * grid already uses for the same thing: this calendar, this event.
+ */
+.cal__slotdot {
+  flex: none;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--slot);
+  /* Sits on the text's own line rather than the baseline it would ride on. */
+  align-self: center;
 }
 
 .cal__slottitle {
@@ -588,28 +671,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  /* Takes the room left beside the dot, and gives way before the times do. */
+  min-width: 0;
+  flex: 1;
 }
 
+/* Follows the title, and keeps its width — the title gives way instead. */
 .cal__slotwhen {
+  flex: none;
   color: var(--fg-muted);
   font-size: 0.9em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.cal__slotwhere {
+  color: var(--fg-subtle);
+  font-size: 0.9em;
   overflow: hidden;
-}
-
-/*
- * A short block has room for one line only, so the time is dropped rather than
- * clipped — the block's position on the axis already says when it is.
- */
-.cal__slot:not(:hover) .cal__slotwhen {
-  display: none;
-}
-
-@container cal (min-height: 260px) {
-  .cal__slot .cal__slotwhen {
-    display: block;
-  }
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 /*
