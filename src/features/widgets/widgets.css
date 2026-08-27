@@ -55,6 +55,47 @@
   z-index: 1;
 }
 
+/*
+ * The library's stylesheet hardcodes its durations, so the grid would keep
+ * animating with animations turned off or reduced motion requested. Restating
+ * them against `--dur` puts the grid under the same motion token as everything
+ * else, which zeroes it in both cases.
+ *
+ * Only `transform` is animated, unlike the library's default. A widget's size
+ * is derived from the measured container, so it settles over the first frames
+ * after load; transitioning `width` turns that settling into a visible drift
+ * outwards, while sliding a neighbour aside during a drag — which is what the
+ * motion is actually for — is pure `transform`.
+ */
+.canvas .react-grid-item {
+  transition: transform var(--dur) var(--ease);
+}
+
+.canvas .react-grid-layout {
+  transition: height var(--dur) var(--ease);
+}
+
+/* Dragging and resizing follow the pointer, so they must never be eased. */
+.canvas .react-grid-item.react-draggable-dragging,
+.canvas .react-grid-item.resizing {
+  transition: none;
+}
+
+/*
+ * The first layout arrives already in place, rather than sliding in.
+ *
+ * The grid places items with percentages on its first render and swaps to
+ * transforms once mounted, and both are transitioned by the library's own
+ * stylesheet — so without this every widget animates from the grid's origin on
+ * every page load, and the container animates up from zero height underneath
+ * them. The flag is cleared a frame after mount, which leaves drag, resize and
+ * reflow animating as before.
+ */
+.canvas[data-settling='true'] .react-grid-item,
+.canvas[data-settling='true'] .react-grid-layout {
+  transition: none;
+}
+
 /* --- frame --- */
 
 .wframe {

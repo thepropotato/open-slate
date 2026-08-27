@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useId, useMemo, useState, type Ref } from 'react'
+import { Suspense, useCallback, useEffect, useId, useMemo, useState, type Ref } from 'react'
 import { lazyChunk } from '@/core/util/lazyChunk'
 import {
   ResponsiveGridLayout,
@@ -81,12 +81,37 @@ export function WidgetCanvas() {
   const [picking, setPicking] = useState(false)
   const [configuring, setConfiguring] = useState<string | null>(null)
 
+  /*
+   * The grid positions items with percentages on its very first render and
+   * switches to CSS transforms once it has mounted and measured the container.
+   * Both of those are transitioned properties, so the switch animates every
+   * widget from the grid's origin into place — the "thrown from the corner"
+   * effect. Nothing is animated until this flag clears on the frame after
+   * mount, so the first paint is simply the finished layout; drag and resize
+   * keep their motion because by then it is long since settled.
+   */
+  const [settling, setSettling] = useState(true)
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setSettling(false))
+    return () => cancelAnimationFrame(frame)
+  }, [])
+
   const editing = !widgets.locked
 
   const cols = useMemo(() => colsFor(widgets.columns), [widgets.columns])
   const breakpoints = useMemo(() => breakpointsFor(cols), [cols])
 
-  const { width, containerRef } = useContainerWidth()
+  /*
+   * `measureBeforeMount` reports the container as unmounted until it has been
+   * measured. Without it the hook assumes a 1280px container, so the first
+   * layout is computed at the wrong scale and every widget then jumps to its
+   * real geometry once the true width arrives — the motion that read as the
+   * widgets being thrown into place. The ref goes on the stage rather than the
+   * grid, since the grid is what gets held back and the element being measured
+   * has to stay in the DOM.
+   */
+  const { width, mounted, containerRef } = useContainerWidth({ measureBeforeMount: true })
+
 
   // The grid picks its own breakpoint from the width; the same choice has to be
   // made here to keep cells square, since row height is a single number.
@@ -263,12 +288,16 @@ export function WidgetCanvas() {
   const configuringSize = sizeNameOf(configuringInstance, configuringDefinition, widgets.layouts.lg)
 
   return (
-    <div className="canvas" data-editing={editing}>
-      <div className="canvas__stage" style={{ minHeight: editing ? stageHeight : undefined }}>
+    <div className="canvas" data-editing={editing} data-settling={settling}>
+      <div
+        className="canvas__stage"
+        ref={containerRef}
+        style={{ minHeight: editing ? stageHeight : undefined }}
+      >
       <GridSlots cell={rowHeight} gutter={widgets.margin} radius={appearance.radius} />
+      {mounted ? (
       <ResponsiveGridLayout
         className="canvas__grid"
-        innerRef={containerRef}
         width={width}
         layouts={layouts}
         breakpoints={breakpoints}
@@ -312,6 +341,7 @@ export function WidgetCanvas() {
           </div>
         ))}
       </ResponsiveGridLayout>
+      ) : null}
       </div>
 
       <div className="canvas__toolbar">
