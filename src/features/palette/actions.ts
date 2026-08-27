@@ -70,6 +70,30 @@ export function buildActions(settings: Settings, actions: SettingsActions): Pale
       keywords: 'move resize dashboard grid',
       run: () => set('widgets.locked', !settings.widgets.locked),
     },
+    {
+      id: 'pane:widgets',
+      title: 'Show the widgets',
+      icon: 'layers',
+      keywords: 'dashboard tab pane switch',
+      run: () => set('layout.lastPane', 'widgets'),
+    },
+    {
+      id: 'pane:tiles',
+      title: 'Show the tiles',
+      icon: 'layout',
+      keywords: 'speed dial shortcuts tab pane switch',
+      run: () => set('layout.lastPane', 'tiles'),
+    },
+    {
+      id: 'view:mode',
+      title:
+        settings.layout.viewMode === 'tabs'
+          ? 'Put widgets and tiles on one page'
+          : 'Split widgets and tiles into tabs',
+      icon: 'tabs',
+      keywords: 'view mode scroll tabs layout',
+      run: () => set('layout.viewMode', settings.layout.viewMode === 'tabs' ? 'scroll' : 'tabs'),
+    },
     toggle('tiles.enabled', settings.tiles.enabled, 'Show or hide the tiles', 'layers'),
     toggle('search.enabled', settings.search.enabled, 'Show or hide the search box', 'search'),
     toggle('widgets.enabled', settings.widgets.enabled, 'Show or hide the widgets', 'layout'),

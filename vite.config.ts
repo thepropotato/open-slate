@@ -11,6 +11,13 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     target: 'chrome120',
+    /*
+     * Extension pages load their scripts in an isolated world, so Chrome
+     * refuses every `<link rel="modulepreload">` Vite emits and logs a
+     * "cross-world extension resource mismatch" for each one. The hints buy
+     * nothing here — everything is served from local disk — so don't emit them.
+     */
+    modulePreload: false,
     rollupOptions: {
       input: {
         newtab: resolve(import.meta.dirname, 'newtab.html'),

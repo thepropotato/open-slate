@@ -28,11 +28,113 @@
   padding-inline: var(--space-xl);
   overflow-y: auto;
   scrollbar-width: none;
+  /*
+   * Scroll anchoring works against this page. A band that grows after paint —
+   * a widget finishing its load — would have the browser scroll to hold the
+   * content below it still, carrying the reader off the band they were on.
+   */
+  overflow-anchor: none;
 }
 
 .band {
   display: flex;
   flex-direction: column;
+}
+
+/*
+ * One switchable band. Kept in the DOM when it is not the active tab — a
+ * running timer, a half-typed note and an open folder all live in component
+ * state, and none of them should be lost to a glance at the bookmarks.
+ */
+.pane {
+  display: flex;
+  flex-direction: column;
+  scroll-margin-top: var(--space);
+}
+
+.pane[hidden] {
+  display: none;
+}
+
+/* Tabs cross-fade; there is nowhere to scroll, so the switch needs to read. */
+.page[data-view='tabs'] .pane[data-active='true'] {
+  animation: pane-in var(--dur) var(--ease);
+}
+
+@keyframes pane-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* One flick lands on the next band instead of dragging through the widgets. */
+.page[data-view='scroll'] .page__content {
+  scroll-snap-type: y proximity;
+}
+
+.page[data-view='scroll'] .pane {
+  scroll-snap-align: start;
+}
+
+/*
+ * The topmost band is not a snap target: the anchor below already covers the
+ * top of the page, and two snap points a padding's width apart would make
+ * scrolling near the top ambiguous.
+ */
+.page[data-view='scroll'] .pane[data-first='true'] {
+  scroll-snap-align: none;
+}
+
+.page__snaptop {
+  position: absolute;
+  top: 0;
+  width: 0;
+  height: 0;
+}
+
+.page[data-view='scroll'] .page__snaptop {
+  scroll-snap-align: start;
+}
+
+/* --- pane switch --- */
+
+.page__switch {
+  display: flex;
+  justify-content: center;
+}
+
+.paneswitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  background: rgb(var(--surface-base) / 45%);
+  backdrop-filter: blur(10px);
+}
+
+.paneswitch__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 550;
+  color: var(--fg-subtle);
+  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.paneswitch__item:hover {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 8%);
+}
+
+.paneswitch__item[aria-current='true'] {
+  color: var(--accent-fg);
+  background: var(--accent);
 }
 
 .page__settings {
@@ -50,13 +152,23 @@
   border: 1px solid var(--line);
   backdrop-filter: blur(10px);
   opacity: 0.35;
-  transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease),
-    transform var(--dur) var(--ease);
+  transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+/*
+ * The cog turns, the button does not: rotating the button would take its
+ * border and its blurred plate round with it.
+ */
+.page__settings .icon {
+  transition: transform var(--dur) var(--ease);
 }
 
 .page__settings:hover {
   opacity: 1;
   color: var(--fg);
+}
+
+.page__settings:hover .icon {
   transform: rotate(30deg);
 }
 

@@ -6,6 +6,38 @@ export const layoutSection: Section = {
   icon: 'layout',
   groups: [
     {
+      id: 'view',
+      label: 'View',
+      fields: [
+        {
+          path: 'layout.viewMode',
+          label: 'Widgets and tiles',
+          help: 'One scrolling page, or two tabs behind a switch.',
+          control: {
+            kind: 'segmented',
+            options: [
+              { value: 'scroll', label: 'One page' },
+              { value: 'tabs', label: 'Two tabs' },
+            ],
+          },
+        },
+        {
+          path: 'layout.defaultPane',
+          label: 'Open on',
+          help: 'Which side a new tab starts on.',
+          when: (s) => s.layout.viewMode === 'tabs',
+          control: {
+            kind: 'segmented',
+            options: [
+              { value: 'last', label: 'Last used' },
+              { value: 'widgets', label: 'Widgets' },
+              { value: 'tiles', label: 'Tiles' },
+            ],
+          },
+        },
+      ],
+    },
+    {
       id: 'page',
       label: 'Page',
       fields: [

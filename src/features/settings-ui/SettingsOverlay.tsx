@@ -1,4 +1,5 @@
-import { Suspense, lazy, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
+import { lazyChunk } from '@/core/util/lazyChunk'
 import { Button } from '@/core/ui'
 import { useSettingsActions } from '@/core/settings/SettingsProvider'
 import { isExtension } from '@/core/platform/browser'
@@ -8,7 +9,7 @@ import './SettingsOverlay.css'
  * Loaded on demand. The settings UI pulls in the whole spec and every control,
  * and a new tab must paint before any of that is needed.
  */
-const SettingsPanel = lazy(() =>
+const SettingsPanel = lazyChunk(() =>
   import('./SettingsPanel').then((m) => ({ default: m.SettingsPanel })),
 )
 
