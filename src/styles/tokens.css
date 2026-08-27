@@ -230,8 +230,16 @@ video {
   backdrop-filter: none;
 }
 
+/*
+ * Scrolls on one axis, as the name says.
+ *
+ * `overflow-x` is stated rather than left alone: with one axis `auto` and the
+ * other `visible`, the spec promotes `visible` to `auto`, so anything that
+ * overhangs quietly gains a horizontal scrollbar as well.
+ */
 .scroll-y {
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--fg-subtle) transparent;
   overscroll-behavior: contain;
