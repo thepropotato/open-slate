@@ -32,7 +32,7 @@ export function DataPanel() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
-    link.download = `new-tab-config-${stamp()}.json`
+    link.download = `open-slate-config-${stamp()}.json`
     link.click()
     URL.revokeObjectURL(url)
     setMessage({ kind: 'ok', text: 'Configuration downloaded.' })

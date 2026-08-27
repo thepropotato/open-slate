@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "New Tab",
+  "name": "Open Slate",
   "version": "0.1.0",
   "description": "A customizable speed dial and dashboard for your new tab page.",
   "minimum_chrome_version": "120",

@@ -1,5 +1,5 @@
 {
-  "name": "new-tab",
+  "name": "open-slate",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "gen:brands": "node scripts/gen-brands.mjs",
     "gen:icons": "node scripts/gen-icons.mjs",
-    "zip": "npm run build && cd dist && zip -qr ../new-tab.zip . && cd ..",
+    "zip": "npm run build && cd dist && zip -qr ../open-slate.zip . && cd ..",
     "shots": "node scripts/shots.mjs",
     "icons:check": "node scripts/icons-check.mjs",
     "test": "node --import ./scripts/register.mjs scripts/selftest.mjs",

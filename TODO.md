@@ -1,4 +1,4 @@
-# New Tab — Build Plan
+# Open Slate — Build Plan
 
 A Chrome MV3 extension replacing the new tab with a customizable speed dial / dashboard.
 

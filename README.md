@@ -1,4 +1,4 @@
-# New Tab
+# Open Slate
 
 A Chrome extension that replaces the new tab page with a speed dial and dashboard:
 image tiles, widgets, and a wallpaper engine, with close to everything about the
