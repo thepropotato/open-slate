@@ -1,0 +1,250 @@
+/*
+ * Shared list chrome for the widgets that show browser data — recently closed,
+ * top sites, bookmarks, downloads, tabs and history. They differ in what they
+ * put in a row, not in how a row looks.
+ */
+
+.blist {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 1px;
+}
+
+.blist--empty {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  padding-inline: var(--space);
+}
+
+.blist__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 7px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.blist__item:hover {
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+.blist__icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--fg-subtle);
+  font-size: 11px;
+}
+
+.blist__icon img {
+  border-radius: 3px;
+}
+
+.blist__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.blist__title {
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blist__sub {
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.blist__action {
+  margin-left: auto;
+  flex: none;
+  color: var(--fg-subtle);
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.blist__item:hover .blist__action {
+  opacity: 1;
+}
+
+/* --- optional header --- */
+
+.blist__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex: none;
+  padding: 0 4px var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+}
+
+.blist__headtitle {
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.blist__headtools {
+  margin-left: auto;
+  display: flex;
+  gap: 3px;
+}
+
+.blist__scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: 1px;
+}
+
+.blist__badge {
+  flex: none;
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 12%);
+  font-size: 10px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-muted);
+}
+
+.blist__search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex: none;
+  margin-bottom: var(--space-xs);
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 7%);
+  color: var(--fg-subtle);
+}
+
+.blist__search input {
+  flex: 1;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-size: var(--text-sm);
+  color: var(--fg);
+}
+
+/* Tile-style grid used by the top-sites widget. */
+.bgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--bgrid-min, 64px), 1fr));
+  gap: var(--space-xs);
+  align-content: start;
+  overflow-y: auto;
+  min-height: 0;
+  flex: 1;
+}
+
+.bgrid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+.bgrid__item:hover {
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+.bgrid__icon {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+}
+
+.bgrid__icon img {
+  border-radius: 5px;
+}
+
+.bgrid__label {
+  font-size: 10px;
+  color: var(--fg-muted);
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- row with a trailing action button --- */
+
+.blist__rowwrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.blist__rowwrap > .blist__item {
+  flex: 1;
+  min-width: 0;
+}
+
+.blist__rowaction {
+  position: absolute;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-subtle);
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.blist__rowwrap:hover .blist__rowaction,
+.blist__rowwrap:focus-within .blist__rowaction {
+  opacity: 1;
+}
+
+.blist__rowaction:hover {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 16%);
+}
+
+.blist__dupbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 12%);
+  color: var(--fg-muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.blist__dupbtn:hover {
+  background: var(--accent);
+  color: var(--accent-fg);
+}

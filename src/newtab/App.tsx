@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { Icon } from '@/core/icons'
 import { BackgroundLayer } from '@/features/background/BackgroundLayer'
+import { CommandPalette } from '@/features/palette/CommandPalette'
 import { SearchBar } from '@/features/search/SearchBar'
 import { SettingsOverlay } from '@/features/settings-ui/SettingsOverlay'
 import { TileGrid } from '@/features/tiles/TileGrid'
@@ -10,25 +11,34 @@ import './App.css'
 
 /**
  * The new tab shell. It owns nothing but the page frame: which bands appear, in
- * what order, and how the settings overlay opens. Each band is a self-contained
- * feature that reads its own slice of settings.
+ * what order, and the two global keyboard entry points. Each band is a
+ * self-contained feature that reads its own slice of settings.
  */
 export function App() {
-  const { layout, appearance } = useSettings()
+  const { layout, appearance, behavior } = useSettings()
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+
+  const paletteEnabled = behavior.commandPalette
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setSettingsOpen(false)
+      const modifier = event.metaKey || event.ctrlKey
+      if (!modifier) return
       // Comma with a modifier is the conventional "open preferences".
-      if (event.key === ',' && (event.metaKey || event.ctrlKey)) {
+      if (event.key === ',') {
         event.preventDefault()
         setSettingsOpen((open) => !open)
+      }
+      if (paletteEnabled && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        setPaletteOpen((open) => !open)
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [paletteEnabled])
 
   return (
     <div className="page" data-align={layout.align}>
@@ -59,6 +69,11 @@ export function App() {
       </button>
 
       <SettingsOverlay open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+
+      {/* Mounted only while open, so its state starts fresh every time. */}
+      {paletteEnabled && paletteOpen ? (
+        <CommandPalette onClose={() => setPaletteOpen(false)} />
+      ) : null}
     </div>
   )
 }

@@ -1,0 +1,160 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Icon } from '@/core/icons'
+import { useAsyncValue } from '@/core/hooks'
+import { openUrl } from '@/core/platform/browser'
+import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
+import { asDestination, buildSearchUrl, parseQuery } from '@/features/search/engines'
+import { queryLocal, type Suggestion } from '@/features/search/providers'
+import { buildActions, matchAction } from './actions'
+import './CommandPalette.css'
+
+/**
+ * One box for everything: open tabs, tiles, bookmarks, history, settings
+ * commands, and a web search as the always-available fallback.
+ *
+ * Ranking is shared with the search bar's provider scoring, so the same query
+ * puts the same thing first in both places.
+ */
+export function CommandPalette({ onClose }: { onClose: () => void }) {
+  const settings = useSettings()
+  const actions = useSettingsActions()
+  const [query, setQuery] = useState('')
+  const [highlight, setHighlight] = useState(0)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+
+  const needle = query.trim().toLowerCase()
+
+  const commands = useMemo(() => buildActions(settings, actions), [settings, actions])
+
+  const local = useAsyncValue(needle.length > 0 ? `palette:${needle}` : null, () =>
+    queryLocal(query, { tiles: settings.tiles.items, limit: 12 }),
+  )
+
+  const results = useMemo(() => {
+    const matched = commands
+      .map((command) => matchAction(command, needle))
+      .filter((item): item is Suggestion => item !== null)
+
+    const items = [...(local ?? []), ...matched].sort((a, b) => b.score - a.score)
+
+    // A web search is always offered last, so no query is ever a dead end.
+    if (needle) {
+      const destination = asDestination(query)
+      const parsed = parseQuery(query, settings.search.engineId, settings.search.bangs)
+      items.push({
+        id: 'fallback:search',
+        kind: 'search',
+        title: destination ? `Go to ${destination}` : `Search ${parsed.engine.name} for “${parsed.query}”`,
+        icon: destination ? 'link' : 'search',
+        score: -1,
+        run: () => openUrl(destination ?? buildSearchUrl(parsed), settings.tiles.openIn),
+      })
+    }
+
+    return items.slice(0, 40)
+  }, [local, commands, needle, query, settings])
+
+  // Clamped rather than reset in an effect, so a shrinking list never points
+  // past its end and no extra render is needed to correct it.
+  const active = results.length === 0 ? 0 : Math.min(highlight, results.length - 1)
+
+  // Keep the highlighted row on screen while arrowing through a long list.
+  useEffect(() => {
+    listRef.current?.children[active]?.scrollIntoView({ block: 'nearest' })
+  }, [active])
+
+  const commit = (index: number) => {
+    const item = results[index]
+    if (!item) return
+    onClose()
+    void item.run()
+  }
+
+  const onKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setHighlight((current) => (current + 1) % Math.max(1, results.length))
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setHighlight((current) => (current - 1 + results.length) % Math.max(1, results.length))
+    } else if (event.key === 'Enter') {
+      event.preventDefault()
+      commit(active)
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      onClose()
+    }
+  }
+
+  return (
+    <div className="palette__scrim" onClick={onClose} role="presentation">
+      <div
+        className="palette surface"
+        role="dialog"
+        aria-label="Command palette"
+        aria-modal="true"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="palette__input">
+          <Icon name="search" />
+          <input
+            ref={inputRef}
+            value={query}
+            autoFocus
+            onChange={(event) => {
+              setQuery(event.target.value)
+              setHighlight(0)
+            }}
+            onKeyDown={onKeyDown}
+            placeholder="Search tabs, bookmarks, history, or type a command"
+            aria-label="Search or run a command"
+            autoComplete="off"
+            spellCheck={false}
+          />
+          <kbd>esc</kbd>
+        </div>
+
+        <ul className="palette__list scroll-y" ref={listRef}>
+          {results.map((item, index) => (
+            <li key={item.id}>
+              <button
+                type="button"
+                className="palette__row"
+                data-active={index === active}
+                onMouseMove={() => setHighlight(index)}
+                onClick={() => commit(index)}
+              >
+                <span className="palette__icon">
+                  {item.image ? (
+                    <img src={item.image} alt="" width={16} height={16} />
+                  ) : item.icon ? (
+                    <Icon name={item.icon} />
+                  ) : null}
+                </span>
+                <span className="palette__text">
+                  <span className="palette__title">{item.title}</span>
+                  {item.subtitle ? <span className="palette__sub">{item.subtitle}</span> : null}
+                </span>
+                <span className="palette__kind">{kindLabel(item.kind)}</span>
+              </button>
+            </li>
+          ))}
+          {results.length === 0 ? (
+            <li className="palette__empty">Start typing to search, or press escape.</li>
+          ) : null}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+const kindLabel = (kind: Suggestion['kind']): string =>
+  ({
+    tab: 'Tab',
+    bookmark: 'Bookmark',
+    history: 'History',
+    tile: 'Tile',
+    action: 'Command',
+    search: 'Search',
+  })[kind]

@@ -116,6 +116,34 @@ await shot('dashboard', async (page) => {
   await settle(page)
 }, { width: 1600, height: 1100 })
 
+// Browser-data widgets: outside the extension their queries return nothing, so
+// this shot verifies the header, filter and empty states.
+const browserDash = [
+  widget('ts', 'topsites', 0, 0, 8, 5),
+  widget('tb', 'tabs', 8, 0, 8, 7),
+  widget('bm', 'bookmarks', 16, 0, 8, 7),
+  widget('hi', 'history', 0, 5, 8, 6),
+  widget('dl', 'downloads', 8, 7, 8, 4),
+  widget('rc', 'continue', 16, 7, 8, 4),
+]
+
+await shot('dashboard-browser', async (page) => {
+  await seed(page, {
+    version: 1,
+    widgets: {
+      enabled: true,
+      locked: true,
+      instances: browserDash.map((w) => w.instance),
+      layouts: { lg: browserDash.map((w) => w.layout) },
+    },
+    layout: { order: ['widgets'], maxWidth: 1400 },
+    tiles: { enabled: false },
+    search: { enabled: false },
+  })
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+}, { width: 1600, height: 1000 })
+
 await shot('widget-config', async (page) => {
   await seed(page, { ...dashboardSettings, widgets: { ...dashboardSettings.widgets, locked: false } })
   await page.goto(`${base}/newtab.html`)
@@ -123,6 +151,15 @@ await shot('widget-config', async (page) => {
   await page.locator('.wframe__tool').first().click()
   await page.waitForTimeout(500)
 }, { width: 1600, height: 1100 })
+
+await shot('palette', async (page) => {
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+  await page.keyboard.press('ControlOrMeta+k')
+  await page.waitForTimeout(300)
+  await page.keyboard.type('dark')
+  await page.waitForTimeout(400)
+})
 
 await shot('search-typing', async (page) => {
   await page.goto(`${base}/newtab.html`)

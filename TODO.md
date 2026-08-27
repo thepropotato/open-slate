@@ -54,15 +54,17 @@ requested per widget.
 - [x] Greeting line (name, time-aware)
 
 ## Phase 5 — Browser-native widgets
-- [ ] Top sites
-- [ ] Bookmarks folder viewer
-- [ ] Recent downloads
-- [ ] Open tabs overview: count, tab groups, duplicate finder
-- [ ] History quick search
+<!-- Tab groups were dropped from the tabs widget: the duplicate finder and
+     cross-window jump carry it, and grouping added a permission for little gain. -->
+- [x] Top sites
+- [x] Bookmarks folder viewer
+- [x] Recent downloads
+- [x] Open tabs overview: count, tab groups, duplicate finder
+- [x] History quick search
 
 ## Phase 6 — Command palette
-- [ ] `Cmd+K` unified search: tabs, bookmarks, history, tiles, settings, actions
-- [ ] Keyboard nav across tiles (arrows + digits 1–9 to open)
+- [x] `Cmd+K` unified search: tabs, bookmarks, history, tiles, settings, actions
+- [x] Keyboard nav across tiles (arrows + digits 1–9 to open)
 
 ## Phase 7 — Polish & ship
 - [ ] Full settings page: tabbed, search, live preview

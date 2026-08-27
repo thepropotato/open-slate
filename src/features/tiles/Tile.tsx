@@ -14,6 +14,7 @@ export function Tile({
   settings,
   index,
   editing,
+  showHint,
   onEdit,
   onRemove,
 }: {
@@ -21,6 +22,7 @@ export function Tile({
   settings: TilesSettings
   index: number
   editing: boolean
+  showHint: boolean
   onEdit: (id: string) => void
   onRemove: (id: string) => void
 }) {
@@ -60,7 +62,7 @@ export function Tile({
       >
         <TileArt art={visual.art} title={visual.title} />
 
-        {index < 9 ? <span className="tile__hint">{index + 1}</span> : null}
+        {showHint && index < 9 ? <span className="tile__hint">{index + 1}</span> : null}
 
         <img
           className="tile__favicon"

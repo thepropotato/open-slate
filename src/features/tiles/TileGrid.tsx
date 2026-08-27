@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   DndContext,
   KeyboardSensor,
@@ -17,6 +17,7 @@ import { openUrl } from '@/core/platform/browser'
 import { Tile } from './Tile'
 import { TileEditor } from './TileEditor'
 import { seedTilesFromBrowser } from './seed'
+import { useGridArrows } from './useGridArrows'
 import './tiles.css'
 
 /**
@@ -26,12 +27,15 @@ import './tiles.css'
  * single click on a tile always navigates — the common case by far.
  */
 export function TileGrid() {
-  const { tiles } = useSettings()
+  const { tiles, behavior } = useSettings()
   const { update } = useSettingsActions()
   const [editing, setEditing] = useState(false)
   const [editorId, setEditorId] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [hints, setHints] = useState(false)
+  const gridRef = useRef<HTMLDivElement>(null)
+
+  useGridArrows(gridRef, 'a.tile__plate')
 
   const sensors = useSensors(
     // A short distance threshold keeps clicks clicking and drags dragging.
@@ -59,8 +63,10 @@ export function TileGrid() {
     }
   }, [items.length, update])
 
-  // Holding a modifier reveals the 1-9 shortcut badges.
+  // Holding Alt reveals the 1-9 shortcut badges.
+  const shortcuts = behavior.tileNumberShortcuts
   useEffect(() => {
+    if (!shortcuts) return
     const onKey = (event: KeyboardEvent) => setHints(event.altKey)
     window.addEventListener('keydown', onKey)
     window.addEventListener('keyup', onKey)
@@ -68,7 +74,7 @@ export function TileGrid() {
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('keyup', onKey)
     }
-  }, [])
+  }, [shortcuts])
 
   const write = useCallback(
     (next: TileModel[]) => update((current) => ({ ...current, tiles: { ...current.tiles, items: next } })),
@@ -77,6 +83,7 @@ export function TileGrid() {
 
   // Alt+1..9 opens a tile without touching the mouse.
   useEffect(() => {
+    if (!shortcuts) return
     const onKey = (event: KeyboardEvent) => {
       if (!event.altKey || event.metaKey || event.ctrlKey) return
       const digit = Number(event.key)
@@ -88,7 +95,7 @@ export function TileGrid() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [items, tiles.openIn])
+  }, [items, tiles.openIn, shortcuts])
 
   const onDragEnd = ({ active, over }: DragEndEvent) => {
     if (!over || active.id === over.id) return
@@ -106,6 +113,7 @@ export function TileGrid() {
     <div className="tiles-band">
       <div
         className="tiles"
+        ref={gridRef}
         data-label-vis={tiles.labelVisibility}
         data-favicon-vis={tiles.faviconVisibility}
         data-hover={tiles.hoverEffect}
@@ -139,6 +147,7 @@ export function TileGrid() {
                 index={index}
                 settings={tiles}
                 editing={editing}
+                showHint={shortcuts}
                 onEdit={setEditorId}
                 onRemove={remove}
               />
