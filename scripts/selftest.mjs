@@ -374,6 +374,215 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   }
 }
 
+/* -------------------------------------------------------- calendar feeds */
+
+{
+  const { parseCalendar, calendarName } = await load('features/widgets/calendar/ics.ts')
+  const { normaliseUrl, colorOf } = await load('features/widgets/calendar/api.ts')
+
+  const wrap = (body) => `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nX-WR-CALNAME:Work\r\n${body}\r\nEND:VCALENDAR`
+  const event = (lines) => wrap(`BEGIN:VEVENT\r\n${lines.join('\r\n')}\r\nEND:VEVENT`)
+  // A whole month, so expansion has somewhere to land.
+  const from = new Date(2026, 2, 1).getTime()
+  const to = new Date(2026, 3, 1).getTime()
+  const read = (ics) => parseCalendar(ics, from, to)
+  const at = (y, m, d, hh = 0, mm = 0) => new Date(y, m - 1, d, hh, mm).getTime()
+
+  check('ics: calendar name', calendarName(wrap('')), 'Work')
+
+  {
+    const events = read(
+      event(['UID:a', 'SUMMARY:Standup', 'DTSTART:20260304T090000', 'DTEND:20260304T093000']),
+    )
+    check('ics: one timed event', events.length, 1)
+    check('ics: title', events[0].title, 'Standup')
+    check('ics: local start', events[0].start, at(2026, 3, 4, 9))
+    check('ics: not all day', events[0].allDay, false)
+  }
+
+  // Folded lines are the norm from real producers, not an edge case.
+  check(
+    'ics: folded lines rejoin',
+    read(event(['UID:b', 'SUMMARY:A very long meet', ' ing title', 'DTSTART:20260304T090000']))[0]
+      .title,
+    'A very long meeting title',
+  )
+
+  check(
+    'ics: escapes are unescaped',
+    read(event(['UID:c', 'SUMMARY:Lunch\\, then\; talk', 'DTSTART:20260304T120000']))[0].title,
+    'Lunch, then; talk',
+  )
+
+  {
+    const events = read(event(['UID:d', 'SUMMARY:Off', 'DTSTART;VALUE=DATE:20260310', 'DTEND;VALUE=DATE:20260312']))
+    check('ics: all day flag', events[0].allDay, true)
+    check('ics: all day starts at local midnight', events[0].start, at(2026, 3, 10))
+    check('ics: all day end is exclusive', events[0].end, at(2026, 3, 12))
+  }
+
+  check(
+    'ics: DURATION sets the end',
+    read(event(['UID:e', 'SUMMARY:Call', 'DTSTART:20260304T090000', 'DURATION:PT1H30M']))[0].end,
+    at(2026, 3, 4, 10, 30),
+  )
+
+  // A VALARM carries its own DTSTART/DURATION; reading them would move the event.
+  check(
+    'ics: an alarm does not move the event',
+    read(
+      event([
+        'UID:f',
+        'SUMMARY:Review',
+        'DTSTART:20260304T140000',
+        'DTEND:20260304T150000',
+        'BEGIN:VALARM',
+        'TRIGGER:-PT10M',
+        'ACTION:DISPLAY',
+        'END:VALARM',
+      ]),
+    )[0].start,
+    at(2026, 3, 4, 14),
+  )
+
+  check(
+    'ics: cancelled events are dropped',
+    read(event(['UID:g', 'SUMMARY:Gone', 'DTSTART:20260304T090000', 'STATUS:CANCELLED'])).length,
+    0,
+  )
+
+  {
+    // A weekly meeting started long before the window still fills this month.
+    const weekly = read(
+      event([
+        'UID:h',
+        'SUMMARY:Weekly',
+        'DTSTART:20250106T100000',
+        'DTEND:20250106T110000',
+        'RRULE:FREQ=WEEKLY;BYDAY=MO',
+      ]),
+    )
+    check('ics: weekly recurrence fills the month', weekly.length, 5)
+    truthy(
+      'ics: every weekly occurrence is a Monday',
+      weekly.every((e) => new Date(e.start).getDay() === 1),
+    )
+    truthy(
+      'ics: recurrence keeps the clock time',
+      weekly.every((e) => new Date(e.start).getHours() === 10),
+    )
+  }
+
+  check(
+    'ics: BYDAY makes several days a week',
+    read(
+      event([
+        'UID:i',
+        'SUMMARY:Gym',
+        'DTSTART:20260302T070000',
+        'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR',
+      ]),
+    ).length,
+    13,
+  )
+
+  check(
+    'ics: COUNT stops the series',
+    read(event(['UID:j', 'SUMMARY:Three', 'DTSTART:20260302T090000', 'RRULE:FREQ=DAILY;COUNT=3']))
+      .length,
+    3,
+  )
+
+  check(
+    'ics: UNTIL stops the series',
+    read(
+      event(['UID:k', 'SUMMARY:Til', 'DTSTART:20260302T090000', 'RRULE:FREQ=DAILY;UNTIL=20260305T000000Z']),
+    ).length,
+    3,
+  )
+
+  check(
+    'ics: INTERVAL skips',
+    read(event(['UID:l', 'SUMMARY:Alt', 'DTSTART:20260302T090000', 'RRULE:FREQ=DAILY;INTERVAL=10']))
+      .length,
+    3,
+  )
+
+  check(
+    'ics: EXDATE removes one occurrence',
+    read(
+      event([
+        'UID:m',
+        'SUMMARY:Daily',
+        'DTSTART:20260302T090000',
+        'RRULE:FREQ=DAILY;COUNT=4',
+        'EXDATE:20260303T090000',
+      ]),
+    ).length,
+    3,
+  )
+
+  // A monthly series on the 31st has no February, and must not slide to the 1st.
+  check(
+    'ics: a monthly 31st skips short months',
+    parseCalendar(
+      event(['UID:n', 'SUMMARY:Rent', 'DTSTART:20260131T090000', 'RRULE:FREQ=MONTHLY']),
+      new Date(2026, 1, 1).getTime(),
+      new Date(2026, 2, 1).getTime(),
+    ).length,
+    0,
+  )
+
+  {
+    // The moved instance of a weekly meeting replaces its generated occurrence.
+    const moved = parseCalendar(
+      wrap(
+        [
+          'BEGIN:VEVENT',
+          'UID:o',
+          'SUMMARY:Sync',
+          'DTSTART:20260302T090000',
+          'DTEND:20260302T093000',
+          'RRULE:FREQ=WEEKLY;COUNT=3',
+          'END:VEVENT',
+          'BEGIN:VEVENT',
+          'UID:o',
+          'RECURRENCE-ID:20260309T090000',
+          'SUMMARY:Sync (moved)',
+          'DTSTART:20260309T140000',
+          'DTEND:20260309T143000',
+          'END:VEVENT',
+        ].join('\r\n'),
+      ),
+      from,
+      to,
+    )
+    check('ics: an override does not duplicate its occurrence', moved.length, 3)
+    truthy(
+      'ics: the override replaces that occurrence',
+      moved.some((e) => e.start === at(2026, 3, 9, 14)) &&
+        !moved.some((e) => e.start === at(2026, 3, 9, 9)),
+    )
+  }
+
+  check(
+    'ics: an unsupported rule still shows once',
+    read(event(['UID:p', 'SUMMARY:Odd', 'DTSTART:20260304T090000', 'RRULE:FREQ=SECONDLY'])).length,
+    1,
+  )
+
+  check('ics: junk is not a calendar', read('not a calendar at all').length, 0)
+  check('ics: an empty document is empty', read(''), [])
+
+  check('cal url: webcal becomes https', normaliseUrl('webcal://example.com/a.ics'), 'https://example.com/a.ics')
+  check('cal url: a bare host gets a scheme', normaliseUrl('example.com/a.ics'), 'https://example.com/a.ics')
+  check('cal url: https survives', normaliseUrl('https://example.com/a.ics'), 'https://example.com/a.ics')
+  check('cal url: rubbish is rejected', normaliseUrl('javascript:alert(1)'), '')
+  check('cal url: empty is rejected', normaliseUrl('   '), '')
+  check('cal colour: wraps', colorOf(8), colorOf(0))
+  check('cal colour: a negative index still resolves', colorOf(-1), colorOf(7))
+}
+
 /* ------------------------------------------------------------------ output */
 
 console.log(`${passed} checks passed, ${failures.length} failed`)
