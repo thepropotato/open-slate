@@ -1,0 +1,82 @@
+/* Shared list styling for the browser-data widgets. */
+
+.cont {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 1px;
+}
+
+.cont--empty {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  padding-inline: var(--space);
+}
+
+.cont__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 6px 7px;
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.cont__item:hover {
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+.cont__icon {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--fg-subtle);
+  font-size: 11px;
+}
+
+.cont__icon img {
+  border-radius: 3px;
+}
+
+.cont__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1px;
+}
+
+.cont__title {
+  font-size: var(--text-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cont__sub {
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cont__action {
+  margin-left: auto;
+  flex: none;
+  color: var(--fg-subtle);
+  font-size: 10px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.cont__item:hover .cont__action {
+  opacity: 1;
+}

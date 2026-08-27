@@ -1,0 +1,26 @@
+.notes {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  color: var(--fg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--fg-subtle) transparent;
+}
+
+.notes::placeholder {
+  color: var(--fg-subtle);
+}
+
+.notes[data-font='mono'] {
+  font-family: var(--font-mono);
+}
+
+.notes[data-font='serif'] {
+  font-family: ui-serif, Georgia, serif;
+}

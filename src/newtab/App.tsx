@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { Icon } from '@/core/icons'
 import { BackgroundLayer } from '@/features/background/BackgroundLayer'
+import { SearchBar } from '@/features/search/SearchBar'
 import { SettingsOverlay } from '@/features/settings-ui/SettingsOverlay'
 import { TileGrid } from '@/features/tiles/TileGrid'
 import { WidgetCanvas } from '@/features/widgets'
@@ -66,5 +67,6 @@ export function App() {
 function Band({ name }: { name: 'search' | 'tiles' | 'widgets' }) {
   if (name === 'tiles') return <TileGrid />
   if (name === 'widgets') return <WidgetCanvas />
-  return <section className={`band band--${name}`} data-band={name} />
+  if (name === 'search') return <SearchBar />
+  return null
 }

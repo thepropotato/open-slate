@@ -1,0 +1,27 @@
+.greeting {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  min-height: 0;
+  container-type: size;
+}
+
+.greeting__line {
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.greeting[data-size='s'] .greeting__line {
+  font-size: clamp(13px, min(30cqh, 5cqw), 26px);
+}
+
+.greeting[data-size='m'] .greeting__line {
+  font-size: clamp(16px, min(46cqh, 8cqw), 44px);
+}
+
+.greeting[data-size='l'] .greeting__line {
+  font-size: clamp(20px, min(64cqh, 11cqw), 76px);
+}

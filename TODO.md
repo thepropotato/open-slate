@@ -45,13 +45,13 @@ requested per widget.
 
 ## Phase 4 — Core widgets
 - [x] Clock: 6+ styles (digital, flip, minimal, binary, text, analog variants), 12/24h, seconds, timezone
-- [ ] Search bar: engine switcher, bang shortcuts (`!yt`, `!gh`), inline calculator
-- [ ] Continue: recently closed tabs + last session (`chrome.sessions`)
-- [ ] Weather: Open-Meteo, no API key, manual or geolocated city
-- [ ] Notes scratchpad (autosave)
-- [ ] Todo list
-- [ ] Date/calendar month view
-- [ ] Greeting line (name, time-aware)
+- [x] Search bar: engine switcher, bang shortcuts (`!yt`, `!gh`), inline calculator
+- [x] Continue: recently closed tabs + last session (`chrome.sessions`)
+- [x] Weather: Open-Meteo, no API key, manual or geolocated city
+- [x] Notes scratchpad (autosave)
+- [x] Todo list
+- [x] Date/calendar month view
+- [x] Greeting line (name, time-aware)
 
 ## Phase 5 — Browser-native widgets
 - [ ] Top sites
@@ -106,6 +106,11 @@ requested per widget.
 - react-grid-layout 2.x dropped `WidthProvider` and moved drag/resize into config
   objects; `@types/react-grid-layout` is v1-only and was removed, since v2 ships
   its own types. The canvas measures width with the library's `useContainerWidth`.
+- The search box has no remote suggestion service. Suggestions come from the user's
+  own tabs, tiles, bookmarks and history, which is both more useful on a browser
+  dashboard and avoids sending every keystroke to a third party.
+- The calculator is a hand-written recursive-descent parser. MV3 forbids `eval`
+  and `new Function` outright, and the grammar is then exactly what is documented.
 - Clock faces are hand-built. The maintained analog-clock packages each give one
   fixed look, and the requirement was a range of faces all reading from the theme
   tokens. Faces size themselves in container query units, so resizing scales them.

@@ -1,0 +1,177 @@
+.weather {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  height: 100%;
+  min-height: 0;
+  container-type: inline-size;
+}
+
+.weather--empty,
+.weather--setup {
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  text-align: center;
+}
+
+.weather--setup {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.weather__now {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space);
+}
+
+.weather__icon {
+  font-size: clamp(22px, 9cqi, 44px);
+  color: var(--accent);
+}
+
+.weather__reading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.weather__temp {
+  font-size: clamp(24px, 11cqi, 54px);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.weather__unit {
+  font-size: 0.5em;
+  font-weight: 500;
+  color: var(--fg-muted);
+  padding-left: 0.15em;
+  vertical-align: super;
+}
+
+.weather__label {
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+
+.weather__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
+.weather__place {
+  font-weight: 600;
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 14ch;
+}
+
+/* --- forecast strip --- */
+
+.weather__strip {
+  display: flex;
+  gap: var(--space-xs);
+  margin-top: auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.weather__strip > li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 1 0 auto;
+  min-width: 40px;
+  padding: 5px 4px;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 6%);
+  font-size: var(--text-xs);
+}
+
+.weather__strip svg {
+  color: var(--accent);
+}
+
+.weather__striptime {
+  color: var(--fg-subtle);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.weather__striptemp {
+  font-variant-numeric: tabular-nums;
+  font-weight: 550;
+}
+
+.weather__stripmin {
+  color: var(--fg-subtle);
+  font-weight: 400;
+  padding-left: 3px;
+}
+
+/* --- setup --- */
+
+.weather__setuprow {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.weather__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: #ffb08a;
+  text-align: left;
+}
+
+.weather__places {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.weather__places button {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.weather__places button:hover {
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+.weather__placemeta {
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  margin-left: auto;
+}
+
+/* Hide the secondary column when the widget is narrow. */
+@container (width < 260px) {
+  .weather__meta {
+    display: none;
+  }
+}

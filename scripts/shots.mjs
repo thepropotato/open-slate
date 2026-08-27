@@ -34,6 +34,52 @@ const shot = async (name, fn, { colorScheme = 'dark', ...size } = {}) => {
 
 const settle = (page) => page.waitForTimeout(900)
 
+/**
+ * Seeds the settings blob before the page runs, so a screenshot can show any
+ * configuration without clicking through the UI to build it.
+ */
+const seed = (page, settings) =>
+  page.addInitScript(
+    ([value]) => localStorage.setItem('newtab:local:settings', JSON.stringify(value)),
+    [settings],
+  )
+
+const widget = (id, type, x, y, w, h, config = {}) => ({
+  instance: { id, type, config, surface: null },
+  layout: { i: id, x, y, w, h },
+})
+
+const dashboard = [
+  widget('g', 'greeting', 0, 0, 10, 2),
+  widget('c', 'clock', 16, 0, 8, 4, { style: 'analog-classic', showSeconds: true, showDate: false }),
+  widget('w', 'weather', 0, 2, 10, 4),
+  widget('cal', 'calendar', 10, 0, 6, 6),
+  widget('n', 'notes', 16, 4, 8, 6, { text: 'Ship the wallpaper engine.\nThen the palette.' }),
+  widget('t', 'todo', 0, 6, 10, 4, {
+    items: [
+      { id: '1', text: 'Review the pull request', done: false },
+      { id: '2', text: 'Book the flights', done: true },
+      { id: '3', text: 'Reply to Anya', done: false },
+    ],
+  }),
+  widget('k', 'continue', 10, 6, 6, 4),
+]
+
+const dashboardSettings = {
+  version: 1,
+  widgets: {
+    enabled: true,
+    locked: true,
+    instances: dashboard.map((w) => w.instance),
+    layouts: {
+      lg: dashboard.map((w) => w.layout),
+      md: dashboard.map((w) => w.layout),
+      sm: dashboard.map((w) => w.layout),
+    },
+  },
+  layout: { order: ['widgets', 'search', 'tiles'], maxWidth: 1320 },
+}
+
 for (const scheme of ['dark', 'light']) {
   await shot(
     `newtab-${scheme}`,
@@ -62,6 +108,34 @@ await shot('tile-editor', async (page) => {
     await page.locator('.ctl-input').first().fill('netflix.com')
     await page.waitForTimeout(700)
   }
+})
+
+await shot('dashboard', async (page) => {
+  await seed(page, dashboardSettings)
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+}, { width: 1600, height: 1100 })
+
+await shot('widget-config', async (page) => {
+  await seed(page, { ...dashboardSettings, widgets: { ...dashboardSettings.widgets, locked: false } })
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+  await page.locator('.wframe__tool').first().click()
+  await page.waitForTimeout(500)
+}, { width: 1600, height: 1100 })
+
+await shot('search-typing', async (page) => {
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+  await page.locator('.search__input').fill('12 * (3 + 4)')
+  await page.waitForTimeout(500)
+})
+
+await shot('search-engines', async (page) => {
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+  await page.locator('.search__enginebtn').click()
+  await page.waitForTimeout(400)
 })
 
 await shot('widgets-editing', async (page) => {
