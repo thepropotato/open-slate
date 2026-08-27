@@ -136,6 +136,17 @@ function Plate({
   onActivate: () => void
   children: ReactNode
 }) {
+  /*
+   * Arrange mode takes the plate out of the page's interactive surface
+   * altogether, rather than only suppressing its click.
+   *
+   * Dropping the handler alone left a control that still took focus, still lit
+   * up under the pointer and still fired on Enter — a tile that looked and felt
+   * clickable while doing nothing, which reads as a broken tile rather than a
+   * deliberate mode. `data-inert` drives the styling; `tabIndex` and the
+   * missing href take it out of the tab order and out of the browser's own
+   * link handling.
+   */
   if (isFolder) {
     return (
       <button
@@ -143,6 +154,10 @@ function Plate({
         className="tile__plate"
         style={style}
         title={title}
+        data-inert={inert}
+        tabIndex={inert ? -1 : undefined}
+        aria-hidden={inert || undefined}
+        onMouseDown={inert ? (event) => event.preventDefault() : undefined}
         onClick={inert ? undefined : onActivate}
       >
         {children}
@@ -157,6 +172,11 @@ function Plate({
       href={inert ? undefined : url}
       style={style}
       title={title}
+      data-inert={inert}
+      tabIndex={inert ? -1 : undefined}
+      aria-hidden={inert || undefined}
+      // Keeps the click from focusing a plate that no longer does anything.
+      onMouseDown={inert ? (event) => event.preventDefault() : undefined}
       onClick={(event) => {
         if (inert) {
           event.preventDefault()

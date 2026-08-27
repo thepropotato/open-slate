@@ -151,6 +151,26 @@
   display: none;
 }
 
+/*
+ * An inert plate is not a control: no pointer cursor, and none of the hover
+ * effects below. In Arrange mode the tile answers to dragging, and a plate that
+ * still lifted or glowed under the pointer would go on promising a click that
+ * no longer happens.
+ */
+.tile__plate[data-inert='true'] {
+  cursor: inherit;
+}
+
+/*
+ * Specific enough to beat every `.tiles[data-hover='…'] .tile:hover .tile__plate`
+ * rule below, which is why the hover attribute is named here rather than
+ * relying on source order.
+ */
+.tiles[data-hover] .tile:hover .tile__plate[data-inert='true'] {
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
 /* --- hover effects --- */
 
 .tiles[data-hover='lift'] .tile:hover .tile__plate {
