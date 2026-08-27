@@ -116,6 +116,7 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
   if (setup) {
     return (
       <CalendarSetup
+        existing={config.sources}
         onAdd={(source) => {
           setConfig({ sources: [...config.sources, source] })
           setSetup(false)
@@ -186,6 +187,15 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
           {new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(view)}
         </button>
 
+        {/*
+         * Connecting stays offered after the first calendar. Subscribing to one
+         * is rarely subscribing to all of them — work, then a shared family
+         * calendar — and hiding `+` the moment one existed left the second
+         * findable only through the widget's options dialog.
+         *
+         * Refresh joins it rather than replacing it, so neither action has to
+         * wait for the other to go away.
+         */}
         {sources.length > 0 ? (
           <button
             type="button"
@@ -199,18 +209,17 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
               spin={calendars === null && revision > 0}
             />
           </button>
-        ) : (
-          /* Always a way to connect a calendar, without the widget asking. */
-          <button
-            type="button"
-            className="cal__aux"
-            onClick={() => setSetup(true)}
-            aria-label="Connect a calendar"
-            title="Connect a calendar"
-          >
-            <Icon name="add" />
-          </button>
-        )}
+        ) : null}
+
+        <button
+          type="button"
+          className="cal__add"
+          onClick={() => setSetup(true)}
+          aria-label="Connect a calendar"
+          title="Connect a calendar"
+        >
+          <Icon name="add" />
+        </button>
 
         <button
           type="button"
@@ -538,9 +547,12 @@ function GrantNotice({
  * without one.
  */
 function CalendarSetup({
+  existing,
   onAdd,
   onCancel,
 }: {
+  /** Already connected, to colour the new one apart and refuse a repeat. */
+  existing: CalendarSource[]
   onAdd: (source: CalendarSource) => void
   onCancel: () => void
 }) {
@@ -552,6 +564,10 @@ function CalendarSetup({
     const url = normaliseUrl(draft)
     if (!url) {
       setError('That does not look like a calendar address.')
+      return
+    }
+    if (existing.some((source) => source.url === url)) {
+      setError('That calendar is already connected.')
       return
     }
     setBusy(true)
@@ -566,12 +582,18 @@ function CalendarSetup({
       setError('Could not read a calendar there. Check the address.')
       return
     }
-    onAdd({ url, name: probed.name, color: 0 })
+    /*
+     * The next colour along, so a second calendar is told apart from the first
+     * at a glance. `colorOf` wraps, so this stays in range however many are on.
+     */
+    onAdd({ url, name: probed.name, color: existing.length })
   }
 
   return (
     <div className="cal cal--setup wframe__live">
-      <p className="cal__setuplead">Connect a calendar</p>
+      <p className="cal__setuplead">
+        {existing.length > 0 ? 'Connect another calendar' : 'Connect a calendar'}
+      </p>
       <ol className="cal__steps">
         <li>
           Open{' '}

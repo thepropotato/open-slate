@@ -47,7 +47,17 @@
 }
 
 /* Refresh, or connect-a-calendar: the column before the forward arrow. */
+/*
+ * The two extra controls take a side each rather than stacking up beside the
+ * next-month chevron: refresh inboard of `‹` on the left, connect inboard of
+ * `›` on the right. Three buttons crowded on one side read as a toolbar that
+ * had run out of room, with the month title pushed off centre between them.
+ */
 .cal__aux {
+  grid-column: 2;
+}
+
+.cal__add {
   grid-column: 6;
 }
 
