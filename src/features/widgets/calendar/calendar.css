@@ -201,20 +201,25 @@
 .cal__cell {
   /* Square comes from the grid track above, which knows the widget's height. */
   position: relative;
+  --cal-disc: min(72%, 2.2em);
+  --cal-pad: 22%;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Lifts the disc so the dot band below it is not overlapped. */
-  padding-bottom: 14%;
   font-size: clamp(9px, 3.5cqi, 15px);
   font-variant-numeric: tabular-nums;
   font-weight: 400;
   color: var(--fg);
   min-height: 0;
   min-width: 0;
-  padding: 0;
   background: none;
   border: none;
+  /*
+   * Lifts the disc just clear of the dot band. Kept small and in step with
+   * `.cal__dots` below: too much and the dots stop reading as belonging to the
+   * number above them and start looking marooned between the two rows.
+   */
+  padding: 0 0 var(--cal-pad);
 }
 
 /*
@@ -229,7 +234,8 @@
 .cal__num {
   display: grid;
   place-items: center;
-  width: min(78%, 2.35em);
+  /* Shared with `.cal__dots`, which sits directly beneath it. */
+  width: var(--cal-disc);
   aspect-ratio: 1;
   border-radius: var(--radius-pill);
   line-height: 1;
@@ -298,13 +304,28 @@
  * the square tracks are already exact, and a row of dots that took part in
  * layout would push the last week past the bottom of a short card.
  */
+/*
+ * Tucked directly under the disc rather than pinned to the bottom of the cell.
+ *
+ * The cell is square and the disc is centred in the space above the padding, so
+ * measuring the dots from the cell's floor left them drifting halfway to the
+ * next row. Anchoring to the disc's own centre instead keeps the gap constant.
+ *
+ * The gap is in `em`, not pixels: it has to scale with the number it belongs
+ * to. A fixed 3px read as touching the digits on a large widget, and a fixed
+ * larger value would have swamped a small one.
+ */
 .cal__dots {
   position: absolute;
-  bottom: 5%;
+  /*
+   * The disc is centred in the cell *minus* the bottom padding, so its centre
+   * sits at half of what is left — not at the cell's own midpoint.
+   */
+  top: calc((100% - var(--cal-pad)) / 2);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, calc(var(--cal-disc) / 2 + 0.55em));
   display: flex;
-  gap: 2px;
+  gap: 3px;
   align-items: center;
   height: 4px;
 }
@@ -314,6 +335,15 @@
   height: 4px;
   border-radius: 50%;
   flex: none;
+}
+
+/*
+ * A dot on a leading or trailing day belongs to a month the user is not
+ * looking at. The number is already faded to 45%; a full-strength dot beneath
+ * it drew the eye straight to the row that matters least.
+ */
+.cal__cell[data-outside='true'] .cal__dot {
+  opacity: 0.55;
 }
 
 @container cal (max-width: 220px) {
