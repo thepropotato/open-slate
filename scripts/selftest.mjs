@@ -87,16 +87,16 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 }
 
 {
-  const { defaultSettings, Settings } = await load('core/settings/schema.ts')
+  const { SETTINGS_VERSION, defaultSettings, Settings } = await load('core/settings/schema.ts')
   const { migrate } = await load('core/settings/migrations.ts')
 
   const defaults = defaultSettings()
-  check('settings: version', defaults.version, 1)
+  check('settings: version', defaults.version, SETTINGS_VERSION)
   truthy('settings: round-trips through JSON', Settings.safeParse(JSON.parse(JSON.stringify(defaults))).success)
 
   check('migrate: empty gives defaults', migrate(undefined).appearance.mode, 'auto')
   check('migrate: null gives defaults', migrate(null).tiles.labelVisibility, 'hover')
-  check('migrate: unknown fields are dropped', migrate({ nonsense: true }).version, 1)
+  check('migrate: unknown fields are dropped', migrate({ nonsense: true }).version, SETTINGS_VERSION)
   check(
     'migrate: a partial section is filled in',
     migrate({ appearance: { radius: 0 } }).appearance.radius,
@@ -216,6 +216,162 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('brand: host of a bare string', hostOf('youtube.com'), '')
   check('brand: monogram from a title', monogram('https://news.ycombinator.com', 'Hacker News'), 'HN')
   check('brand: monogram from a host', monogram('https://github.com'), 'GI')
+}
+
+/* ----------------------------------------------------- standard widget sizes */
+
+{
+  const { WIDGET_SIZES, SIZE_ORDER, snapSize, sizesFitting, orderSizes, nameOfSize } =
+    await load('core/widgets/sizes.ts')
+  const all = SIZE_ORDER
+
+  check('size: an exact footprint stays put', snapSize({ w: 2, h: 2 }, all), 'large')
+  check('size: a near miss rounds to the nearest', snapSize({ w: 3, h: 2 }, all), 'large')
+  check('size: a wide drag reaches the wide size', snapSize({ w: 4, h: 1 }, all), 'wide')
+  check('size: a tie goes to the smaller footprint', snapSize({ w: 1, h: 2 }, all), 'small')
+  check('size: a huge drag is capped at the largest', snapSize({ w: 9, h: 9 }, all), 'xlarge')
+  check(
+    'size: undeclared sizes are never chosen',
+    snapSize({ w: 1, h: 1 }, ['medium', 'large']),
+    'medium',
+  )
+  check(
+    'size: a narrow canvas rules out wide footprints',
+    snapSize({ w: 4, h: 2 }, all, 2),
+    'large',
+  )
+  check('size: nothing fits, so the narrowest wins', sizesFitting(['wide', 'xlarge'], 1), ['wide'])
+  check('size: declared order does not matter', orderSizes(['xlarge', 'small']), ['small', 'xlarge'])
+  check('size: a stored footprint is named', nameOfSize({ w: 4, h: 2 }, all), 'xlarge')
+  check('size: every name has a footprint', Object.keys(WIDGET_SIZES).length, SIZE_ORDER.length)
+}
+
+/* ------------------------------------------------- widget canvas packing */
+
+{
+  const { normalizeLayout, nudgeDown, hasOverlap, colsFor } = await load('core/widgets/layout.ts')
+  const { SIZE_ORDER } = await load('core/widgets/sizes.ts')
+  const anySize = () => SIZE_ORDER
+  const box = (i, x, y, w, h) => ({ i, x, y, w, h })
+  const at = (items, i) => items.find((item) => item.i === i)
+
+  // The bug this module exists for: a layout stored against six columns is
+  // clamped into two, which used to pile every widget onto the same cell.
+  {
+    const wide = [box('a', 0, 0, 2, 1), box('b', 2, 0, 2, 1), box('c', 4, 0, 2, 1)]
+    const narrow = normalizeLayout(wide, 2, anySize, 'vertical')
+    check('pack: a clamped layout does not overlap', hasOverlap(narrow), false)
+    check('pack: clamping stacks in reading order', narrow.map((item) => item.y), [0, 1, 2])
+  }
+
+  // Growing a widget from the config dialog has to move its neighbours.
+  {
+    const grown = [box('a', 0, 0, 2, 2), box('b', 0, 1, 2, 1), box('c', 2, 0, 2, 1)]
+    const packed = normalizeLayout(grown, 6, anySize, 'vertical')
+    check('pack: a grown widget pushes the one below it', hasOverlap(packed), false)
+    check('pack: the grown widget keeps its place', at(packed, 'a'), box('a', 0, 0, 2, 2))
+    check('pack: the neighbour beside it does not move', at(packed, 'c'), box('c', 2, 0, 2, 1))
+    check('pack: the one underneath drops clear', at(packed, 'b').y, 2)
+  }
+
+  // Free placement: positions are kept, overlaps are not.
+  {
+    const stacked = [box('a', 1, 1, 2, 1), box('b', 1, 1, 2, 1)]
+    const free = nudgeDown(stacked, 6)
+    check('pack: free mode keeps the first where it was', at(free, 'a'), box('a', 1, 1, 2, 1))
+    check('pack: free mode does not pull it to the top', at(free, 'a').y, 1)
+    check('pack: free mode drops the second clear', at(free, 'b'), box('b', 1, 2, 2, 1))
+  }
+
+  check(
+    'pack: free mode clamps to the column count',
+    nudgeDown([box('a', 5, 0, 2, 1)], 4),
+    [box('a', 2, 0, 2, 1)],
+  )
+
+  // Left gravity has to wrap rather than run off the right-hand edge.
+  {
+    const row = [box('a', 0, 0, 4, 1), box('b', 0, 0, 4, 1), box('c', 0, 0, 4, 1)]
+    const packed = normalizeLayout(row, 6, anySize, 'horizontal')
+    check('pack: left gravity does not overlap', hasOverlap(packed), false)
+    check('pack: left gravity wraps at the edge', at(packed, 'b'), box('b', 0, 1, 4, 1))
+  }
+
+  check('pack: order is preserved for react keys', normalizeLayout(
+    [box('z', 0, 4, 2, 1), box('a', 0, 0, 2, 1)], 6, anySize, 'vertical',
+  ).map((item) => item.i), ['z', 'a'])
+
+  check('pack: a pinned widget is never moved', nudgeDown(
+    [{ ...box('a', 0, 0, 2, 2), static: true }, box('b', 0, 0, 2, 1)], 6,
+  ).map((item) => item.y), [0, 2])
+
+  check('pack: an empty layout is fine', normalizeLayout([], 6, anySize, 'vertical'), [])
+  check('pack: columns scale down per breakpoint', colsFor(6), { lg: 6, md: 4, sm: 2 })
+}
+
+/* ------------------------------------------------- widget layout migration */
+
+{
+  const { migrate } = await load('core/settings/migrations.ts')
+
+  const stored = {
+    version: 1,
+    widgets: {
+      columns: 24,
+      rowHeight: 56,
+      margin: 14,
+      instances: [{ id: 'a', type: 'clock' }, { id: 'b', type: 'notes' }],
+      layouts: {
+        lg: [
+          { i: 'a', x: 8, y: 0, w: 8, h: 3 },
+          { i: 'b', x: 0, y: 3, w: 6, h: 5 },
+        ],
+      },
+    },
+  }
+  const after = migrate(stored).widgets
+
+  check('migrate: version is current', migrate(stored).version >= 2, true)
+  check('migrate: columns become widgets across', after.columns, 6)
+  check('migrate: row height is gone', 'rowHeight' in after, false)
+  check('migrate: a wide short widget becomes medium', after.layouts.lg[0], {
+    i: 'a',
+    x: 2,
+    y: 0,
+    w: 2,
+    h: 1,
+  })
+  // The 2 -> 3 step packs whatever the 1 -> 2 step produced, so the gap the
+  // rescale left under the clock is closed on the way through.
+  check('migrate: a tall widget becomes large', after.layouts.lg[1], {
+    i: 'b',
+    x: 0,
+    y: 0,
+    w: 2,
+    h: 2,
+  })
+  truthy('migrate: junk still parses', Boolean(migrate({ version: 1, widgets: { layouts: 7 } })))
+
+  // The whole point of the 2 -> 3 step: layouts nothing had ever checked.
+  {
+    const { hasOverlap } = await load('core/widgets/layout.ts')
+    const broken = migrate({
+      version: 2,
+      widgets: {
+        columns: 6,
+        instances: [{ id: 'a', type: 'clock' }, { id: 'b', type: 'notes' }],
+        layouts: {
+          lg: [{ i: 'a', x: 0, y: 0, w: 2, h: 2 }, { i: 'b', x: 2, y: 0, w: 2, h: 1 }],
+          sm: [{ i: 'a', x: 0, y: 0, w: 2, h: 2 }, { i: 'b', x: 0, y: 0, w: 2, h: 1 }],
+        },
+      },
+    }).widgets.layouts
+    check('migrate: a stacked narrow layout is separated', hasOverlap(broken.sm), false)
+    check('migrate: a layout that was already fine is left alone', broken.lg, [
+      { i: 'a', x: 0, y: 0, w: 2, h: 2 },
+      { i: 'b', x: 2, y: 0, w: 2, h: 1 },
+    ])
+  }
 }
 
 /* ------------------------------------------------------------------ output */

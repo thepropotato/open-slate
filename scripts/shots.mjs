@@ -50,24 +50,26 @@ const widget = (id, type, x, y, w, h, config = {}) => ({
   layout: { i: id, x, y, w, h },
 })
 
+// Positions are in the standard grid: one cell is a small widget, and every
+// footprint below is one of the sizes the picker offers.
 const dashboard = [
-  widget('g', 'greeting', 0, 0, 10, 2),
-  widget('c', 'clock', 16, 0, 8, 4, { style: 'analog-classic', showSeconds: true, showDate: false }),
-  widget('w', 'weather', 0, 2, 10, 4),
-  widget('cal', 'calendar', 10, 0, 6, 6),
-  widget('n', 'notes', 16, 4, 8, 6, { text: 'Ship the wallpaper engine.\nThen the palette.' }),
-  widget('t', 'todo', 0, 6, 10, 4, {
+  widget('g', 'greeting', 0, 0, 4, 1),
+  widget('c', 'clock', 4, 0, 2, 1, { style: 'analog-classic', showSeconds: true, showDate: false }),
+  widget('w', 'weather', 0, 1, 2, 2),
+  widget('cal', 'calendar', 2, 1, 2, 2),
+  widget('n', 'notes', 4, 1, 2, 2, { text: 'Ship the wallpaper engine.\nThen the palette.' }),
+  widget('t', 'todo', 0, 3, 2, 2, {
     items: [
       { id: '1', text: 'Review the pull request', done: false },
       { id: '2', text: 'Book the flights', done: true },
       { id: '3', text: 'Reply to Anya', done: false },
     ],
   }),
-  widget('k', 'continue', 10, 6, 6, 4),
+  widget('k', 'continue', 2, 3, 4, 2),
 ]
 
 const dashboardSettings = {
-  version: 1,
+  version: 3,
   widgets: {
     enabled: true,
     locked: true,
@@ -78,7 +80,7 @@ const dashboardSettings = {
       sm: dashboard.map((w) => w.layout),
     },
   },
-  layout: { order: ['widgets', 'search', 'tiles'], maxWidth: 1320 },
+  layout: { order: ['search', 'widgets', 'tiles'], maxWidth: 1320 },
 }
 
 for (const scheme of ['dark', 'light']) {
@@ -130,17 +132,17 @@ await shot('dashboard', async (page) => {
 // Browser-data widgets: outside the extension their queries return nothing, so
 // this shot verifies the header, filter and empty states.
 const browserDash = [
-  widget('ts', 'topsites', 0, 0, 8, 5),
-  widget('tb', 'tabs', 8, 0, 8, 7),
-  widget('bm', 'bookmarks', 16, 0, 8, 7),
-  widget('hi', 'history', 0, 5, 8, 6),
-  widget('dl', 'downloads', 8, 7, 8, 4),
-  widget('rc', 'continue', 16, 7, 8, 4),
+  widget('ts', 'topsites', 0, 0, 2, 2),
+  widget('tb', 'tabs', 2, 0, 2, 2),
+  widget('bm', 'bookmarks', 4, 0, 2, 2),
+  widget('hi', 'history', 0, 2, 2, 2),
+  widget('dl', 'downloads', 2, 2, 2, 2),
+  widget('rc', 'continue', 4, 2, 2, 2),
 ]
 
 await shot('dashboard-browser', async (page) => {
   await seed(page, {
-    version: 1,
+    version: 3,
     widgets: {
       enabled: true,
       locked: true,
@@ -210,6 +212,34 @@ await shot('widget-picker', async (page) => {
   if (await add.count()) await add.click()
   await page.waitForTimeout(500)
 })
+
+// Arranging: the in-widget bars and the cell grid the widgets snap to.
+await shot('widgets-arranging', async (page) => {
+  await seed(page, { ...dashboardSettings, widgets: { ...dashboardSettings.widgets, locked: false } })
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+}, { width: 1600, height: 1200 })
+
+// One scrolling page with the whole dashboard on it, for comparison with tabs.
+await shot('view-scroll', async (page) => {
+  await seed(page, {
+    ...dashboardSettings,
+    layout: { ...dashboardSettings.layout, viewMode: 'scroll' },
+  })
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+}, { height: 1200 })
+
+for (const pane of ['widgets', 'tiles']) {
+  await shot(`view-tabs-${pane}`, async (page) => {
+    await seed(page, {
+      ...dashboardSettings,
+      layout: { ...dashboardSettings.layout, viewMode: 'tabs', defaultPane: pane },
+    })
+    await page.goto(`${base}/newtab.html`)
+    await settle(page)
+  })
+}
 
 // One shot per settings section, driven through the real navigation.
 await shot('settings', async (page) => {

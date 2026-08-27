@@ -29,17 +29,19 @@ const widget = (id, type, x, y, w, h, config = {}) => ({
   layout: { i: id, x, y, w, h },
 })
 
-// Sized to leave room for the search box and a full row of tiles at 1280x800.
+// Standard sizes on an 8-across grid, which leaves room for the search box and
+// a full row of tiles at 1280x800.
 const showcase = [
-  widget('greet', 'greeting', 0, 0, 9, 2, { tone: 'greeting', size: 'm' }),
-  widget('clock', 'clock', 17, 0, 7, 5, { style: 'analog-classic', showSeconds: true, showDate: false }),
-  widget('cal', 'calendar', 9, 0, 8, 5),
-  widget('todo', 'todo', 0, 2, 9, 3, {
+  widget('greet', 'greeting', 0, 0, 4, 1, { tone: 'greeting', size: 'm' }),
+  widget('clock', 'clock', 4, 0, 2, 1, { style: 'analog-classic', showSeconds: true, showDate: false }),
+  widget('cal', 'calendar', 6, 0, 2, 2),
+  widget('todo', 'todo', 0, 1, 2, 1, {
     items: [
       { id: '1', text: 'Draft the launch note', done: false },
       { id: '2', text: 'Book the flights', done: true },
     ],
   }),
+  widget('weather', 'weather', 2, 1, 2, 1),
 ]
 
 const scenes = [
@@ -50,16 +52,17 @@ const scenes = [
   {
     name: '2-dashboard',
     settings: {
+      version: 3,
       widgets: {
         enabled: true,
         locked: true,
-        rowHeight: 40,
+        columns: 8,
         margin: 12,
         instances: showcase.map((w) => w.instance),
         layouts: { lg: showcase.map((w) => w.layout), md: showcase.map((w) => w.layout) },
       },
       tiles: { width: 150, aspect: 1.7, gap: 14, labelVisibility: 'always' },
-      layout: { order: ['widgets', 'search', 'tiles'], maxWidth: 1160, paddingY: 24, gap: 20 },
+      layout: { order: ['search', 'widgets', 'tiles'], maxWidth: 1160, paddingY: 24, gap: 20 },
     },
   },
   {
