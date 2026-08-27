@@ -64,6 +64,22 @@ await shot('tile-editor', async (page) => {
   }
 })
 
+await shot('widgets-editing', async (page) => {
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+  const arrange = page.locator('.canvas__btn', { hasText: 'Arrange' })
+  if (await arrange.count()) await arrange.click()
+  await page.waitForTimeout(400)
+})
+
+await shot('widget-picker', async (page) => {
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+  const add = page.locator('.canvas__btn', { hasText: 'Widget' })
+  if (await add.count()) await add.click()
+  await page.waitForTimeout(500)
+})
+
 // One shot per settings section, driven through the real navigation.
 await shot('settings', async (page) => {
   await page.goto(`${base}/options.html`)

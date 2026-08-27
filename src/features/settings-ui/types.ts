@@ -47,6 +47,11 @@ export interface Field {
   control: FieldControl
   /** Hides the field when the predicate is false — e.g. video-only options. */
   when?: (settings: Settings) => boolean
+  /**
+   * Same, but for a field rendered against a local object rather than global
+   * settings — a widget's own config. Both predicates must pass.
+   */
+  whenLocal?: (values: Record<string, unknown>) => boolean
   /** Extra words matched by the settings search box. */
   keywords?: string
 }

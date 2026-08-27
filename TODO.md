@@ -38,13 +38,13 @@ requested per widget.
 - [x] Slideshow rotation via `chrome.alarms`
 
 ## Phase 3 — Widget framework
-- [ ] Widget registry: manifest (id, icon, sizes, component, settings panel, defaults)
-- [ ] Grid canvas: drag, resize, snap, per-breakpoint layouts, lock mode
-- [ ] Per-widget config panel + global widget chrome (glass/solid/none, radius, opacity)
-- [ ] Optional-permission gate on widget enable
+- [x] Widget registry: manifest (id, icon, sizes, component, settings panel, defaults)
+- [x] Grid canvas: drag, resize, snap, per-breakpoint layouts, lock mode
+- [x] Per-widget config panel + global widget chrome (glass/solid/none, radius, opacity)
+- [x] Optional-permission gate on widget enable
 
 ## Phase 4 — Core widgets
-- [ ] Clock: 6+ styles (digital, flip, minimal, binary, text, analog variants), 12/24h, seconds, timezone
+- [x] Clock: 6+ styles (digital, flip, minimal, binary, text, analog variants), 12/24h, seconds, timezone
 - [ ] Search bar: engine switcher, bang shortcuts (`!yt`, `!gh`), inline calculator
 - [ ] Continue: recently closed tabs + last session (`chrome.sessions`)
 - [ ] Weather: Open-Meteo, no API key, manual or geolocated city
@@ -103,3 +103,9 @@ requested per widget.
   for the wallpaper the user explicitly chose, never for the many favicon URLs.
 - `npm run shots` captures every screen with Playwright, in both colour schemes.
   Most of this UI only exists on hover or behind a settings tab.
+- react-grid-layout 2.x dropped `WidthProvider` and moved drag/resize into config
+  objects; `@types/react-grid-layout` is v1-only and was removed, since v2 ships
+  its own types. The canvas measures width with the library's `useContainerWidth`.
+- Clock faces are hand-built. The maintained analog-clock packages each give one
+  fixed look, and the requirement was a range of faces all reading from the theme
+  tokens. Faces size themselves in container query units, so resizing scales them.

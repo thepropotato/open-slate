@@ -3,6 +3,7 @@ import { appearanceSection } from './appearance'
 import { backgroundSection } from './background'
 import { layoutSection } from './layout'
 import { tilesSection } from './tiles'
+import { widgetsSection } from './widgets'
 
 /**
  * The settings sections, in sidebar order. Each feature contributes its own
@@ -13,4 +14,5 @@ export const sections: Section[] = [
   backgroundSection,
   layoutSection,
   tilesSection,
+  widgetsSection,
 ]

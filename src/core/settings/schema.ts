@@ -177,11 +177,21 @@ export const WidgetInstance = z.object({
 })
 export type WidgetInstance = z.infer<typeof WidgetInstance>
 
+/**
+ * A blank dashboard is a bad first impression, so a new profile starts with one
+ * clock. It is an ordinary instance: it can be moved, reconfigured or deleted.
+ */
+const DEFAULT_CLOCK_ID = 'clock-default'
+
 export const Widgets = z.object({
   enabled: z.boolean().default(true),
-  instances: z.array(WidgetInstance).default([]),
+  instances: z.array(WidgetInstance).prefault([{ id: DEFAULT_CLOCK_ID, type: 'clock' }]),
   /** Layouts keyed by breakpoint name (`lg`, `md`, `sm`). */
-  layouts: z.record(z.string(), z.array(GridItem)).prefault({}),
+  layouts: z.record(z.string(), z.array(GridItem)).prefault({
+    lg: [{ i: DEFAULT_CLOCK_ID, x: 8, y: 0, w: 8, h: 3 }],
+    md: [{ i: DEFAULT_CLOCK_ID, x: 8, y: 0, w: 8, h: 3 }],
+    sm: [{ i: DEFAULT_CLOCK_ID, x: 0, y: 0, w: 12, h: 3 }],
+  }),
   columns: z.number().min(4).max(48).default(24),
   rowHeight: z.number().min(20).max(160).default(56),
   margin: z.number().min(0).max(48).default(14),
@@ -194,7 +204,7 @@ export const Widgets = z.object({
 
 export const Layout = z.object({
   /** Vertical stacking order of the page's three main bands. */
-  order: z.array(z.enum(['widgets', 'search', 'tiles'])).default(['search', 'tiles', 'widgets']),
+  order: z.array(z.enum(['widgets', 'search', 'tiles'])).default(['widgets', 'search', 'tiles']),
   align: z.enum(['top', 'center', 'bottom']).default('center'),
   maxWidth: z.number().min(600).max(2400).default(1180),
   paddingY: z.number().min(0).max(200).default(48),

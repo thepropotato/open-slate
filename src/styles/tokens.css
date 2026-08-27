@@ -167,6 +167,39 @@ video {
   backdrop-filter: none;
 }
 
+/*
+ * Per-element overrides. These carry the same specificity as the ancestor rules
+ * above, so they must come after them in source order to win — which they only
+ * ever need to do when `data-scope` is actually present.
+ */
+.surface[data-scope='glass'] {
+  background: var(--surface);
+  border: var(--surface-border);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--surface-blur)) saturate(160%);
+}
+
+.surface[data-scope='solid'] {
+  background: var(--bg-elevated);
+  border: var(--surface-border);
+  box-shadow: var(--shadow);
+  backdrop-filter: none;
+}
+
+.surface[data-scope='outline'] {
+  background: rgb(var(--surface-base) / 15%);
+  border: var(--surface-border);
+  box-shadow: none;
+  backdrop-filter: blur(4px);
+}
+
+.surface[data-scope='none'] {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
 .scroll-y {
   overflow-y: auto;
   scrollbar-width: thin;

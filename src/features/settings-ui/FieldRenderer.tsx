@@ -12,16 +12,31 @@ import {
 } from '@/core/ui'
 import type { Field } from './types'
 
+/**
+ * Where a field reads and writes. Defaults to global settings; widget config
+ * dialogs pass their own instance config instead.
+ */
+export interface FieldScope {
+  values: Record<string, unknown>
+  write: (path: string, value: unknown) => void
+}
+
 /** Draws one declared field by dispatching on its control descriptor. */
-export function FieldRenderer({ field }: { field: Field }) {
+export function FieldRenderer({ field, scope }: { field: Field; scope?: FieldScope }) {
   const settings = useSettings()
   const { set } = useSettingsActions()
 
   if (field.when && !field.when(settings)) return null
+  if (field.whenLocal && !field.whenLocal(scope?.values ?? {})) return null
 
   const control = field.control
-  const value = field.path ? getPath(settings, field.path) : undefined
-  const write = (next: unknown) => field.path && set(field.path, next)
+  const source = scope ? scope.values : settings
+  const value = field.path ? getPath(source, field.path) : undefined
+  const write = (next: unknown) => {
+    if (!field.path) return
+    if (scope) scope.write(field.path, next)
+    else set(field.path, next)
+  }
 
   if (control.kind === 'custom') {
     return (

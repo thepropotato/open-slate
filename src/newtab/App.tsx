@@ -4,6 +4,7 @@ import { Icon } from '@/core/icons'
 import { BackgroundLayer } from '@/features/background/BackgroundLayer'
 import { SettingsOverlay } from '@/features/settings-ui/SettingsOverlay'
 import { TileGrid } from '@/features/tiles/TileGrid'
+import { WidgetCanvas } from '@/features/widgets'
 import './App.css'
 
 /**
@@ -64,5 +65,6 @@ export function App() {
 /** Band router. Each band is a feature that reads its own slice of settings. */
 function Band({ name }: { name: 'search' | 'tiles' | 'widgets' }) {
   if (name === 'tiles') return <TileGrid />
+  if (name === 'widgets') return <WidgetCanvas />
   return <section className={`band band--${name}`} data-band={name} />
 }

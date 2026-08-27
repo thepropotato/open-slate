@@ -1,0 +1,322 @@
+/*
+ * Clock faces.
+ *
+ * Every face sizes itself from container query units, so resizing the widget
+ * scales the face instead of clipping it. `--face` is the shared base size.
+ */
+
+.clock {
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  align-items: var(--clock-align, center);
+  justify-content: center;
+  gap: 2px;
+  height: 100%;
+  min-height: 0;
+  text-align: center;
+}
+
+.face {
+  --face: min(24cqh, 14cqw);
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.14em;
+  line-height: 1;
+  min-height: 0;
+}
+
+.clock__date {
+  font-size: clamp(9px, min(6cqh, 3.4cqw), 20px);
+  color: var(--fg-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.clock__zone {
+  font-size: clamp(8px, min(5cqh, 2.8cqw), 14px);
+  color: var(--fg-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* --- digital --- */
+
+.face--digital .face__time {
+  font-size: clamp(20px, min(46cqh, 22cqw), 200px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.face__colon {
+  opacity: 0.35;
+  padding-inline: 0.04em;
+}
+
+.face__colon--small {
+  font-size: 0.7em;
+}
+
+.face--digital .face__seconds {
+  font-size: 0.62em;
+  opacity: 0.6;
+}
+
+.face__meridiem {
+  margin-left: 0.35em;
+  font-size: clamp(9px, min(11cqh, 5cqw), 30px);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-muted);
+}
+
+/* --- minimal --- */
+
+.face--minimal .face__time {
+  font-size: clamp(18px, min(38cqh, 18cqw), 150px);
+  font-weight: 250;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.face--minimal .face__seconds {
+  opacity: 0.4;
+}
+
+/* --- mono --- */
+
+.face--mono .face__time {
+  font-family: var(--font-mono);
+  font-size: clamp(16px, min(34cqh, 15cqw), 130px);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.face--mono .face__meridiem {
+  padding-left: 0.3em;
+}
+
+/* --- flip --- */
+
+.face--flip {
+  gap: 0.1em;
+  align-items: center;
+}
+
+.flip {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0.1em 0.16em;
+  border-radius: 0.14em;
+  background: linear-gradient(180deg, rgb(var(--surface-tint) / 14%), rgb(var(--surface-tint) / 5%));
+  border: 1px solid var(--line);
+  font-size: clamp(18px, min(40cqh, 19cqw), 160px);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  overflow: hidden;
+  animation: flip-in var(--dur) var(--ease);
+  transform-origin: center top;
+}
+
+.flip[data-small='true'] {
+  font-size: clamp(12px, min(24cqh, 11cqw), 90px);
+}
+
+.flip__seam {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 1px;
+  background: rgb(0 0 0 / 30%);
+}
+
+@keyframes flip-in {
+  from {
+    transform: perspective(300px) rotateX(-58deg);
+    opacity: 0.55;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+/* --- text --- */
+
+.face--text .face__phrase {
+  font-size: clamp(13px, min(20cqh, 9cqw), 64px);
+  font-weight: 450;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+/* --- binary --- */
+
+.face--binary {
+  gap: min(1.6cqw, 8px);
+  align-items: flex-end;
+}
+
+.binary__col {
+  display: flex;
+  flex-direction: column;
+  gap: min(1.4cqh, 7px);
+}
+
+.binary__dot {
+  width: min(4.2cqh, 2.2cqw, 18px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(var(--surface-tint) / 14%);
+  transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.binary__dot[data-on='true'] {
+  background: var(--accent);
+  box-shadow: 0 0 min(2cqh, 10px) var(--accent);
+}
+
+.binary__dot[data-dead='true'] {
+  opacity: 0.12;
+}
+
+/* --- analog --- */
+
+.face--analog {
+  width: 100%;
+  height: 100%;
+}
+
+.analog {
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  overflow: visible;
+}
+
+.analog__rim {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.4;
+}
+
+.analog__dial {
+  fill: rgb(var(--surface-tint) / 8%);
+  stroke: none;
+}
+
+.analog__tick {
+  stroke: var(--fg-subtle);
+  stroke-width: 0.9;
+  stroke-linecap: round;
+}
+
+.analog__tick[data-major='true'] {
+  stroke: var(--fg-muted);
+  stroke-width: 2.2;
+}
+
+.analog__hand {
+  stroke: var(--fg);
+  stroke-linecap: round;
+  transform-origin: 0 0;
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.analog__hand--hour {
+  stroke-width: 4.4;
+}
+
+.analog__hand--minute {
+  stroke-width: 2.8;
+}
+
+.analog__hand--second {
+  stroke: var(--accent);
+  stroke-width: 1.3;
+}
+
+.analog__pin {
+  fill: var(--accent);
+}
+
+.face--analog[data-variant='minimal'] .analog__rim {
+  stroke: none;
+}
+
+.face--analog[data-variant='minimal'] .analog__hand--hour {
+  stroke-width: 3;
+}
+
+.face--analog[data-variant='bauhaus'] .analog__tick {
+  stroke: var(--bg);
+  stroke-width: 3.4;
+}
+
+.face--analog[data-variant='bauhaus'] .analog__hand--hour,
+.face--analog[data-variant='bauhaus'] .analog__hand--minute {
+  stroke: var(--fg);
+  stroke-linecap: butt;
+}
+
+.face--analog[data-variant='bauhaus'] .analog__hand--hour {
+  stroke-width: 6.5;
+}
+
+.face--analog[data-variant='bauhaus'] .analog__hand--minute {
+  stroke-width: 4;
+}
+
+/* --- rings --- */
+
+.face--rings {
+  width: 100%;
+  height: 100%;
+}
+
+.rings {
+  width: 100%;
+  height: 100%;
+}
+
+.rings__track {
+  fill: none;
+  stroke: rgb(var(--surface-tint) / 12%);
+  stroke-width: 5;
+}
+
+.rings__value {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  transition: stroke-dasharray var(--dur) var(--ease);
+}
+
+.rings [data-ring='minute'] .rings__value {
+  stroke: color-mix(in oklab, var(--accent) 70%, var(--fg));
+}
+
+.rings [data-ring='second'] .rings__value {
+  stroke: var(--fg-muted);
+}
+
+.rings__label {
+  fill: var(--fg);
+  font-size: 15px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-anchor: middle;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip {
+    animation: none;
+  }
+}
