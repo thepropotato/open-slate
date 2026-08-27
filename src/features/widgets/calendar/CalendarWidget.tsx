@@ -27,8 +27,13 @@ import './calendar.css'
  *
  * Subscriptions are plain iCalendar feeds — see `api.ts` for why that is the
  * connection rather than OAuth. A day carries a dot per calendar with something
- * on it, and selecting a day lists it; the numbers alone were a wall calendar
- * nobody had written on.
+ * on it, and the numbers alone were a wall calendar nobody had written on.
+ *
+ * Once a calendar is connected the widget is two views rather than one card
+ * split in half: it opens on today's events, and the month is where you go to
+ * pick a different day. Splitting a small card between a grid and a list gave
+ * neither enough room — the grid squeezed to a few rows, the list to one line.
+ * Whole-card views mean whichever you are looking at gets all of it.
  */
 
 const CalendarSourceSchema = z.object({
@@ -45,7 +50,10 @@ const CalendarConfig = z.object({
   highlightWeekend: z.boolean().default(true),
   /** Subscribed calendars. Empty means the widget is still just a month grid. */
   sources: z.array(CalendarSourceSchema).default([]),
-  /** Lists the selected day's events under the grid. */
+  /*
+   * Whether the day view exists at all. Off, the widget is only ever the month
+   * grid — dates stop opening a day, and a connected widget opens on the month.
+   */
   showAgenda: z.boolean().default(true),
   maxDots: z.number().min(1).max(5).default(3),
 })
@@ -60,6 +68,12 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
   const [offset, setOffset] = useState(0)
   /** Epoch ms of local midnight on the selected day; null means today. */
   const [selected, setSelected] = useState<number | null>(null)
+  /*
+   * Which of the two views is up. Connected widgets open on `day` — the point
+   * of connecting is to see what is on, and a grid of dots makes you click
+   * before it tells you anything.
+   */
+  const [pane, setPane] = useState<'month' | 'day'>('day')
   /** Bumped to re-fetch past the cache when the user asks for it. */
   const [revision, setRevision] = useState(0)
   /** Reopens the setup card over an already-configured widget. */
@@ -113,8 +127,43 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
 
   const agenda = byDay.get(selectedDay) ?? []
 
+  /*
+   * The day pane needs a calendar to have something to show, and the agenda
+   * setting still turns it off. Without either, the widget is the month grid it
+   * has always been.
+   */
+  const dayPane = pane === 'day' && config.showAgenda && sources.length > 0
+
+  if (dayPane) {
+    return (
+      <div className="cal" data-pane="day">
+        <DayView
+          day={selectedDay}
+          events={agenda}
+          locale={locale}
+          loading={calendars === null}
+          isToday={selectedDay === startOfToday}
+          now={today.getTime()}
+          refreshing={calendars === null && revision > 0}
+          onRefresh={() => setRevision((n) => n + 1)}
+          onBack={() => setPane('month')}
+        />
+        {needsPermission.length > 0 ? (
+          <GrantNotice
+            calendars={needsPermission}
+            onGrant={() =>
+              void Promise.all(
+                needsPermission.map((cal) => requestCalendarAccess(cal.url)),
+              ).then(() => setRevision((n) => n + 1))
+            }
+          />
+        ) : null}
+      </div>
+    )
+  }
+
   return (
-    <div className="cal" data-agenda={config.showAgenda && sources.length > 0}>
+    <div className="cal" data-pane="month">
       <header className="cal__head">
         <button
           type="button"
@@ -174,19 +223,14 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
       </header>
 
       {needsPermission.length > 0 ? (
-        <div className="cal__grant">
-          <Icon name="warning" />
-          <span>{needsPermission.map((cal) => urlLabel(cal.url)).join(', ')} needs permission.</span>
-          <Button
-            onClick={() =>
-              void Promise.all(
-                needsPermission.map((cal) => requestCalendarAccess(cal.url)),
-              ).then(() => setRevision((n) => n + 1))
-            }
-          >
-            Allow
-          </Button>
-        </div>
+        <GrantNotice
+          calendars={needsPermission}
+          onGrant={() =>
+            void Promise.all(
+              needsPermission.map((cal) => requestCalendarAccess(cal.url)),
+            ).then(() => setRevision((n) => n + 1))
+          }
+        />
       ) : null}
 
       <div className="cal__body">
@@ -216,16 +260,17 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
                 startOfToday={startOfToday}
                 selectedDay={showSelection ? selectedDay : null}
                 byDay={byDay}
-                onSelect={setSelected}
+                onSelect={(day) => {
+                  setSelected(day)
+                  // Picking a date is asking what is on it, so go and show it.
+                  if (config.showAgenda && sources.length > 0) setPane('day')
+                }}
                 interactive={sources.length > 0}
               />
             ))}
           </div>
         </div>
 
-        {config.showAgenda && sources.length > 0 ? (
-          <Agenda day={selectedDay} events={agenda} locale={locale} loading={calendars === null} />
-        ) : null}
       </div>
     </div>
   )
@@ -299,76 +344,188 @@ function Week({
   )
 }
 
-function Agenda({
+/**
+ * The whole card, for one day, drawn against an hour axis.
+ *
+ * A list said what was on; a timeline says what the day is shaped like — a free
+ * afternoon looks free, and a stacked morning looks stacked. That is the thing
+ * a glance at a new tab is actually asking.
+ *
+ * There are deliberately no chevrons here. In a view that replaces the month, a
+ * `‹` cannot say whether it steps back a day or back to the grid, and a control
+ * that could mean either is worse than one fewer control. Tapping the date is
+ * the way back, and it says so.
+ */
+function DayView({
   day,
   events,
   locale,
   loading,
+  isToday,
+  now,
+  refreshing,
+  onRefresh,
+  onBack,
 }: {
   day: number
   events: DayEvent[]
   locale?: string
   loading: boolean
+  isToday: boolean
+  now: number
+  refreshing: boolean
+  onRefresh: () => void
+  onBack: () => void
 }) {
-  const heading = new Intl.DateTimeFormat(locale, {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'short',
-  }).format(day)
+  const weekday = new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(day)
   const time = new Intl.DateTimeFormat(locale, { hour: 'numeric', minute: '2-digit' })
+  const hourLabel = new Intl.DateTimeFormat(locale, { hour: 'numeric' })
+
+  const allDay = events.filter((event) => event.allDay)
+  const timed = events.filter((event) => !event.allDay)
+  const { start, end } = hourRange(events, day, now)
+  const span = (end - start) * HOUR
+  const axis = []
+  for (let hour = start; hour <= end; hour += 1) axis.push(hour)
+
+  /** Where a time falls down the track, as a percentage of the drawn span. */
+  const offset = (at: number) => ((at - (day + start * HOUR)) / span) * 100
+  const nowAt = isToday && now >= day + start * HOUR && now <= day + end * HOUR ? offset(now) : null
 
   return (
-    <div className="cal__agenda">
-      <h4 className="cal__agendahead">
-        {heading}
-        {events.length > 0 ? (
-          <span className="cal__agendacount">
-            {events.length} event{events.length === 1 ? '' : 's'}
+    <div className="cal__day">
+      {/*
+       * A chevron, not just a tappable date. The date alone was the way back
+       * and nothing said so — a heading does not look like a control, so the
+       * way out of the view went unfound.
+       */}
+      <header className="cal__dayhead">
+        <button
+          type="button"
+          className="cal__daynav"
+          onClick={onBack}
+          aria-label="Back to the month"
+          title="Back to the month"
+        >
+          <Icon name="chevronLeft" />
+        </button>
+
+        {/* Still a target itself, so the whole heading works as the way back. */}
+        <button
+          type="button"
+          className="cal__daytitle"
+          onClick={onBack}
+          tabIndex={-1}
+          title="Back to the month"
+        >
+          <span className="cal__dayweekday">{isToday ? 'Today' : weekday}</span>
+          <span className="cal__daydate">
+            {new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(day)}
           </span>
-        ) : null}
-      </h4>
-      {loading ? (
-        <p className="cal__agendaempty">
-          <Icon name="spinner" spin /> Loading
-        </p>
-      ) : events.length === 0 ? (
-        <p className="cal__agendaempty">Nothing on.</p>
-      ) : (
-        <ul className="cal__events scroll-y">
-          {events.map((event) => (
-            <li key={event.id} className="cal__event">
+        </button>
+
+        <button
+          type="button"
+          className="cal__daynav"
+          onClick={onRefresh}
+          aria-label="Check for changes"
+          title="Check for changes"
+        >
+          <Icon name={refreshing ? 'spinner' : 'reset'} spin={refreshing} />
+        </button>
+      </header>
+
+      {/* All-day events have no place on an hour axis, so they sit above it. */}
+      {allDay.length > 0 ? (
+        <ul className="cal__allday">
+          {allDay.map((event) => (
+            <li key={event.id} className="cal__alldayitem" title={event.title}>
               <span className="cal__eventbar" style={{ background: colorOf(event.color) }} />
-              <span className="cal__eventwhen">
-                {event.allDay ? (
-                  <span className="cal__eventallday">All day</span>
-                ) : (
-                  <>
-                    <span>{time.format(event.start)}</span>
-                    {/*
-                     * The end is only worth a line when it says something the
-                     * start does not — a meeting that runs past this day, or one
-                     * long enough that its length is the point.
-                     */}
-                    {event.end - event.start >= 45 * 60_000 ? (
-                      <span className="cal__eventend">{time.format(event.end)}</span>
-                    ) : null}
-                  </>
-                )}
-              </span>
-              <span className="cal__eventtext">
-                <span className="cal__eventtitle" title={event.title}>
-                  {event.title}
-                </span>
-                {event.location ? (
-                  <span className="cal__eventwhere" title={event.location}>
-                    {event.location}
-                  </span>
-                ) : null}
-              </span>
+              <span className="cal__eventtitle">{event.title}</span>
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {loading ? (
+        <p className="cal__dayempty">
+          <Icon name="spinner" spin /> Loading
+        </p>
+      ) : events.length === 0 ? (
+        <p className="cal__dayempty">Nothing on.</p>
+      ) : (
+        <div className="cal__track scroll-y">
+          <div className="cal__hours">
+            {axis.map((hour) => (
+              <div
+                key={hour}
+                className="cal__hour"
+                style={{ top: `${((hour - start) / (end - start)) * 100}%` }}
+              >
+                <span className="cal__hourlabel">
+                  {hourLabel.format(new Date(day).setHours(hour, 0, 0, 0))}
+                </span>
+                <span className="cal__hourline" />
+              </div>
+            ))}
+
+            {layout(timed).map(({ event, column, columns }) => {
+              // Clamped to the drawn range so an event running over midnight
+              // stays inside the track instead of overflowing it.
+              const top = Math.max(0, offset(event.start))
+              const bottom = Math.min(100, offset(event.end))
+              return (
+                <div
+                  key={event.id}
+                  className="cal__slot"
+                  style={{
+                    top: `${top}%`,
+                    // A floor, so a 15-minute event is still a readable block.
+                    height: `max(1.5em, ${bottom - top}%)`,
+                    /*
+                     * Offset and width are shares of the room left of the hour
+                     * labels, so a block can never overhang the track — the
+                     * gutter is added once here rather than as a margin, which
+                     * would push the block out by its own width.
+                     */
+                    insetInlineStart: `calc(var(--cal-gutter) + (100% - var(--cal-gutter)) * ${column / columns})`,
+                    width: `calc((100% - var(--cal-gutter)) / ${columns} - 3px)`,
+                    // Tints the block with its calendar rather than filling it,
+                    // so the title stays readable in either theme.
+                    ['--slot' as string]: colorOf(event.color),
+                  }}
+                  title={`${time.format(event.start)} ${event.title}`}
+                >
+                  <span className="cal__slottitle">{event.title}</span>
+                  <span className="cal__slotwhen">{time.format(event.start)}</span>
+                </div>
+              )
+            })}
+
+            {/* Where the day has got to — the one live thing on the card. */}
+            {nowAt !== null ? (
+              <div className="cal__now" style={{ top: `${nowAt}%` }} aria-hidden="true" />
+            ) : null}
+          </div>
+        </div>
       )}
+    </div>
+  )
+}
+
+/** Shown in either pane: a feed cannot be read until the user allows its host. */
+function GrantNotice({
+  calendars,
+  onGrant,
+}: {
+  calendars: LoadedCalendar[]
+  onGrant: () => void
+}) {
+  return (
+    <div className="cal__grant">
+      <Icon name="warning" />
+      <span>{calendars.map((cal) => urlLabel(cal.url)).join(', ')} needs permission.</span>
+      <Button onClick={onGrant}>Allow</Button>
     </div>
   )
 }
@@ -474,6 +631,91 @@ function CalendarSetup({
       </button>
     </div>
   )
+}
+
+/* ---------------------------------------------------------------- timeline */
+
+const HOUR = 3_600_000
+
+/**
+ * The hours the timeline draws, fitted to what is actually on.
+ *
+ * A fixed 24-hour axis spends most of a card on hours nobody has anything in —
+ * a day with one 11:30 meeting would be a sliver of event above and below a
+ * screenful of empty night. So the range is the day's own span, padded by an
+ * hour each way to give the first and last events somewhere to sit, and floored
+ * at a few hours so a single short meeting does not fill the card end to end.
+ */
+function hourRange(events: DayEvent[], day: number, now: number): { start: number; end: number } {
+  const timed = events.filter((event) => !event.allDay)
+  // Nothing timed: show the working part of the day rather than an empty axis.
+  if (timed.length === 0) return { start: 9, end: 17 }
+
+  let first = 24
+  let last = 0
+  for (const event of timed) {
+    // Clamped to the day: a multi-day event runs past both of its edges.
+    first = Math.min(first, Math.max(0, (event.start - day) / HOUR))
+    last = Math.max(last, Math.min(24, (event.end - day) / HOUR))
+  }
+
+  // The "now" line only reads as a position if its hour is on the axis.
+  const nowHour = now >= day && now < day + 24 * HOUR ? (now - day) / HOUR : null
+  if (nowHour !== null) {
+    first = Math.min(first, nowHour)
+    last = Math.max(last, nowHour)
+  }
+
+  let start = Math.max(0, Math.floor(first) - 1)
+  let end = Math.min(24, Math.ceil(last) + 1)
+  // A floor, so one 30-minute meeting does not become a full-height block.
+  while (end - start < 5) {
+    if (end < 24) end += 1
+    else if (start > 0) start -= 1
+    else break
+  }
+  return { start, end }
+}
+
+/**
+ * Lays overlapping events out side by side.
+ *
+ * Two meetings at the same hour drawn on top of each other hide one of them, so
+ * a run of events that overlap splits the width between them. Columns are
+ * assigned greedily over events sorted by start, which is enough for the handful
+ * a day holds and keeps the order left-to-right by start time.
+ */
+function layout(events: DayEvent[]): { event: DayEvent; column: number; columns: number }[] {
+  const sorted = [...events].sort((a, b) => a.start - b.start || a.end - b.end)
+  const placed: { event: DayEvent; column: number; columns: number }[] = []
+  /* Events that overlap each other, laid out together so they share a width. */
+  let cluster: typeof placed = []
+  let clusterEnd = -Infinity
+  const ends: number[] = []
+
+  const flush = () => {
+    const columns = ends.length || 1
+    for (const item of cluster) item.columns = columns
+    placed.push(...cluster)
+    cluster = []
+    ends.length = 0
+    clusterEnd = -Infinity
+  }
+
+  for (const event of sorted) {
+    if (event.start >= clusterEnd) flush()
+    let column = ends.findIndex((end) => end <= event.start)
+    if (column === -1) {
+      column = ends.length
+      ends.push(event.end)
+    } else {
+      ends[column] = event.end
+    }
+    cluster.push({ event, column, columns: 1 })
+    clusterEnd = Math.max(clusterEnd, event.end)
+  }
+  flush()
+  return placed
 }
 
 /* ------------------------------------------------------------------ events */

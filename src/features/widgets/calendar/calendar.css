@@ -353,159 +353,124 @@
   }
 }
 
-/* ------------------------------------------------------------------ agenda */
+/* ---------------------------------------------------------------- day view */
 
 /*
- * With an agenda the grid takes only the height its squares need and the list
- * gets the rest, rather than the two fighting over it.
- */
-/*
- * With an agenda, how the two share the card depends on its shape.
+ * The day view is the whole card, not a strip under a grid, and it draws an
+ * hour axis rather than a list.
  *
- * Stacked, the grid takes a little over half the height and the list keeps the
- * rest. Side by side — which only fits once the card is wider than it is tall —
- * the grid takes the full height and the list the width left over, because a
- * wide card centring a small grid over a wide empty strip was mostly margin.
+ * A list said what was on; a timeline says what the day is shaped like — a free
+ * afternoon looks free and a stacked morning looks stacked, which is what a
+ * glance is actually asking. Splitting a small widget between a grid and a list
+ * gave neither enough room, so each view now takes the whole card.
  */
-.cal[data-agenda='true'] .cal__wrap {
+.cal__day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+  min-height: 0;
+}
+
+.cal__dayhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
   flex: none;
 }
 
-.cal[data-agenda='true'] .cal__grid {
-  --cal-room: calc(66cqh - var(--cal-chrome));
+/*
+ * The same 22px control the month header uses, so the two views' bars line up
+ * and a button does not change size just because the view did.
+ */
+.cal__daynav {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--fg-subtle);
+  font-size: 11px;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
 }
 
-@container cal (min-aspect-ratio: 7 / 5) {
-  .cal[data-agenda='true'] .cal__body {
-    display: flex;
-    flex-direction: row;
-    align-items: stretch;
-    gap: var(--space-sm);
-    flex: 1;
-    min-height: 0;
-  }
-
-  .cal[data-agenda='true'] .cal__wrap {
-    flex: none;
-    align-items: start;
-  }
-
-  .cal[data-agenda='true'] .cal__grid {
-    --cal-room: calc(100cqh - var(--cal-chrome));
-    width: auto;
-    height: 100%;
-  }
-
-  .cal[data-agenda='true'] .cal__agenda {
-    flex: 1;
-    min-width: 0;
-    padding-top: 0;
-    border-top: none;
-    border-inline-start: 1px solid rgb(var(--surface-tint) / 10%);
-    padding-inline-start: var(--space-sm);
-  }
+.cal__daynav:hover {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 10%);
 }
 
-.cal__agenda {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  flex: 1;
-  min-height: 0;
-  padding-top: var(--space-xs);
-  border-top: 1px solid rgb(var(--surface-tint) / 10%);
-}
-
-.cal__agendahead {
+/*
+ * The heading is a target too, so the whole thing goes back, but the chevron
+ * beside it is what advertises that. It is out of the tab order because it
+ * duplicates the chevron's action — one stop, not two, for the same place.
+ */
+.cal__daytitle {
   display: flex;
   align-items: baseline;
   gap: 6px;
+  min-width: 0;
+  flex: 1;
+  padding: 2px 4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.cal__daytitle:hover {
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+.cal__dayweekday {
   font-size: var(--text-sm);
   font-weight: 620;
   color: var(--fg);
-  margin: 0;
-  flex: none;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
-/* The count sits back from the date, the way a subtitle does. */
-.cal__agendacount {
-  font-size: var(--text-xs);
-  font-weight: 450;
-  color: var(--fg-subtle);
-}
-
-/*
- * Centred in the space the list would have filled, so an empty day reads as a
- * clear day rather than as a widget that failed to load.
- */
-.cal__agendaempty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  flex: 1;
-  margin: 0;
+.cal__daydate {
   font-size: var(--text-xs);
   color: var(--fg-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.cal__events {
+/* All-day events have no hour, so they sit above the axis rather than on it. */
+.cal__allday {
   display: flex;
   flex-direction: column;
   gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
-  min-height: 0;
-  flex: 1;
+  flex: none;
 }
 
-/*
- * One row per event: a colour bar for the calendar it came from, the time, and
- * the title with its location beneath. Times are a fixed column so the titles
- * line up down the list rather than stepping in and out with each duration.
- */
-.cal__event {
+.cal__alldayitem {
   display: grid;
-  grid-template-columns: 2px minmax(0, auto) 1fr;
-  align-items: stretch;
-  gap: 8px;
-  padding-block: 3px;
+  grid-template-columns: 3px 1fr;
+  align-items: center;
+  gap: 7px;
+  padding: 3px 6px;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 5%);
   font-size: var(--text-xs);
-  line-height: 1.3;
 }
 
 .cal__eventbar {
+  align-self: stretch;
   border-radius: var(--radius-pill);
-}
-
-.cal__eventwhen {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  color: var(--fg-subtle);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  text-align: end;
-}
-
-/* The end time is supporting detail, so it sits under the start, not beside. */
-.cal__eventend {
-  opacity: 0.65;
-}
-
-.cal__eventallday {
-  font-size: 0.92em;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.cal__eventtext {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-width: 0;
 }
 
 .cal__eventtitle {
@@ -516,12 +481,151 @@
   white-space: nowrap;
 }
 
-.cal__eventwhere {
+/*
+ * Centred in the room the track would have filled, so a clear day reads as a
+ * clear day rather than as a widget that failed to load.
+ */
+.cal__dayempty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+  margin: 0;
+  font-size: var(--text-xs);
   color: var(--fg-subtle);
-  font-size: 0.92em;
+}
+
+/* -------------------------------------------------------------- hour track */
+
+.cal__track {
+  flex: 1;
+  min-height: 0;
+}
+
+/*
+ * Everything on the track is positioned as a percentage of this box, so the
+ * hour lines and the events cannot drift apart — they are measured against the
+ * same span. A minimum height keeps a five-hour range legible on a short card.
+ */
+.cal__hours {
+  position: relative;
+  min-height: 100%;
+  height: 100%;
+  /*
+   * The label column is reserved here, once, so the percentage offsets and
+   * widths of the blocks below resolve against the room actually left to them.
+   * Margining each block instead pushed it past the right edge by this width.
+   */
+  --cal-gutter: calc(2.2em + 6px);
+}
+
+.cal__hour {
+  position: absolute;
+  /* The full width: the label is part of the row, not inside the event area. */
+  inset-inline: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* Centred on its line, so the label reads as marking that hour exactly. */
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.cal__hourlabel {
+  flex: none;
+  width: 2.2em;
+  text-align: end;
+  font-size: calc(var(--text-xs) * 0.92);
+  font-variant-numeric: tabular-nums;
+  color: var(--fg-subtle);
+  opacity: 0.75;
+}
+
+.cal__hourline {
+  flex: 1;
+  height: 1px;
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+/*
+ * An event block, indented past the hour labels so the axis stays readable
+ * down the left edge whatever is on.
+ */
+.cal__slot {
+  position: absolute;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border-inline-start: 2.5px solid var(--slot);
+  /*
+   * Tinted, not filled. A solid block in the calendar's colour would set the
+   * title on an arbitrary hue in both themes; a wash keeps the card's own
+   * contrast and lets the bar carry the colour.
+   */
+  background: color-mix(in srgb, var(--slot) 18%, rgb(var(--surface-base)));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  font-size: var(--text-xs);
+  line-height: 1.25;
+}
+
+.cal__slottitle {
+  color: var(--fg);
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.cal__slotwhen {
+  color: var(--fg-muted);
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/*
+ * A short block has room for one line only, so the time is dropped rather than
+ * clipped — the block's position on the axis already says when it is.
+ */
+.cal__slot:not(:hover) .cal__slotwhen {
+  display: none;
+}
+
+@container cal (min-height: 260px) {
+  .cal__slot .cal__slotwhen {
+    display: block;
+  }
+}
+
+/*
+ * Where the day has got to. The one live thing on the card, so it takes the
+ * accent and runs the full width — a line, not a marker to hunt for.
+ */
+.cal__now {
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  transform: translateY(-1px);
+  background: var(--accent);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cal__now::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: calc(2.2em + 2px);
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  transform: translateY(-50%);
 }
 
 /* ------------------------------------------------------- setup and warnings */
