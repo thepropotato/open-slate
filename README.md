@@ -22,8 +22,10 @@ genuinely needs the browser (tabs, history, sessions, downloads) shows its empty
 state there.
 
 ```sh
-npm run check      # typecheck, lint, unused-icon check, self-test
-npm run shots      # screenshots every screen in both colour schemes, into ./shots
+npm run check       # typecheck, lint, unused-icon check, self-test
+npm run test:dom    # feed parser, in a real page (needs the dev server)
+npm run shots       # screenshots every screen in both colour schemes, into ./shots
+npm run store:shots # 1280x800 store screenshots, from the built extension
 ```
 
 ## What it does
@@ -42,10 +44,14 @@ the tab is hidden. Slideshow position lives in storage and advances on a
 background alarm, so every open tab agrees and rotation continues with no tab
 open. The accent colour can be sampled from whatever is on screen.
 
-**Widgets.** A resizable grid, locked by default. Twelve widgets: clock (ten
+**Widgets.** A resizable grid, locked by default. Fifteen widgets: clock (ten
 faces — digital, minimal, mono, flip, words, binary, three analog variants,
-rings), weather, calendar, notes, tasks, greeting, recently closed, most visited,
-open tabs (with a duplicate finder), bookmarks, history and downloads.
+rings), weather, calendar, notes, tasks, greeting, timer (pomodoro, countdown,
+stopwatch), feeds, crypto prices, recently closed, most visited, open tabs (with
+a duplicate finder), bookmarks, history and downloads.
+
+**Tiles in folders and across pages.** Drag a tile onto a folder in Arrange mode
+to file it away; split tiles across named pages with a dot or tab switcher.
 
 **Search.** 23 engines with bang shortcuts (`!yt cats`, or `cats !yt`), address
 detection so typing a host navigates, an inline calculator, and suggestions drawn
@@ -56,8 +62,8 @@ settings commands, with a web search as the fallback.
 
 **Settings.** Every preference is declared once, as a schema field plus a spec
 entry, and the UI renders itself from that. Searchable, with live updates across
-every open tab. Full config export and import, plus theme codes that carry the
-look without carrying your content.
+every open tab. Full config export and import, theme codes that carry the look
+without carrying your content, and opt-in sync across devices.
 
 ## Two things worth knowing
 

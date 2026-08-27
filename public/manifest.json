@@ -10,10 +10,21 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "chrome_url_overrides": { "newtab": "newtab.html" },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
   "options_page": "options.html",
-  "background": { "service_worker": "background.js", "type": "module" },
-  "permissions": ["storage", "unlimitedStorage", "favicon", "alarms", "topSites"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "favicon",
+    "alarms",
+    "topSites"
+  ],
   "optional_permissions": [
     "sessions",
     "bookmarks",
@@ -23,8 +34,20 @@
     "tabGroups",
     "geolocation"
   ],
-  "optional_host_permissions": ["https://*.open-meteo.com/*"],
+  "optional_host_permissions": [
+    "https://*.open-meteo.com/*",
+    "https://api.coingecko.com/*",
+    "https://*/*"
+  ],
   "web_accessible_resources": [
-    { "resources": ["_favicon/*"], "matches": ["<all_urls>"], "extension_ids": [] }
+    {
+      "resources": [
+        "_favicon/*"
+      ],
+      "matches": [
+        "<all_urls>"
+      ],
+      "extension_ids": []
+    }
   ]
 }

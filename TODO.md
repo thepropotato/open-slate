@@ -75,13 +75,37 @@ requested per widget.
 - [x] Store assets + single-purpose justification (new tab overrides get manual review)
 
 ## Phase 8 — Optional / later
-- [ ] Google Calendar + Gmail unread (OAuth)
-- [ ] RSS reader, stocks/crypto ticker
+- [ ] Google Calendar + Gmail unread (OAuth) — **blocked, see below**
+- [x] RSS reader, crypto ticker (stocks left out — see below)
 - [x] Pomodoro / timer / stopwatch
 - [x] Tile folders and multiple pages
-- [ ] Sync layout across devices
+- [x] Sync layout across devices
 
 ---
+
+## Not built, and why
+
+**Google Calendar and Gmail widgets (OAuth).** These need an OAuth 2.0 client ID
+registered in a Google Cloud project, with the extension's ID on the allow-list.
+The extension ID is derived from the signing key, which only exists once the item
+is published (or a `key` is pinned in the manifest). Shipping the code without a
+client ID would mean a widget that cannot work, and hard-coding someone else's
+would leak their quota. To add it:
+
+1. Create a Google Cloud project, enable the Calendar and Gmail APIs, and consent
+   to the OAuth screen.
+2. Publish the extension once (or add its `key` to the manifest) to fix its ID.
+3. Create a Chrome-extension OAuth client for that ID.
+4. Add `"oauth2": { "client_id": "…", "scopes": [...] }` and the `identity`
+   permission to the manifest, then read tokens via `chrome.identity.getAuthToken`.
+
+The widget framework needs no changes for this — a widget declaring
+`permissions: ['identity']` would be gated the same way the weather widget is.
+
+**Stock quotes.** Every free equities API requires an API key, and a key inside a
+published extension is public: it gets scraped, rate-limited and revoked. The
+crypto widget uses CoinGecko's keyless public endpoint instead, and the widget is
+named for what it actually does rather than implying stocks.
 
 ## Notes recorded during the build
 - Settings persist to `chrome.storage.local`, not `sync`: `sync` caps items at 8KB,
@@ -136,6 +160,20 @@ requested per widget.
 - Deleting a folder or a page moves its contents out rather than deleting them.
 - The timer stores absolute timestamps, not a decremented countdown, so it
   survives the page being torn down on navigation and every open tab agrees.
+- Cross-device sync is not a mirror of the settings blob: `chrome.storage.sync`
+  caps items at 8KB and the area at 100KB, so each section is chunked across keys,
+  device-local media references are stripped, and sync bookkeeping is kept in
+  `local` so it can never cause a write loop. The `sync` section itself is not
+  synced, so each device opts in for itself.
+- The feeds widget needs `https://*/*` in `optional_host_permissions`, because
+  Chrome only grants a runtime origin request that matches a declared pattern.
+  Nothing is granted at install — verified — and each feed asks for its own origin
+  alone. `STORE.md` carries the justification for review.
+- Custom settings controls receive the field scope, which is how a widget ships a
+  bespoke control over its own config (the feed list, the coin picker) without the
+  settings layer knowing anything about feeds or coins.
+- `npm run test:dom` covers the feed parser in a real page, since Node has no
+  DOMParser and shipping a DOM shim to test one module is a bad trade.
 - Clock faces are hand-built. The maintained analog-clock packages each give one
   fixed look, and the requirement was a range of faces all reading from the theme
   tokens. Faces size themselves in container query units, so resizing scales them.

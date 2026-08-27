@@ -18,5 +18,7 @@ import './browser/TabsWidget'
 import './browser/BookmarksWidget'
 import './browser/HistoryWidget'
 import './browser/DownloadsWidget'
+import './feed/FeedWidget'
+import './crypto/CryptoWidget'
 
 export { WidgetCanvas } from './WidgetCanvas'

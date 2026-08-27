@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import type { Choice } from '@/core/ui'
 import type { IconName } from '@/core/icons'
 import type { Settings } from '@/core/settings/schema'
+import type { FieldScope } from './FieldRenderer'
 
 /**
  * Declarative description of the settings UI.
@@ -39,7 +40,12 @@ export type FieldControl =
   | { kind: 'text'; placeholder?: string; wide?: boolean }
   | {
       kind: 'custom'
-      render: () => ReactNode
+      /**
+       * Receives the scope when the field is rendered against a local object —
+       * a widget's own config — and nothing when it is a global setting. That is
+       * what lets a widget ship a bespoke control over its own state.
+       */
+      render: (scope?: FieldScope) => ReactNode
       stacked?: boolean
       /** Renders the node with no surrounding label row, for panels with their own headings. */
       bare?: boolean

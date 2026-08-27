@@ -37,6 +37,26 @@ adds the widget that needs them. Declining leaves the rest of the page working.
 | `downloads` | The downloads widget. |
 | `geolocation` | Optional, only if the user asks the weather widget to use their location instead of typing a city. |
 | `https://*.open-meteo.com/*` | The weather widget's only network request. Open-Meteo needs no account or API key. |
+| `https://api.coingecko.com/*` | The crypto widget's only network request. CoinGecko's public endpoint needs no account or API key. |
+| `https://*/*` | Required so the feeds widget can request access to **one origin at a time**, chosen by the user. See below. |
+
+### On the broad `https://*/*` optional host pattern
+
+The feeds widget reads RSS and Atom feeds at addresses only the user knows, so
+there is no fixed list of origins to declare. Chrome will only grant a runtime
+origin request if the origin matches something in `optional_host_permissions`,
+which is why the broad pattern is declared.
+
+What matters is that it is **optional and never requested wholesale**:
+
+- Nothing is granted at install. `chrome.permissions.getAll()` on a fresh install
+  returns no origins at all.
+- Adding a feed calls `chrome.permissions.request` for that feed's origin alone —
+  `https://example.com/*`, not `https://*/*` — so the user sees and approves one
+  named site per feed.
+- A user who never adds a feed never grants a single host permission.
+- There are no content scripts, so a granted origin is only ever used for the
+  `fetch` of that feed's XML in `src/features/widgets/feed/api.ts`.
 
 ## Data handling disclosures
 
@@ -47,9 +67,12 @@ adds the widget that needs them. Declining leaves the rest of the page working.
   uploaded.
 - Browser data read through the optional permissions above is used only to render
   the page and never leaves the device.
-- The single outbound request in the whole extension is to `api.open-meteo.com`,
-  made only when the weather widget is added, carrying only the coordinates of the
-  place the user selected.
+- Outbound requests are limited to three cases, each behind a widget the user
+  added and a host permission the user granted:
+  `api.open-meteo.com` (the coordinates of a chosen place),
+  `api.coingecko.com` (a list of coin ids and a currency code),
+  and the feed addresses the user entered. No request carries an identifier of
+  any kind, and responses are cached locally to keep the request count low.
 - The search box sends nothing anywhere as you type: suggestions come from local
   tabs, bookmarks, history and tiles. Submitting a search navigates to the chosen
   engine, exactly as the address bar would.

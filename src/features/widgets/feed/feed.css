@@ -1,0 +1,102 @@
+.feed {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: var(--space-xs);
+}
+
+.feed--setup {
+  justify-content: center;
+  gap: var(--space-sm);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+
+.feed__addrow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.feed__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: #ffb08a;
+  text-align: left;
+}
+
+.feed__grant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 8%);
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+
+.feed__grant > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feed__grant > .ctl-btn {
+  margin-left: auto;
+  flex: none;
+  padding: 3px 9px;
+  font-size: var(--text-xs);
+}
+
+/* --- feed list, in the options dialog --- */
+
+.feedlist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.feedlist__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+.feedlist__row > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feedlist__row > button {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  color: var(--fg-subtle);
+  font-size: 10px;
+}
+
+.feedlist__row > button:hover {
+  color: #ff8080;
+  background: rgb(255 128 128 / 12%);
+}
+
+.feedlist__add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-top: var(--space-xs);
+}

@@ -39,10 +39,10 @@ export function FieldRenderer({ field, scope }: { field: Field; scope?: FieldSco
   }
 
   if (control.kind === 'custom') {
-    if (control.bare) return <>{control.render()}</>
+    if (control.bare) return <>{control.render(scope)}</>
     return (
       <Row title={field.label} help={field.help} stacked={control.stacked}>
-        {control.render()}
+        {control.render(scope)}
       </Row>
     )
   }

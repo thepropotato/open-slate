@@ -260,6 +260,18 @@ export const Behavior = z.object({
   timezone: z.string().default(''),
 }).prefault({})
 
+/* -------------------------------------------------------------------- sync */
+
+/**
+ * Deliberately not one of the synced sections: each device opts in for itself,
+ * so enabling sync on a laptop does not silently enable it everywhere.
+ */
+export const Sync = z.object({
+  enabled: z.boolean().default(false),
+  /** Push after a change, and pull on load. Off means the buttons only. */
+  auto: z.boolean().default(true),
+}).prefault({})
+
 /* ------------------------------------------------------------------- root */
 
 export const Settings = z.object({
@@ -271,6 +283,7 @@ export const Settings = z.object({
   widgets: Widgets,
   search: Search,
   behavior: Behavior,
+  sync: Sync,
 })
 
 export type Settings = z.infer<typeof Settings>
@@ -281,5 +294,6 @@ export type Widgets = z.infer<typeof Widgets>
 export type SearchSettings = z.infer<typeof Search>
 export type Layout = z.infer<typeof Layout>
 export type Behavior = z.infer<typeof Behavior>
+export type Sync = z.infer<typeof Sync>
 
 export const defaultSettings = (): Settings => Settings.parse({})

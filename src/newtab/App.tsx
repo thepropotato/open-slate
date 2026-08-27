@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
+import { useSettingsSync } from '@/core/settings/useSettingsSync'
 import { Icon } from '@/core/icons'
 import { BackgroundLayer } from '@/features/background/BackgroundLayer'
 
@@ -20,6 +21,7 @@ import './App.css'
  */
 export function App() {
   const { layout, appearance, behavior } = useSettings()
+  useSettingsSync()
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
 

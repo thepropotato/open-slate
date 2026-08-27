@@ -1,0 +1,100 @@
+.crypto {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: 2px;
+}
+
+.crypto--setup {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  padding-inline: var(--space);
+}
+
+.crypto__row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: 4px 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.crypto__symbol {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  min-width: 3.6ch;
+}
+
+.crypto__name {
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.crypto__price {
+  margin-left: auto;
+  font-size: var(--text-sm);
+  font-weight: 550;
+  white-space: nowrap;
+}
+
+.crypto__change {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 5.6ch;
+  justify-content: flex-end;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: #ff8080;
+  white-space: nowrap;
+}
+
+.crypto__change[data-up='true'] {
+  color: #6bd48f;
+}
+
+/* Compact drops the name and tightens the rows to fit a small widget. */
+.crypto[data-layout='compact'] .crypto__row {
+  padding: 2px;
+  gap: var(--space-xs);
+}
+
+.crypto[data-layout='compact'] .crypto__price {
+  font-size: var(--text-xs);
+}
+
+.crypto__picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: 100%;
+}
+
+.crypto__picker button {
+  padding: 4px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--line);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  color: var(--fg-muted);
+}
+
+.crypto__picker button:hover {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+.crypto__picker button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-fg);
+}
