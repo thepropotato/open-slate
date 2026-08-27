@@ -12,6 +12,8 @@ export interface CalendarEvent {
   id: string
   title: string
   location: string
+  /** Where the meeting is, if the feed says. Empty when there is nothing to open. */
+  url: string
   /** Epoch ms. For an all-day event, local midnight on the starting day. */
   start: number
   /** Epoch ms, exclusive. All-day events end at local midnight after the last day. */
@@ -113,10 +115,27 @@ function parseDuration(value: string): number {
   return sign === '-' ? -ms : ms
 }
 
+/**
+ * The first http(s) link in a block of text.
+ *
+ * Conference links are rarely in the URL property — Meet, Zoom and Teams all
+ * write them into the description among a paragraph of joining instructions, so
+ * the link has to be picked out of prose. Only http and https are accepted:
+ * these values come off the network, and anything else (`javascript:` above all)
+ * has no business being handed to the browser to open.
+ */
+function firstLink(text: string): string {
+  const match = /https?:\/\/[^\s<>"')\]]+/i.exec(text)
+  if (!match) return ''
+  // Trailing punctuation belongs to the sentence, not the address.
+  return match[0].replace(/[.,;:]+$/, '')
+}
+
 interface RawEvent {
   uid: string
   title: string
   location: string
+  url: string
   start: number
   end: number
   allDay: boolean
@@ -148,6 +167,7 @@ function readEvents(text: string): RawEvent[] {
         uid: '',
         title: '',
         location: '',
+        url: '',
         start: NaN,
         end: NaN,
         allDay: false,
@@ -186,6 +206,20 @@ function readEvents(text: string): RawEvent[] {
       case 'LOCATION':
         current.location = unescapeText(value)
         break
+      /*
+       * A URL property is the event's own link, so it wins. Otherwise the join
+       * link is usually buried in the description — Meet, Zoom and Teams all
+       * write it there — and the location field sometimes holds it too.
+       */
+      case 'URL':
+        if (!current.url) current.url = firstLink(value)
+        break
+      case 'DESCRIPTION':
+      case 'X-GOOGLE-CONFERENCE': {
+        const link = firstLink(unescapeText(value))
+        if (link && !current.url) current.url = link
+        break
+      }
       case 'STATUS':
         current.cancelled = value.toUpperCase() === 'CANCELLED'
         break
@@ -366,6 +400,7 @@ export function parseCalendar(text: string, from: number, to: number): CalendarE
         id: `${event.uid || at.title}:${at.start}`,
         title: at.title || 'Busy',
         location: at.location,
+        url: at.url,
         start: at.start,
         // A zero-length event still has to occupy its own day in the grid.
         end: Math.max(end, at.start + 1),
@@ -384,6 +419,7 @@ export function parseCalendar(text: string, from: number, to: number): CalendarE
       id: `${override.uid}:${override.start}:moved`,
       title: override.title || 'Busy',
       location: override.location,
+      url: override.url,
       start: override.start,
       end: Math.max(end, override.start + 1),
       allDay: override.allDay,

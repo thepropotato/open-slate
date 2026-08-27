@@ -571,6 +571,35 @@ const truthy = (name, value) => check(name, Boolean(value), true)
     1,
   )
 
+  {
+    // The join link is almost never in URL; it is buried in the description.
+    const url = (lines) => read(event(['UID:u', 'SUMMARY:Call', 'DTSTART:20260304T090000', ...lines]))[0].url
+    check('ics: URL property is read', url(['URL:https://example.com/a']), 'https://example.com/a')
+    check(
+      'ics: a link is found in the description',
+      url(['DESCRIPTION:Join at https://meet.example.com/abc-def to talk']),
+      'https://meet.example.com/abc-def',
+    )
+    check(
+      'ics: URL wins over the description',
+      url(['URL:https://example.com/a', 'DESCRIPTION:see https://other.example.com/b']),
+      'https://example.com/a',
+    )
+    check(
+      'ics: a sentence full stop is not part of the link',
+      url(['DESCRIPTION:Join https://meet.example.com/abc.']),
+      'https://meet.example.com/abc',
+    )
+    check('ics: no link is empty', url(['DESCRIPTION:Bring a pen']), '')
+    // These values come off the network and are handed to the browser to open.
+    check('ics: a script url is not a link', url(['URL:javascript:alert(1)']), '')
+    check(
+      'ics: a script url in the description is not a link',
+      url(['DESCRIPTION:click javascript:alert(1) now']),
+      '',
+    )
+  }
+
   check('ics: junk is not a calendar', read('not a calendar at all').length, 0)
   check('ics: an empty document is empty', read(''), [])
 
