@@ -65,6 +65,12 @@ export function Tile({
         isFolder={isFolder}
         url={tile.url}
         title={visual.title}
+        /*
+          In Arrange mode a tile is something you move, not something you follow:
+          the plate stops navigating so a drag that ends short of the threshold
+          cannot fire off to the site instead of putting the tile back down.
+        */
+        inert={editing}
         style={{ background: visual.plate ?? 'transparent', color: visual.ink }}
         onActivate={() => (isFolder ? onOpenFolder?.(tile.id) : openUrl(tile.url, settings.openIn))}
       >
@@ -117,6 +123,7 @@ function Plate({
   url,
   title,
   style,
+  inert,
   onActivate,
   children,
 }: {
@@ -124,12 +131,20 @@ function Plate({
   url: string
   title: string
   style: CSSProperties
+  /** Arrange mode: draw the plate, but do not let it lead anywhere. */
+  inert: boolean
   onActivate: () => void
   children: ReactNode
 }) {
   if (isFolder) {
     return (
-      <button type="button" className="tile__plate" style={style} title={title} onClick={onActivate}>
+      <button
+        type="button"
+        className="tile__plate"
+        style={style}
+        title={title}
+        onClick={inert ? undefined : onActivate}
+      >
         {children}
       </button>
     )
@@ -137,10 +152,16 @@ function Plate({
   return (
     <a
       className="tile__plate"
-      href={url}
+      // Without an href this is no longer a link, so cmd-click, middle-click and
+      // the browser's own link drag all stop competing with the reorder drag.
+      href={inert ? undefined : url}
       style={style}
       title={title}
       onClick={(event) => {
+        if (inert) {
+          event.preventDefault()
+          return
+        }
         // Let the browser handle modified clicks natively.
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
         event.preventDefault()
