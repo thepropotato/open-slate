@@ -56,8 +56,13 @@
   display: none;
 }
 
-/* Tabs cross-fade; there is nowhere to scroll, so the switch needs to read. */
-.page[data-view='tabs'] .pane[data-active='true'] {
+/*
+ * Tabs cross-fade; there is nowhere to scroll, so the switch needs to read.
+ * Only once the page has entered, though: on the first paint there is no
+ * previous pane to read against, and the slide just looks like the content
+ * being thrown into position as it fades up.
+ */
+.page[data-switched='true'][data-view='tabs'] .pane[data-active='true'] {
   animation: pane-in var(--dur) var(--ease);
 }
 

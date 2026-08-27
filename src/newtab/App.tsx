@@ -40,6 +40,19 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const contentRef = useRef<HTMLElement>(null)
 
+  /*
+   * The pane's entrance animation is for switching tabs, where the slide is
+   * what tells you the content changed. On first load there is nothing to
+   * distinguish it from, and it just reads as the page being thrown together:
+   * the whole band of widgets rises 8px while it fades in.
+   *
+   * So it is driven by an actual switch rather than by elapsed time. Timing is
+   * not reliable here: the panes only mount once settings have loaded, which is
+   * already several frames in, so any "first paint" flag has expired before the
+   * pane it was meant to hold back ever renders.
+   */
+  const [switched, setSwitched] = useState(false)
+
   const paletteEnabled = behavior.commandPalette
   const tabbed = layout.viewMode === 'tabs'
 
@@ -98,6 +111,9 @@ export function App() {
 
   const showPane = useCallback(
     (pane: Pane) => {
+      // Every pane change comes through here, so this is what separates a
+      // deliberate switch from the page simply appearing.
+      setSwitched(true)
       setChosen(pane)
       update((current) => ({ ...current, layout: { ...current.layout, lastPane: pane } }))
       if (layout.viewMode === 'scroll') {
@@ -136,7 +152,12 @@ export function App() {
   }, [paletteEnabled, panes, showPane])
 
   return (
-    <div className="page" data-align={layout.align} data-view={layout.viewMode}>
+    <div
+      className="page"
+      data-align={layout.align}
+      data-view={layout.viewMode}
+      data-switched={switched}
+    >
       <BackgroundLayer />
 
       <main
