@@ -226,19 +226,28 @@
 
 /* --- hint --- */
 
-.searchband__hint {
-  font-size: var(--text-xs);
+/*
+ * Lives inside the search row instead of below it: the old block-level hint
+ * reserved a line of layout space under the bar even while faded out.
+ */
+.search__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
   color: var(--fg-subtle);
+  font-size: var(--text-xs);
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--dur) var(--ease);
 }
 
-.searchband:hover .searchband__hint,
-.searchband:focus-within .searchband__hint {
+.search__row:hover .search__hint,
+.search__row:focus-within .search__hint {
   opacity: 1;
 }
 
-.searchband__hint kbd {
+.search__hint kbd {
   font-family: var(--font-mono);
   font-size: 0.92em;
   padding: 1px 5px;

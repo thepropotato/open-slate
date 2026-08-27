@@ -159,6 +159,17 @@ export function SearchBar() {
             enterKeyHint="search"
           />
 
+          {behavior.commandPalette && !value ? (
+            <span
+              className="search__hint"
+              title={`Press / to jump here, ${modifierLabel()}K for everything`}
+              aria-hidden="true"
+            >
+              <kbd>/</kbd>
+              <kbd>{modifierLabel()}K</kbd>
+            </span>
+          ) : null}
+
           {parsed.bang ? <span className="search__chip">{engine.name}</span> : null}
           {destination ? (
             <span className="search__chip">
@@ -210,12 +221,6 @@ export function SearchBar() {
           </ul>
         ) : null}
       </div>
-
-      {behavior.commandPalette ? (
-        <p className="searchband__hint">
-          Press <kbd>/</kbd> to search, <kbd>{modifierLabel()}K</kbd> for everything
-        </p>
-      ) : null}
     </div>
   )
 }
