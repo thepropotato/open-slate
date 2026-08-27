@@ -99,8 +99,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--fg);
-  border: 3px solid var(--accent);
+  background: var(--accent);
+  border: 3px solid var(--bg-elevated);
   box-sizing: content-box;
   margin-top: -1px;
 }

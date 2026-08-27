@@ -30,12 +30,12 @@ requested per widget.
 - [x] Seed from `chrome.topSites` on first run
 
 ## Phase 2 — Background engine
-- [ ] Layer system: solid / gradient / image / video / slideshow
-- [ ] IndexedDB blob store + upload UI + size guardrails
-- [ ] Video wallpaper: loop, mute, pause on tab blur, respect `prefers-reduced-motion`
-- [ ] Overlay controls: dim, blur, saturation, scale, vignette
-- [ ] Accent extraction from wallpaper → feeds theme tokens
-- [ ] Slideshow rotation via `chrome.alarms`
+- [x] Layer system: solid / gradient / image / video / slideshow
+- [x] IndexedDB blob store + upload UI + size guardrails
+- [x] Video wallpaper: loop, mute, pause on tab blur, respect `prefers-reduced-motion`
+- [x] Overlay controls: dim, blur, saturation, scale, vignette
+- [x] Accent extraction from wallpaper → feeds theme tokens
+- [x] Slideshow rotation via `chrome.alarms`
 
 ## Phase 3 — Widget framework
 - [ ] Widget registry: manifest (id, icon, sizes, component, settings panel, defaults)
@@ -93,3 +93,13 @@ requested per widget.
   plate tinted by sampling that favicon. Visually near-identical, and legally clean.
 - Tiles reorder in an explicit "Arrange" mode rather than on always-on drag, so a
   plain click always navigates.
+- Wallpaper dim/blur/vignette apply only to images and video. Applied to a solid or
+  gradient they just muted a colour the palette had already chosen.
+- Solid and gradient wallpapers follow the theme palette by default, so light/dark
+  and palette switches change the whole page rather than leaving a fixed wallpaper.
+- `--surface-tint` (subtle fills drawn over content) inverts between light and dark;
+  a fixed white tint made every slider track and hover wash invisible in light mode.
+- Cross-origin pixel reads need CORS headers, so accent sampling is attempted only
+  for the wallpaper the user explicitly chose, never for the many favicon URLs.
+- `npm run shots` captures every screen with Playwright, in both colour schemes.
+  Most of this UI only exists on hover or behind a settings tab.

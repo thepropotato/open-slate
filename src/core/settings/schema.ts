@@ -110,6 +110,13 @@ export const Tiles = z.object({
 
 export const Background = z.object({
   type: z.enum(['solid', 'gradient', 'image', 'video', 'slideshow']).default('gradient'),
+  /**
+   * When true, the solid colour and the gradient are derived from the active
+   * theme palette instead of the stored hexes. On by default so that switching
+   * palette or light/dark actually changes the whole page, rather than leaving a
+   * fixed dark wallpaper behind light panels.
+   */
+  followTheme: z.boolean().default(true),
   color: hex.default('#0b0d12'),
   gradient: z.object({
     from: hex.default('#101318'),
@@ -144,7 +151,7 @@ export const Background = z.object({
   saturation: z.number().min(0).max(2).default(1),
   brightness: z.number().min(0.2).max(2).default(1),
   scale: z.number().min(1).max(1.5).default(1),
-  vignette: unit.default(0.2),
+  vignette: unit.default(0.12),
   /** Slow drift/zoom on the still image. */
   kenBurns: z.boolean().default(false),
 }).prefault({})

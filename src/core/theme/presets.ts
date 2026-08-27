@@ -17,8 +17,14 @@ export interface Palette {
   accent: string
   accentFg: string
   line: string
-  /** `r g b` triplet used for translucent surfaces. */
+  /** `r g b` triplet for translucent panel fills. */
   surfaceBase: string
+  /**
+   * `r g b` triplet for subtle overlays drawn *on top of* content — hover
+   * washes, slider tracks, input fills. It has to invert between light and dark
+   * or those fills disappear into the background.
+   */
+  surfaceTint: string
 }
 
 export interface ThemePreset {
@@ -38,6 +44,7 @@ const dark = (over: Partial<Palette>): Palette => ({
   accentFg: '#06090f',
   line: 'rgb(255 255 255 / 12%)',
   surfaceBase: '12 14 19',
+  surfaceTint: '255 255 255',
   ...over,
 })
 
@@ -51,6 +58,7 @@ const light = (over: Partial<Palette>): Palette => ({
   accentFg: '#ffffff',
   line: 'rgb(0 0 0 / 12%)',
   surfaceBase: '255 255 255',
+  surfaceTint: '17 22 32',
   ...over,
 })
 

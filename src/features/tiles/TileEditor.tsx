@@ -51,10 +51,6 @@ export function TileEditor({
     }
   }, [draft.image.kind])
 
-  // Tells the user whether "Auto" will actually find a logo for this URL.
-  const autoBrand = useAsyncValue(draft.url ? `brand:${draft.url}` : null, () =>
-    resolveBrand(draft.url),
-  )
 
   const filteredBrands = useMemo(() => {
     const needle = brandQuery.trim().toLowerCase()
@@ -64,6 +60,12 @@ export function TileEditor({
 
   const normalisedUrl = normaliseUrl(draft.url)
   const valid = normalisedUrl.length > 0
+
+  // Tells the user whether "Auto" will actually find a logo. Keyed on the
+  // normalised URL, since "netflix.com" alone has no parsable host.
+  const autoBrand = useAsyncValue(normalisedUrl ? `brand:${normalisedUrl}` : null, () =>
+    resolveBrand(normalisedUrl),
+  )
 
   const preview = { ...draft, url: normalisedUrl || 'https://example.com' }
 

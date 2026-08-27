@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { Icon } from '@/core/icons'
+import { BackgroundLayer } from '@/features/background/BackgroundLayer'
 import { SettingsOverlay } from '@/features/settings-ui/SettingsOverlay'
 import { TileGrid } from '@/features/tiles/TileGrid'
 import './App.css'
@@ -29,7 +30,7 @@ export function App() {
 
   return (
     <div className="page" data-align={layout.align}>
-      <div className="page__background" />
+      <BackgroundLayer />
 
       <main
         className="page__content"

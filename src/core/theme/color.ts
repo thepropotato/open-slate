@@ -72,39 +72,68 @@ export function ensureContrast(color: string, against: string, ratio = 3.2): str
 
 /**
  * Averages an image down to a single vivid colour, used when the accent is
- * derived from the wallpaper. Runs on a tiny offscreen canvas, and buckets by
+ * derived from the wallpaper. Runs on a tiny offscreen canvas, and scores by
  * saturation so a mostly-grey photo still yields its one colourful region.
  */
-export async function dominantColor(src: string): Promise<string | null> {
+export async function dominantColor(src: string, allowCrossOrigin = false): Promise<string | null> {
+  // Reading pixels back from a cross-origin image needs CORS headers the source
+  // may not send. Requesting it anyway costs a failed fetch and a console error,
+  // so callers that sample many URLs opt out.
+  if (!allowCrossOrigin && !isReadable(src)) return null
   try {
     const bitmap = await loadBitmap(src)
-    const size = 32
-    const canvas = new OffscreenCanvas(size, size)
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return null
-    ctx.drawImage(bitmap, 0, 0, size, size)
-    const { data } = ctx.getImageData(0, 0, size, size)
-
-    let best = { score: -1, rgb: { r: 0, g: 0, b: 0 } }
-    let sum = { r: 0, g: 0, b: 0, n: 0 }
-
-    for (let i = 0; i < data.length; i += 4) {
-      if (data[i + 3] < 128) continue
-      const rgb = { r: data[i], g: data[i + 1], b: data[i + 2] }
-      const max = Math.max(rgb.r, rgb.g, rgb.b)
-      const min = Math.min(rgb.r, rgb.g, rgb.b)
-      const saturation = max === 0 ? 0 : (max - min) / max
-      // Favour saturated mid-tones over blown-out highlights and shadows.
-      const score = saturation * (1 - Math.abs(max / 255 - 0.62))
-      if (score > best.score) best = { score, rgb }
-      sum = { r: sum.r + rgb.r, g: sum.g + rgb.g, b: sum.b + rgb.b, n: sum.n + 1 }
-    }
-
-    if (best.score > 0.12) return rgbToHex(best.rgb)
-    if (sum.n === 0) return null
-    return rgbToHex({ r: sum.r / sum.n, g: sum.g / sum.n, b: sum.b / sum.n })
+    const colour = sampleDominant(bitmap)
+    bitmap.close()
+    return colour
   } catch {
     return null
+  }
+}
+
+/** Same sampling, for something already drawable — a `<video>`, say. */
+export function dominantColorOf(source: CanvasImageSource): string | null {
+  try {
+    return sampleDominant(source)
+  } catch {
+    return null
+  }
+}
+
+function sampleDominant(source: CanvasImageSource): string | null {
+  const size = 32
+  const canvas = new OffscreenCanvas(size, size)
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return null
+  ctx.drawImage(source, 0, 0, size, size)
+  const { data } = ctx.getImageData(0, 0, size, size)
+
+  let best = { score: -1, rgb: { r: 0, g: 0, b: 0 } }
+  let sum = { r: 0, g: 0, b: 0, n: 0 }
+
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i + 3] < 128) continue
+    const rgb = { r: data[i], g: data[i + 1], b: data[i + 2] }
+    const max = Math.max(rgb.r, rgb.g, rgb.b)
+    const min = Math.min(rgb.r, rgb.g, rgb.b)
+    const saturation = max === 0 ? 0 : (max - min) / max
+    // Favour saturated mid-tones over blown-out highlights and shadows.
+    const score = saturation * (1 - Math.abs(max / 255 - 0.62))
+    if (score > best.score) best = { score, rgb }
+    sum = { r: sum.r + rgb.r, g: sum.g + rgb.g, b: sum.b + rgb.b, n: sum.n + 1 }
+  }
+
+  if (best.score > 0.12) return rgbToHex(best.rgb)
+  if (sum.n === 0) return null
+  return rgbToHex({ r: sum.r / sum.n, g: sum.g / sum.n, b: sum.b / sum.n })
+}
+
+/** True for blob:, data: and same-origin URLs, whose pixels are always readable. */
+function isReadable(src: string): boolean {
+  if (/^(blob:|data:)/.test(src)) return true
+  try {
+    return new URL(src, location.href).origin === location.origin
+  } catch {
+    return false
   }
 }
 

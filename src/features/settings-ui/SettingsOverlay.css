@@ -21,13 +21,18 @@
   z-index: calc(var(--z-modal) + 1);
   width: min(940px, 100vw);
   transform: translateX(100%);
-  transition: transform var(--dur-slow) var(--ease);
-  box-shadow: -24px 0 60px rgb(0 0 0 / 40%);
+  /* Hidden rather than just off-screen: the shadow would otherwise spill back
+     onto the page, and a closed panel must not be reachable by keyboard. */
+  visibility: hidden;
+  transition: transform var(--dur-slow) var(--ease), visibility var(--dur-slow) step-end;
   overflow: hidden;
 }
 
 .overlay[data-open='true'] {
   transform: none;
+  visibility: visible;
+  box-shadow: -24px 0 60px rgb(0 0 0 / 40%);
+  transition: transform var(--dur-slow) var(--ease), visibility 0s;
 }
 
 .overlay__loading {

@@ -68,6 +68,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       '--fg-subtle': palette.fgSubtle,
       '--line': palette.line,
       '--surface-base': palette.surfaceBase,
+      '--surface-tint': palette.surfaceTint,
       '--accent': accent,
       '--accent-fg': readableOn(accent),
       '--radius': `${appearance.radius}px`,

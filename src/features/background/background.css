@@ -1,0 +1,81 @@
+/* Wallpaper stack. Everything is fixed and pointer-transparent. */
+
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-background);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bg__base,
+.bg__media,
+.bg__dim,
+.bg__vignette {
+  position: absolute;
+  inset: 0;
+}
+
+.bg__media {
+  /* `--bg-scale` comes from settings; the origin keeps the crop centred. */
+  transform: scale(var(--bg-scale, 1));
+  transform-origin: center;
+  will-change: transform, filter;
+}
+
+.bg__media--image {
+  background-color: transparent;
+}
+
+.bg__media--video {
+  width: 100%;
+  height: 100%;
+}
+
+.bg__media[data-fade='true'] {
+  animation: bg-fade-in var(--dur-slow) var(--ease) both;
+}
+
+.bg__media[data-ken-burns='true'] {
+  animation: bg-ken-burns 90s ease-in-out infinite alternate;
+}
+
+.bg__media[data-ken-burns='true'][data-fade='true'] {
+  animation:
+    bg-fade-in var(--dur-slow) var(--ease) both,
+    bg-ken-burns 90s ease-in-out infinite alternate;
+}
+
+.bg__dim {
+  background: #000;
+}
+
+/* Corner falloff, kept subtle so text stays the brightest thing on screen. */
+.bg__vignette {
+  background: radial-gradient(ellipse at center, transparent 42%, #000 130%);
+}
+
+@keyframes bg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes bg-ken-burns {
+  from {
+    transform: scale(calc(var(--bg-scale, 1) * 1.02)) translate3d(-0.6%, -0.4%, 0);
+  }
+  to {
+    transform: scale(calc(var(--bg-scale, 1) * 1.12)) translate3d(0.8%, 0.6%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg__media[data-ken-burns='true'],
+  .bg__media[data-fade='true'] {
+    animation: none;
+  }
+}

@@ -1,4 +1,6 @@
 .modal {
+  /* The reset zeroes every margin, which also removes <dialog>'s auto-centring. */
+  margin: auto;
   max-width: calc(100vw - 32px);
   max-height: min(84vh, 760px);
   padding: 0;
