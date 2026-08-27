@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Icon } from '@/core/icons'
-import { Button, Row, TextArea } from '@/core/ui'
+import { Icon, type IconName } from '@/core/icons'
+import { Button, ConfirmDialog, Row, TextArea } from '@/core/ui'
 import { useAsyncValue } from '@/core/hooks'
 import { mediaStore } from '@/core/storage/blobStore'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
@@ -23,7 +23,9 @@ export function DataPanel() {
   const [paste, setPaste] = useState('')
   const [themeInput, setThemeInput] = useState('')
   const [message, setMessage] = useState<{ kind: 'ok' | 'bad'; text: string } | null>(null)
-  const [confirming, setConfirming] = useState(false)
+  /* Anything that overwrites or deletes what is already stored waits here for
+     a confirmation, so a stray click cannot take a configuration with it. */
+  const [pending, setPending] = useState<Confirmation | null>(null)
 
   const usage = useAsyncValue('media-usage', () => mediaStore.usage())
 
@@ -40,22 +42,46 @@ export function DataPanel() {
 
   const loadFile = async (file: File | undefined) => {
     if (!file) return
+    // Read before asking: a file that will not parse is a bad-input message,
+    // not a question about replacing anything.
+    let incoming: ReturnType<typeof importSettings>
     try {
-      replace(importSettings(await file.text()))
-      setMessage({ kind: 'ok', text: `Loaded ${file.name}.` })
+      incoming = importSettings(await file.text())
     } catch (error) {
       setMessage({ kind: 'bad', text: describe(error) })
+      return
     }
+    setPending({
+      title: 'Replace your configuration?',
+      body: `Loading ${file.name} overwrites every setting on this device, including tiles, notes and tasks. This cannot be undone.`,
+      confirmLabel: 'Replace everything',
+      confirmIcon: 'import',
+      run: () => {
+        replace(incoming)
+        setMessage({ kind: 'ok', text: `Loaded ${file.name}.` })
+      },
+    })
   }
 
   const applyPaste = () => {
+    let incoming: ReturnType<typeof importSettings>
     try {
-      replace(importSettings(paste))
-      setPaste('')
-      setMessage({ kind: 'ok', text: 'Configuration applied.' })
+      incoming = importSettings(paste)
     } catch (error) {
       setMessage({ kind: 'bad', text: describe(error) })
+      return
     }
+    setPending({
+      title: 'Replace your configuration?',
+      body: 'Applying this configuration overwrites every setting on this device, including tiles, notes and tasks. This cannot be undone.',
+      confirmLabel: 'Replace everything',
+      confirmIcon: 'check',
+      run: () => {
+        replace(incoming)
+        setPaste('')
+        setMessage({ kind: 'ok', text: 'Configuration applied.' })
+      },
+    })
   }
 
   const copyTheme = async () => {
@@ -168,10 +194,17 @@ export function DataPanel() {
           <Button
             variant="danger"
             icon="remove"
-            onClick={() => {
-              void mediaStore.clear()
-              setMessage({ kind: 'ok', text: 'Stored media deleted.' })
-            }}
+            onClick={() =>
+              setPending({
+                title: 'Delete all stored media?',
+                body: 'Every wallpaper and tile image saved in this browser is removed. Anything you did not download a copy of is gone for good.',
+                confirmLabel: 'Delete all media',
+                run: () => {
+                  void mediaStore.clear()
+                  setMessage({ kind: 'ok', text: 'Stored media deleted.' })
+                },
+              })
+            }
           >
             Delete all media
           </Button>
@@ -180,32 +213,51 @@ export function DataPanel() {
 
       <Row title="Start over" help="Restores every setting to its default." stacked>
         <div className="data__row">
-          {confirming ? (
-            <>
-              <Button
-                variant="danger"
-                icon="reset"
-                onClick={() => {
+          <Button
+            variant="danger"
+            icon="reset"
+            onClick={() =>
+              setPending({
+                title: 'Reset every setting?',
+                body: 'Appearance, layout, tiles, notes and tasks all go back to their defaults. Download a configuration first if you want a way back.',
+                confirmLabel: 'Reset everything',
+                confirmIcon: 'reset',
+                run: () => {
                   void reset()
-                  setConfirming(false)
                   setMessage({ kind: 'ok', text: 'Everything reset to defaults.' })
-                }}
-              >
-                Yes, reset everything
-              </Button>
-              <Button variant="ghost" onClick={() => setConfirming(false)}>
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <Button variant="danger" icon="reset" onClick={() => setConfirming(true)}>
-              Reset all settings
-            </Button>
-          )}
+                },
+              })
+            }
+          >
+            Reset all settings
+          </Button>
         </div>
       </Row>
+
+      {pending ? (
+        <ConfirmDialog
+          title={pending.title}
+          body={pending.body}
+          confirmLabel={pending.confirmLabel}
+          confirmIcon={pending.confirmIcon}
+          onCancel={() => setPending(null)}
+          onConfirm={() => {
+            pending.run()
+            setPending(null)
+          }}
+        />
+      ) : null}
     </div>
   )
+}
+
+/** A destructive action held until the user says yes. */
+interface Confirmation {
+  title: string
+  body: string
+  confirmLabel: string
+  confirmIcon?: IconName
+  run: () => void
 }
 
 const describe = (error: unknown): string =>

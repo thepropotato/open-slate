@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '@/core/icons'
-import { Button, Row, Toggle } from '@/core/ui'
+import { Button, ConfirmDialog, Row, Toggle } from '@/core/ui'
 import { useAsyncValue } from '@/core/hooks'
 import { isExtension } from '@/core/platform/browser'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
@@ -18,6 +18,10 @@ export function SyncPanel() {
   const { set, replace } = useSettingsActions()
   const [revision, setRevision] = useState(0)
   const [message, setMessage] = useState('')
+  /* Both applying the synced copy and deleting it destroy something — this
+     device's settings, or the copy the other devices read. Neither happens
+     on a single click. */
+  const [confirm, setConfirm] = useState<'pull' | 'forget' | null>(null)
 
   const state = useAsyncValue(`syncstate:${revision}`, readSyncState)
   const refresh = () => setRevision((n) => n + 1)
@@ -98,14 +102,41 @@ export function SyncPanel() {
               <Button icon="upstream" onClick={() => void push()}>
                 Send this device
               </Button>
-              <Button icon="download" onClick={() => void pull()}>
+              <Button icon="download" onClick={() => setConfirm('pull')}>
                 Apply the synced copy
               </Button>
-              <Button variant="danger" icon="remove" onClick={() => void forget()}>
+              <Button variant="danger" icon="remove" onClick={() => setConfirm('forget')}>
                 Delete synced copy
               </Button>
             </div>
           </Row>
+
+          {confirm === 'pull' ? (
+            <ConfirmDialog
+              title="Apply the synced copy?"
+              body="Every setting on this device is replaced by the copy saved from another device, including tiles, notes and tasks."
+              confirmLabel="Apply and replace"
+              confirmIcon="download"
+              onCancel={() => setConfirm(null)}
+              onConfirm={() => {
+                setConfirm(null)
+                void pull()
+              }}
+            />
+          ) : null}
+
+          {confirm === 'forget' ? (
+            <ConfirmDialog
+              title="Delete the synced copy?"
+              body="The copy in your Chrome profile's sync storage is removed, so your other devices have nothing left to pull. Settings on this device are untouched."
+              confirmLabel="Delete synced copy"
+              onCancel={() => setConfirm(null)}
+              onConfirm={() => {
+                setConfirm(null)
+                void forget()
+              }}
+            />
+          ) : null}
 
           {state?.lastError ? (
             <p className="data__msg" data-kind="bad">

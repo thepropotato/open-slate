@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAsyncValue } from '@/core/hooks'
 import { Icon } from '@/core/icons'
-import { Button, ColorInput, Modal, Row, Segmented, Select, TextInput } from '@/core/ui'
+import { Button, ColorInput, ConfirmDialog, Modal, Row, Segmented, Select, TextInput } from '@/core/ui'
 import { measureMedia, mediaStore } from '@/core/storage/blobStore'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { Tile as TileSchema, type Tile as TileModel } from '@/core/settings/schema'
@@ -45,6 +45,7 @@ export function TileEditor({
       TileSchema.parse({ id: uid('tile'), url: '', kind: initialKind, pageId: initialPageId }),
   )
   const isFolder = draft.kind === 'folder'
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [brandQuery, setBrandQuery] = useState('')
   const [brands, setBrands] = useState<Brand[]>([])
 
@@ -107,7 +108,7 @@ export function TileEditor({
       footer={
         <>
           {onDelete ? (
-            <Button variant="danger" icon="remove" onClick={onDelete}>
+            <Button variant="danger" icon="remove" onClick={() => setConfirmingDelete(true)}>
               Delete
             </Button>
           ) : null}
@@ -126,6 +127,23 @@ export function TileEditor({
         </>
       }
     >
+      {confirmingDelete && onDelete ? (
+        <ConfirmDialog
+          title={isFolder ? 'Delete this folder?' : 'Delete this tile?'}
+          body={
+            isFolder
+              ? `“${draft.title || 'This folder'}” and everything inside it is removed.`
+              : `“${draft.title || normalisedUrl || 'This tile'}” is removed.`
+          }
+          confirmLabel={isFolder ? 'Delete folder' : 'Delete tile'}
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={() => {
+            setConfirmingDelete(false)
+            onDelete()
+          }}
+        />
+      ) : null}
+
       <div className="tile-editor">
         <div className="tile-editor__preview">
           <div
