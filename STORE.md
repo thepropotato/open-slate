@@ -36,10 +36,22 @@ adds the widget that needs them. Declining leaves the rest of the page working.
 | `bookmarks` | The bookmarks widget and palette results. |
 | `history` | The history widget and palette results. |
 | `downloads` | The downloads widget. |
-| `geolocation` | Optional, only if the user asks the weather widget to use their location instead of typing a city. |
-| `https://*.open-meteo.com/*` | The weather widget's only network request. Open-Meteo needs no account or API key. |
+| `https://*.open-meteo.com/*` | The weather widget's forecast and place search. Open-Meteo needs no account or API key. |
+| `https://get.geojs.io/*`, `https://ipwho.is/*` | A one-off, city-level location lookup so the weather widget can place itself without a permission prompt. Two providers because either free service may rate-limit. Requested together with Open-Meteo, and never called again once a place is set. |
 | `https://api.coingecko.com/*` | The crypto widget's only network request. CoinGecko's public endpoint needs no account or API key. |
 | `https://*/*` | Required so the feeds widget can request access to **one origin at a time**, chosen by the user. See below. |
+
+### On geolocation
+
+The extension does **not** declare `geolocation`. Chrome refuses to make it an
+optional permission, and requiring it would put a "know your physical location"
+warning in front of every install for one widget.
+
+The widget also never calls `navigator.geolocation`: the object exists on an
+extension page, but the call fails without the manifest permission and logs a
+console warning. It places itself with a city-level IP lookup instead, falling
+back to the browser's timezone, and then to a search box for typing a town by
+hand — which is also how the detected place is corrected.
 
 ### On the broad `https://*/*` optional host pattern
 
@@ -68,9 +80,11 @@ What matters is that it is **optional and never requested wholesale**:
   uploaded.
 - Browser data read through the optional permissions above is used only to render
   the page and never leaves the device.
-- Outbound requests are limited to three cases, each behind a widget the user
+- Outbound requests are limited to four cases, each behind a widget the user
   added and a host permission the user granted:
   `api.open-meteo.com` (the coordinates of a chosen place),
+  `get.geojs.io` or `ipwho.is` (nothing but the request itself, answered with an
+  approximate city; called once, while the weather widget is being set up),
   `api.coingecko.com` (a list of coin ids and a currency code),
   and the feed addresses the user entered. No request carries an identifier of
   any kind, and responses are cached locally to keep the request count low.
