@@ -312,11 +312,16 @@ export function WidgetCanvas() {
          * easy to miss and easy to hit by accident. Widgets keep their own
          * inputs usable because dragging is only on while the canvas is
          * unlocked, and the frame's own buttons are excluded outright.
+         *
+         * `.wframe__live` marks content that may still be scrolled while
+         * arranging — a first-run card longer than its widget. It is excluded
+         * from the drag handle so the wheel reaches it; its children stay
+         * inert, so scrolling is all it gets.
          */
         dragConfig={{
           enabled: editing,
           handle: '.wframe',
-          cancel: '.wframe__tool, .react-resizable-handle',
+          cancel: '.wframe__tool, .wframe__live, .react-resizable-handle',
           bounded: false,
           threshold: 3,
         }}

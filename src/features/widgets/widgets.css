@@ -138,6 +138,25 @@
   user-select: none;
 }
 
+/*
+ * ...except that a widget marking its content live may still be *read* while
+ * arranging. A first-run card can be longer than the widget, and instructions
+ * whose end cannot be reached are no instructions at all.
+ *
+ * Scrolling only. The element takes pointer events so the wheel reaches it,
+ * and hands them straight back on every child, so nothing inside is clickable
+ * or typable — arranging and using a widget stay separate modes, and a drag
+ * begun over the card still moves the widget.
+ */
+.wframe[data-editing='true'] .wframe__live {
+  pointer-events: auto;
+  overflow-y: auto;
+}
+
+.wframe[data-editing='true'] .wframe__live > * {
+  pointer-events: none;
+}
+
 .wframe__missing {
   font-size: var(--text-xs);
   color: var(--fg-subtle);
@@ -163,11 +182,21 @@
   height: var(--wframe-bar);
   padding-inline: 6px;
   border-radius: var(--radius) var(--radius) 0 0;
-  border-bottom: 1px solid var(--line);
-  background: rgb(var(--surface-base) / 55%);
+  border-bottom: 1px solid rgb(var(--surface-tint) / 14%);
+  /*
+   * Lifted off the widget rather than tinted with the page behind it. The
+   * surface under the bar is already near the page's own colour, so a wash of
+   * `--surface-base` left the bar invisible — the tint reads as a raised strip
+   * against any surface, in either theme.
+   */
+  background: linear-gradient(
+      rgb(var(--surface-tint) / 12%),
+      rgb(var(--surface-tint) / 12%)
+    ),
+    rgb(var(--surface-base) / 72%);
   backdrop-filter: blur(14px);
   font-size: var(--text-xs);
-  color: var(--fg-muted);
+  color: var(--fg);
 }
 
 .wframe__drag {
@@ -176,7 +205,7 @@
   width: 18px;
   height: 18px;
   flex: none;
-  color: var(--fg-subtle);
+  color: var(--fg-muted);
 }
 
 /* The whole widget is the drag target while editing, buttons excepted. */
@@ -216,12 +245,17 @@
   height: 22px;
   border-radius: var(--radius-sm);
   color: var(--fg-muted);
-  background: rgb(var(--surface-tint) / 10%);
+  /*
+   * Bare icons. The bar is already a raised strip, so a filled chip on top of
+   * it reads as a second surface rather than a control — the background waits
+   * for the pointer, which is the only time it says anything.
+   */
+  background: none;
 }
 
 .wframe__tool:hover {
   color: var(--fg);
-  background: rgb(var(--surface-tint) / 18%);
+  background: rgb(var(--surface-tint) / 14%);
 }
 
 /* An unlocked widget shows its own outline so empty ones are still findable. */
