@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "New Tab",
+  "version": "0.1.0",
+  "description": "A customizable speed dial and dashboard for your new tab page.",
+  "minimum_chrome_version": "120",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "chrome_url_overrides": { "newtab": "newtab.html" },
+  "options_page": "options.html",
+  "background": { "service_worker": "background.js", "type": "module" },
+  "permissions": ["storage", "unlimitedStorage", "favicon", "alarms", "topSites"],
+  "optional_permissions": [
+    "sessions",
+    "bookmarks",
+    "history",
+    "downloads",
+    "tabs",
+    "tabGroups",
+    "geolocation"
+  ],
+  "optional_host_permissions": ["https://*.open-meteo.com/*"],
+  "web_accessible_resources": [
+    { "resources": ["_favicon/*"], "matches": ["<all_urls>"], "extension_ids": [] }
+  ]
+}

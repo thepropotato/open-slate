@@ -1,0 +1,185 @@
+/*
+ * Base tokens and reset.
+ *
+ * Every value here is a fallback: `ThemeProvider` overwrites the same custom
+ * properties on `:root` from the user's settings. Nothing in the app should
+ * hard-code a colour, radius or duration — always go through a token, because
+ * that is what makes "rounded vs boxy" and theming a one-setting change.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* Palette — replaced per preset. */
+  --bg: #0b0d12;
+  --bg-elevated: #14171f;
+  --fg: #eef1f6;
+  --fg-muted: #a2abbb;
+  --fg-subtle: #6d768a;
+  --accent: #6ea8fe;
+  --accent-fg: #06090f;
+  --line: rgb(255 255 255 / 12%);
+  --surface-tint: 255 255 255;
+  --surface-base: 12 14 19;
+
+  /* Shape — `--radius` is the master control. */
+  --radius: 16px;
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-lg: calc(var(--radius) * 1.35);
+  --radius-pill: 999px;
+
+  /* Surfaces */
+  --surface-opacity: 0.4;
+  --surface-blur: 18px;
+  --surface: rgb(var(--surface-base) / var(--surface-opacity));
+  --surface-border: 1px solid var(--line);
+  --shadow: 0 12px 32px rgb(0 0 0 / 28%);
+
+  /* Rhythm */
+  --space: 12px;
+  --space-xs: calc(var(--space) * 0.5);
+  --space-sm: calc(var(--space) * 0.75);
+  --space-lg: calc(var(--space) * 1.5);
+  --space-xl: calc(var(--space) * 2.5);
+
+  /* Type */
+  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  --font-scale: 1;
+  --text-xs: calc(0.72rem * var(--font-scale));
+  --text-sm: calc(0.82rem * var(--font-scale));
+  --text-md: calc(0.94rem * var(--font-scale));
+  --text-lg: calc(1.15rem * var(--font-scale));
+  --text-xl: calc(1.6rem * var(--font-scale));
+
+  /* Motion — set to 0 when animations are off or reduced motion is requested. */
+  --motion: 1;
+  --dur-fast: calc(120ms * var(--motion));
+  --dur: calc(200ms * var(--motion));
+  --dur-slow: calc(420ms * var(--motion));
+  --ease: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --z-background: 0;
+  --z-content: 10;
+  --z-overlay: 100;
+  --z-modal: 200;
+  --z-toast: 300;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion: 0;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: var(--text-md);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+  padding: 0;
+}
+
+img,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Shared surface treatments, selected by `appearance.surface`. */
+.surface {
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: var(--surface-border);
+  box-shadow: var(--shadow);
+}
+
+[data-surface='glass'] .surface {
+  backdrop-filter: blur(var(--surface-blur)) saturate(160%);
+}
+
+[data-surface='solid'] .surface {
+  background: var(--bg-elevated);
+  backdrop-filter: none;
+}
+
+[data-surface='outline'] .surface {
+  background: rgb(var(--surface-base) / 15%);
+  box-shadow: none;
+  backdrop-filter: blur(4px);
+}
+
+[data-surface='none'] .surface {
+  background: none;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.scroll-y {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--fg-subtle) transparent;
+  overscroll-behavior: contain;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

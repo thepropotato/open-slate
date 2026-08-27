@@ -1,0 +1,77 @@
+.page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.page[data-align='top'] {
+  justify-content: flex-start;
+}
+
+.page[data-align='center'] {
+  justify-content: center;
+}
+
+.page[data-align='bottom'] {
+  justify-content: flex-end;
+}
+
+.page__background {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-background);
+}
+
+.page__content {
+  position: relative;
+  z-index: var(--z-content);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: var(--space-xl);
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.band {
+  display: flex;
+  flex-direction: column;
+}
+
+.page__settings {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: var(--z-overlay);
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-muted);
+  background: rgb(var(--surface-base) / 45%);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  opacity: 0.35;
+  transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+
+.page__settings:hover {
+  opacity: 1;
+  color: var(--fg);
+  transform: rotate(30deg);
+}
+
+/* Zen mode hides the chrome until the pointer moves anywhere on the page. */
+[data-zen='true'] .page__settings,
+.page__settings[data-zen='true'] {
+  opacity: 0;
+}
+
+.page:hover .page__settings[data-zen='true'] {
+  opacity: 0.35;
+}

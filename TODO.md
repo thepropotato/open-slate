@@ -13,12 +13,12 @@ requested per widget.
 ---
 
 ## Phase 0 — Foundation
-- [ ] Scaffold Vite + React + TS, MV3 manifest, newtab override, dev HMR
-- [ ] Design tokens as CSS vars; `radius` token drives rounded↔boxy everywhere
-- [ ] Settings core: zod schema + defaults + version migrations
-- [ ] `useSettings()` with live `storage.onChanged` sync across open tabs
-- [ ] Schema-driven settings UI: declare a setting once, control auto-renders
-- [ ] Font Awesome subset + icon-only rule enforced by lint
+- [x] Scaffold Vite + React + TS, MV3 manifest, newtab override, dev HMR
+- [x] Design tokens as CSS vars; `radius` token drives rounded↔boxy everywhere
+- [x] Settings core: zod schema + defaults + version migrations
+- [x] `useSettings()` with live `storage.onChanged` sync across open tabs
+- [x] Schema-driven settings UI: declare a setting once, control auto-renders
+- [x] Font Awesome subset + icon-only rule enforced by lint
 
 ## Phase 1 — Tiles (the speed dial)
 - [ ] Tile data model: url, title, hero image, favicon, brand color, custom overrides
@@ -78,3 +78,12 @@ requested per widget.
 - [ ] Pomodoro / timer / stopwatch
 - [ ] Tile folders and multiple pages
 - [ ] Sync layout across devices
+
+---
+
+## Notes recorded during the build
+- Settings persist to `chrome.storage.local`, not `sync`: `sync` caps items at 8KB,
+  which a tile list plus grid layouts blows past. Cross-device sync is Phase 8 and
+  will push a trimmed subset. The store abstraction takes the area as a parameter,
+  so switching is a one-line change.
+- TypeScript is pinned to 5.9 — `typescript-eslint` does not yet support TS 7.
