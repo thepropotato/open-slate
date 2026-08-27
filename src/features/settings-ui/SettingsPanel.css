@@ -1,6 +1,6 @@
 .settings {
   display: grid;
-  grid-template-columns: 208px 1fr;
+  grid-template-columns: 236px 1fr;
   height: 100%;
   min-height: 0;
   background: var(--bg);
@@ -17,11 +17,24 @@
   overflow-y: auto;
 }
 
+/* The icon sits inside the field rather than beside it, so the search bar
+   reads as one control and lines up with the nav items below it. */
 .settings__search {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
   color: var(--fg-subtle);
+}
+
+.settings__search > svg {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  pointer-events: none;
+}
+
+.settings__search .ctl-input {
+  padding-left: 32px;
 }
 
 .settings__navitem {
@@ -59,6 +72,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+}
+
+.settings__navfooter > .ctl-btn {
+  justify-content: flex-start;
 }
 
 .settings__body {
