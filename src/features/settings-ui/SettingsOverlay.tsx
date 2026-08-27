@@ -1,7 +1,6 @@
 import { Suspense, useEffect, useRef } from 'react'
 import { lazyChunk } from '@/core/util/lazyChunk'
 import { Button } from '@/core/ui'
-import { useSettingsActions } from '@/core/settings/SettingsProvider'
 import { isExtension } from '@/core/platform/browser'
 import './SettingsOverlay.css'
 
@@ -13,9 +12,14 @@ const SettingsPanel = lazyChunk(() =>
   import('./SettingsPanel').then((m) => ({ default: m.SettingsPanel })),
 )
 
-/** Slide-over wrapper so settings can be edited without leaving the new tab. */
+/**
+ * Slide-over wrapper so settings can be edited without leaving the new tab.
+ *
+ * The footer deliberately holds nothing destructive: resetting lives in the
+ * Backup section behind its own confirmation, rather than one click away from
+ * the navigation.
+ */
 export function SettingsOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { reset } = useSettingsActions()
   const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -39,20 +43,11 @@ export function SettingsOverlay({ open, onClose }: { open: boolean; onClose: () 
           <SettingsPanel
             onClose={onClose}
             footer={
-              <>
-                {isExtension() ? (
-                  <Button
-                    icon="external"
-                    variant="ghost"
-                    onClick={() => chrome.runtime.openOptionsPage()}
-                  >
-                    Open full page
-                  </Button>
-                ) : null}
-                <Button icon="reset" variant="ghost" onClick={() => void reset()}>
-                  Reset all
+              isExtension() ? (
+                <Button icon="external" onClick={() => chrome.runtime.openOptionsPage()}>
+                  Open full page
                 </Button>
-              </>
+              ) : null
             }
           />
           </Suspense>
