@@ -13,7 +13,7 @@ import { z } from 'zod'
  */
 
 export const SETTINGS_KEY = 'settings'
-export const SETTINGS_VERSION = 1
+export const SETTINGS_VERSION = 3
 
 const hex = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/)
 const unit = z.number().min(0).max(1)
@@ -29,20 +29,20 @@ export type Visibility = z.infer<typeof Visibility>
 export const Appearance = z.object({
   /** `auto` follows the OS/Chrome light-dark setting via `prefers-color-scheme`. */
   mode: z.enum(['auto', 'light', 'dark']).default('auto'),
-  preset: z.string().default('midnight'),
+  preset: z.string().default('graphite'),
   /** Where the accent colour comes from. `wallpaper` samples the background. */
-  accentSource: z.enum(['preset', 'wallpaper', 'custom']).default('preset'),
+  accentSource: z.enum(['preset', 'wallpaper', 'custom']).default('wallpaper'),
   accent: hex.default('#6ea8fe'),
   /** Master corner radius, in px. 0 == fully boxy. Drives every surface. */
   radius: z.number().min(0).max(40).default(16),
-  density: z.enum(['compact', 'comfortable', 'spacious']).default('comfortable'),
+  density: z.enum(['compact', 'comfortable', 'spacious']).default('spacious'),
   fontFamily: z.string().default('system'),
   fontScale: z.number().min(0.75).max(1.5).default(1),
   /** How widget and panel surfaces are painted. */
   surface: z.enum(['glass', 'solid', 'outline', 'none']).default('glass'),
   surfaceOpacity: unit.default(0.4),
   surfaceBlur: z.number().min(0).max(40).default(18),
-  shadow: z.enum(['none', 'soft', 'strong']).default('soft'),
+  shadow: z.enum(['none', 'soft', 'strong']).default('none'),
   animations: z.boolean().default(true),
   /** Hides all chrome until the pointer moves. */
   zenMode: z.boolean().default(false),
@@ -70,7 +70,7 @@ export const Tile = z.object({
   image: TileImage.prefault({}),
   /** Overrides the derived brand colour when set. */
   background: hex.nullable().default(null),
-  /** Per-tile override of the global label/favicon rules. */
+  /** Per-tile override of the global label rules. */
   labelPlacement: z.enum(['below', 'inside-bottom', 'inside-top', 'none']).nullable().default(null),
   pinned: z.boolean().default(false),
   /**
@@ -105,12 +105,9 @@ export const Tiles = z.object({
   gap: z.number().min(0).max(64).default(18),
   /** Null follows `appearance.radius`. */
   radius: z.number().min(0).max(60).nullable().default(null),
-  labelPlacement: z.enum(['below', 'inside-bottom', 'inside-top', 'none']).default('below'),
+  labelPlacement: z.enum(['below', 'inside-bottom', 'inside-top', 'none']).default('inside-bottom'),
   labelVisibility: Visibility.default('hover'),
   labelAlign: z.enum(['start', 'center', 'end']).default('center'),
-  faviconVisibility: Visibility.default('hover'),
-  faviconCorner: Corner.default('bottom-left'),
-  faviconSize: z.number().min(12).max(48).default(22),
   /**
    * How the tile's plate is coloured relative to the logo:
    *  brand       plate takes the brand colour, mark goes black or white
@@ -118,9 +115,9 @@ export const Tiles = z.object({
    *  tinted      plate is a wash of the brand colour, mark takes it too
    *  transparent no plate at all
    */
-  plateStyle: z.enum(['brand', 'neutral', 'tinted', 'transparent']).default('brand'),
+  plateStyle: z.enum(['brand', 'neutral', 'tinted', 'transparent']).default('tinted'),
   imageFit: z.enum(['cover', 'contain']).default('contain'),
-  imagePadding: z.number().min(0).max(40).default(14),
+  imagePadding: z.number().min(0).max(40).default(32),
   hoverEffect: z.enum(['none', 'lift', 'zoom', 'glow', 'tilt']).default('lift'),
   openIn: z.enum(['current', 'newTab']).default('current'),
   showAddButton: z.boolean().default(true),
@@ -208,27 +205,48 @@ export const Widgets = z.object({
   instances: z.array(WidgetInstance).prefault([{ id: DEFAULT_CLOCK_ID, type: 'clock' }]),
   /** Layouts keyed by breakpoint name (`lg`, `md`, `sm`). */
   layouts: z.record(z.string(), z.array(GridItem)).prefault({
-    lg: [{ i: DEFAULT_CLOCK_ID, x: 8, y: 0, w: 8, h: 3 }],
-    md: [{ i: DEFAULT_CLOCK_ID, x: 8, y: 0, w: 8, h: 3 }],
-    sm: [{ i: DEFAULT_CLOCK_ID, x: 0, y: 0, w: 12, h: 3 }],
+    lg: [{ i: DEFAULT_CLOCK_ID, x: 2, y: 0, w: 2, h: 1 }],
+    md: [{ i: DEFAULT_CLOCK_ID, x: 1, y: 0, w: 2, h: 1 }],
+    sm: [{ i: DEFAULT_CLOCK_ID, x: 0, y: 0, w: 2, h: 1 }],
   }),
-  columns: z.number().min(4).max(48).default(24),
-  rowHeight: z.number().min(20).max(160).default(56),
+  /**
+   * Cells across at the widest breakpoint. One cell is a small widget, and
+   * cells are square, so this is really "how big is a widget" — fewer columns
+   * means larger widgets. Narrower breakpoints scale down from here.
+   */
+  columns: z.number().min(4).max(10).default(6),
   margin: z.number().min(0).max(48).default(14),
   /** When locked, widgets cannot be dragged or resized. */
   locked: z.boolean().default(true),
-  compact: z.enum(['vertical', 'horizontal', 'none']).default('none'),
+  compact: z.enum(['vertical', 'horizontal', 'none']).default('vertical'),
 }).prefault({})
 
 /* ------------------------------------------------------------------ layout */
 
+/** Which of the two content bands a tab shows. Search belongs to neither. */
+export const Pane = z.enum(['widgets', 'tiles'])
+export type Pane = z.infer<typeof Pane>
+
 export const Layout = z.object({
   /** Vertical stacking order of the page's three main bands. */
-  order: z.array(z.enum(['widgets', 'search', 'tiles'])).default(['widgets', 'search', 'tiles']),
+  /**
+   * Which bands appear, and in what order. Search is always hoisted to the top
+   * by the shell, so its position here only decides whether it appears at all.
+   */
+  order: z.array(z.enum(['widgets', 'search', 'tiles'])).default(['search', 'widgets', 'tiles']),
   align: z.enum(['top', 'center', 'bottom']).default('center'),
   maxWidth: z.number().min(600).max(2400).default(1180),
   paddingY: z.number().min(0).max(200).default(48),
   gap: z.number().min(0).max(120).default(36),
+  /**
+   * `scroll` stacks every band on one scrolling page. `tabs` shows one content
+   * band at a time behind a switch, so a tall dashboard never buries the tiles.
+   */
+  viewMode: z.enum(['scroll', 'tabs']).default('tabs'),
+  /** Which pane a new tab opens on. `last` reopens whatever was left showing. */
+  defaultPane: z.enum(['last', 'widgets', 'tiles']).default('last'),
+  /** Written on every switch so `defaultPane: 'last'` has something to read. */
+  lastPane: Pane.default('widgets'),
 }).prefault({})
 
 /* ------------------------------------------------------------------ search */
@@ -236,7 +254,7 @@ export const Layout = z.object({
 export const Search = z.object({
   enabled: z.boolean().default(true),
   engineId: z.string().default('google'),
-  showEnginePicker: z.boolean().default(true),
+  showEnginePicker: z.boolean().default(false),
   autofocus: z.boolean().default(false),
   placeholder: z.string().default('Search the web'),
   width: z.number().min(240).max(1200).default(680),
