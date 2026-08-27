@@ -158,12 +158,19 @@ export function MediaLibrary() {
             <MediaCard
               key={item.id}
               item={item}
+              /* Being the chosen still or video is not the same as being one of
+                 many slides — only the former is what the page is showing now. */
+              current={
+                (background.type === 'image' && background.image.blobId === item.id) ||
+                (background.type === 'video' && background.video.blobId === item.id)
+              }
               active={
                 background.image.blobId === item.id ||
                 background.video.blobId === item.id ||
                 inSlideshow.has(item.id)
               }
               inSlideshow={inSlideshow.has(item.id)}
+              slideshowRunning={background.type === 'slideshow'}
               onUseStill={() => pickStill(item.id)}
               onUseVideo={() => pickVideo(item.id)}
               onToggleSlideshow={() => toggleInSlideshow(item.id)}
@@ -179,7 +186,9 @@ export function MediaLibrary() {
 function MediaCard({
   item,
   active,
+  current,
   inSlideshow,
+  slideshowRunning,
   onUseStill,
   onUseVideo,
   onToggleSlideshow,
@@ -187,7 +196,11 @@ function MediaCard({
 }: {
   item: MediaMeta
   active: boolean
+  /** Whether this is the wallpaper on screen right now. */
+  current: boolean
   inSlideshow: boolean
+  /** Whether the slideshow is the active background type at all. */
+  slideshowRunning: boolean
   onUseStill: () => void
   onUseVideo: () => void
   onToggleSlideshow: () => void
@@ -211,6 +224,11 @@ function MediaCard({
             <Icon name="video" />
           </span>
         ) : null}
+        {current ? (
+          <span className="media__badge media__badge--use">In use</span>
+        ) : slideshowRunning && inSlideshow ? (
+          <span className="media__badge media__badge--use">In slideshow</span>
+        ) : null}
       </div>
 
       <div className="media__meta">
@@ -225,12 +243,12 @@ function MediaCard({
 
       <div className="media__row">
         {isVideo ? (
-          <Button variant="ghost" icon="video" onClick={onUseVideo}>
+          <Button variant="ghost" icon="video" onClick={onUseVideo} disabled={current}>
             Use
           </Button>
         ) : (
           <>
-            <Button variant="ghost" icon="image" onClick={onUseStill}>
+            <Button variant="ghost" icon="image" onClick={onUseStill} disabled={current}>
               Use
             </Button>
             <Button
