@@ -51,6 +51,21 @@ export function FolderView({
     '--tile-fit': settings.imageFit,
   } as React.CSSProperties
 
+  /** The folder's tiles without drag plumbing: the normal path, and the Arrange fallback. */
+  const plainTiles = (arranging: boolean) =>
+    children.map((tile, index) => (
+      <Tile
+        key={tile.id}
+        tile={tile}
+        index={index}
+        settings={settings}
+        editing={arranging}
+        showHint={false}
+        onEdit={onEdit}
+        onRemove={onRemove}
+      />
+    ))
+
   return (
     <Modal title={folder.title || 'Folder'} width={680} onClose={onClose}>
       {children.length === 0 ? (
@@ -67,7 +82,9 @@ export function FolderView({
           style={gridStyle}
         >
           {editing ? (
-            <Suspense fallback={null}>
+            // The plain tiles stand in while the drag chunk loads, so entering
+            // Arrange never blinks the folder's contents away.
+            <Suspense fallback={plainTiles(true)}>
               <SortableTiles
                 items={children}
                 settings={settings}
@@ -78,18 +95,7 @@ export function FolderView({
               />
             </Suspense>
           ) : (
-            children.map((tile, index) => (
-              <Tile
-                key={tile.id}
-                tile={tile}
-                index={index}
-                settings={settings}
-                editing={false}
-                showHint={false}
-                onEdit={onEdit}
-                onRemove={onRemove}
-              />
-            ))
+            plainTiles(false)
           )}
         </div>
       )}

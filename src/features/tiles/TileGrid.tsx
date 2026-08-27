@@ -121,6 +121,23 @@ export function TileGrid() {
 
   const remove = (id: string) => write(removeTile(items, id))
 
+  /** The tiles without any drag plumbing: the normal path, and the Arrange fallback. */
+  const plainTiles = (arranging: boolean) =>
+    visible.map((tile, index) => (
+      <Tile
+        key={tile.id}
+        tile={tile}
+        index={index}
+        settings={tiles}
+        editing={arranging}
+        showHint={shortcuts}
+        childUrls={tile.kind === 'folder' ? childUrlsFor(tile.id) : undefined}
+        onOpenFolder={setOpenFolder}
+        onEdit={setEditorId}
+        onRemove={remove}
+      />
+    ))
+
   if (!tiles.enabled) return null
 
   const gridStyle = {
@@ -157,7 +174,12 @@ export function TileGrid() {
         style={gridStyle}
       >
         {editing ? (
-          <Suspense fallback={null}>
+          /*
+           * The fallback is the same band of tiles, frozen: swapping in `null`
+           * while the drag chunk loads would blink the whole row away and leave
+           * the add button alone on the line for a frame or two.
+           */
+          <Suspense fallback={plainTiles(true)}>
             <SortableTiles
               items={visible}
               settings={tiles}
@@ -171,20 +193,7 @@ export function TileGrid() {
             />
           </Suspense>
         ) : (
-          visible.map((tile, index) => (
-            <Tile
-              key={tile.id}
-              tile={tile}
-              index={index}
-              settings={tiles}
-              editing={false}
-              showHint={shortcuts}
-              childUrls={tile.kind === 'folder' ? childUrlsFor(tile.id) : undefined}
-              onOpenFolder={setOpenFolder}
-              onEdit={setEditorId}
-              onRemove={remove}
-            />
-          ))
+          plainTiles(false)
         )}
 
         {tiles.showAddButton ? (
