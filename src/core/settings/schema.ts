@@ -91,13 +91,19 @@ export const Tiles = z.object({
   faviconVisibility: Visibility.default('hover'),
   faviconCorner: Corner.default('bottom-left'),
   faviconSize: z.number().min(12).max(48).default(22),
+  /**
+   * How the tile's plate is coloured relative to the logo:
+   *  brand       plate takes the brand colour, mark goes black or white
+   *  neutral     plate matches the theme surface, mark takes the brand colour
+   *  tinted      plate is a wash of the brand colour, mark takes it too
+   *  transparent no plate at all
+   */
+  plateStyle: z.enum(['brand', 'neutral', 'tinted', 'transparent']).default('brand'),
   imageFit: z.enum(['cover', 'contain']).default('contain'),
   imagePadding: z.number().min(0).max(40).default(14),
   hoverEffect: z.enum(['none', 'lift', 'zoom', 'glow', 'tilt']).default('lift'),
   openIn: z.enum(['current', 'newTab']).default('current'),
   showAddButton: z.boolean().default(true),
-  /** Prepend the browser's own most-visited sites. */
-  includeTopSites: z.boolean().default(false),
 }).prefault({})
 
 /* ------------------------------------------------------------- background */

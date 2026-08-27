@@ -33,6 +33,12 @@ export function useResolvedMode(): 'light' | 'dark' {
   return appearance.mode
 }
 
+/** The active palette, for the rare case a component needs real colour maths. */
+export function usePalette(): Palette {
+  const { appearance } = useSettings()
+  return getPreset(appearance.preset)[useResolvedMode()]
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const settings = useSettings()
   const { appearance } = settings

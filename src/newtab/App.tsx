@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { Icon } from '@/core/icons'
 import { SettingsOverlay } from '@/features/settings-ui/SettingsOverlay'
+import { TileGrid } from '@/features/tiles/TileGrid'
 import './App.css'
 
 /**
@@ -59,7 +60,8 @@ export function App() {
   )
 }
 
-/** Placeholder band router — each phase replaces one of these with the real thing. */
+/** Band router. Each band is a feature that reads its own slice of settings. */
 function Band({ name }: { name: 'search' | 'tiles' | 'widgets' }) {
+  if (name === 'tiles') return <TileGrid />
   return <section className={`band band--${name}`} data-band={name} />
 }

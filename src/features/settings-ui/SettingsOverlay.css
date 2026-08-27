@@ -29,3 +29,8 @@
 .overlay[data-open='true'] {
   transform: none;
 }
+
+.overlay__loading {
+  height: 100%;
+  background: var(--bg);
+}

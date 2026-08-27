@@ -21,13 +21,13 @@ requested per widget.
 - [x] Font Awesome subset + icon-only rule enforced by lint
 
 ## Phase 1 — Tiles (the speed dial)
-- [ ] Tile data model: url, title, hero image, favicon, brand color, custom overrides
-- [ ] Tile grid: responsive, drag-reorder, add/edit/delete
-- [ ] Auto-fill on add: Simple Icons logo + brand bg, fallback to `_favicon` API
-- [ ] Custom image upload / paste URL per tile
-- [ ] Hover reveal: title + corner favicon, configurable (always/hover/never, position)
-- [ ] Tile style settings: radius, size, columns, gap, aspect, shadow, label placement
-- [ ] Seed from `chrome.topSites` on first run
+- [x] Tile data model: url, title, hero image, favicon, brand color, custom overrides
+- [x] Tile grid: responsive, drag-reorder, add/edit/delete
+- [x] Auto-fill on add: Simple Icons logo + brand bg, fallback to `_favicon` API
+- [x] Custom image upload / paste URL per tile
+- [x] Hover reveal: title + corner favicon, configurable (always/hover/never, position)
+- [x] Tile style settings: radius, size, columns, gap, aspect, shadow, label placement
+- [x] Seed from `chrome.topSites` on first run
 
 ## Phase 2 — Background engine
 - [ ] Layer system: solid / gradient / image / video / slideshow
@@ -87,3 +87,9 @@ requested per widget.
   will push a trimmed subset. The store abstraction takes the area as a parameter,
   so switching is a one-line change.
 - TypeScript is pinned to 5.9 — `typescript-eslint` does not yet support TS 7.
+- Simple Icons has dropped brands whose logo licence is not permissive (Amazon,
+  LinkedIn, OpenAI, Prime Video, Hotstar among them). Those tiles — and every
+  site outside the curated 233 — use the site's own favicon rendered large on a
+  plate tinted by sampling that favicon. Visually near-identical, and legally clean.
+- Tiles reorder in an explicit "Arrange" mode rather than on always-on drag, so a
+  plain click always navigates.

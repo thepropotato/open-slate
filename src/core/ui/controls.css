@@ -13,6 +13,12 @@
   grid-template-columns: 1fr;
 }
 
+/* Stacked rows put the control on its own line, so it takes the full width. */
+.ctl-row--stacked .ctl-row__control {
+  justify-self: stretch;
+  width: 100%;
+}
+
 .ctl-row__label {
   display: flex;
   flex-direction: column;
