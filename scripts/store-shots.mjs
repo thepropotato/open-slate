@@ -46,11 +46,11 @@ const showcase = [
 
 const scenes = [
   {
-    name: '1-speed-dial',
+    name: 'speed-dial',
     settings: { layout: { order: ['search', 'tiles'], align: 'center' } },
   },
   {
-    name: '2-dashboard',
+    name: 'dashboard',
     settings: {
       version: 3,
       widgets: {
@@ -66,7 +66,7 @@ const scenes = [
     },
   },
   {
-    name: '3-light-and-boxy',
+    name: 'light-and-boxy',
     settings: {
       appearance: { mode: 'light', preset: 'paper', radius: 0, surface: 'solid' },
       tiles: { labelVisibility: 'always', plateStyle: 'neutral', aspect: 1.2, width: 150 },
@@ -74,7 +74,7 @@ const scenes = [
     },
   },
   {
-    name: '4-palette',
+    name: 'palette',
     settings: { layout: { order: ['search', 'tiles'] } },
     async act(page) {
       await page.keyboard.press('ControlOrMeta+k')
@@ -84,7 +84,7 @@ const scenes = [
     },
   },
   {
-    name: '5-settings',
+    name: 'settings',
     settings: {},
     async act(page, id) {
       await page.goto(`chrome-extension://${id}/options.html`)
