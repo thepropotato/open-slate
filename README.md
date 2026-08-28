@@ -14,7 +14,7 @@ npm run build      # writes dist/
 Then in Chrome: `chrome://extensions` → enable Developer mode → **Load unpacked** →
 choose `dist/`.
 
-For UI work, `npm run dev` serves the page at `http://localhost:5173/newtab.html`.
+For UI work, `npm run dev` serves the page at `http://localhost:5178/newtab.html`.
 The `chrome.*` APIs are behind [`src/core/platform/browser.ts`](src/core/platform/browser.ts),
 which falls back to `localStorage` and a public favicon service outside the
 extension — so the whole interface is workable in an ordinary tab. Anything that
@@ -125,3 +125,4 @@ nobody was looking at.
 
 New tab overrides get a manual review, so `STORE.md` holds the single-purpose
 description and the per-permission justifications.
+

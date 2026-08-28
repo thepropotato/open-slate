@@ -7,6 +7,13 @@ export default defineConfig({
   resolve: {
     alias: { '@': resolve(import.meta.dirname, 'src') },
   },
+  /*
+   * Pinned because the browser-driven scripts — shots, dom-tests and
+   * canvas-tests — all default to this port. `strictPort` makes a clash fail
+   * loudly rather than sliding to the next free port, where those scripts would
+   * quietly drive a stale server or none at all.
+   */
+  server: { port: 5178, strictPort: true },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
