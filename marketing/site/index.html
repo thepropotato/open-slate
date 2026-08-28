@@ -1,0 +1,1014 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Slate: your most-opened page, finally yours</title>
+<meta name="description" content="A Chrome extension that replaces the new tab page with a speed dial and dashboard: tiles, widgets and a wallpaper engine, with close to everything about the look under your control. No analytics, no content scripts.">
+<link rel="canonical" href="https://openslate.byvenu.com/">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://openslate.byvenu.com/">
+<meta property="og:title" content="Open Slate: your most-opened page, finally yours">
+<meta property="og:description" content="A speed dial and dashboard for the new tab. Tiles, widgets and a wallpaper engine, with close to everything about the look under your control.">
+<meta property="og:image" content="https://openslate.byvenu.com/img/og.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+/* ---------------------------------------------------------------- tokens */
+:root{
+  --page:#FAF9F6;
+  --surface:#FFFFFF;
+  --border:#E4E1D9;
+  --body:#5A5750;
+  --head:#1A1917;
+  --muted:#8A857B;
+  --accent:#2F5D50;
+  --accent-soft:#2F5D5014;
+
+  --serif:'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --sans:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+
+  --measure:1120px;
+  --gap:clamp(72px, 9vw, 128px);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--page);
+  color:var(--body);
+  font-family:var(--sans);
+  font-size:17px;
+  line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+code{
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  font-size:.88em;background:var(--accent-soft);color:var(--head);
+  padding:.12em .42em;border-radius:5px;
+}
+
+.wrap{max-width:var(--measure);margin:0 auto;padding:0 28px}
+
+h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--head);letter-spacing:-.005em;line-height:1.08}
+h1{font-size:clamp(44px, 6.4vw, 78px)}
+h2{font-size:clamp(32px, 4.2vw, 48px)}
+h3{font-size:23px;line-height:1.25}
+
+.eyebrow{
+  display:inline-flex;align-items:center;
+  font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);
+}
+
+/* ------------------------------------------------------------------ mark */
+.mark{
+  width:var(--s,30px);height:var(--s,30px);flex:none;
+  border-radius:calc(var(--s,30px) * .24);
+  background:var(--head);
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:calc(var(--s,30px) * .085);
+  padding:calc(var(--s,30px) * .17);
+}
+.mark i{aspect-ratio:1;border-radius:calc(var(--s,30px) * .07);background:var(--page);opacity:.9}
+/* One tile is left empty, as the slot you fill yourself. The ring is a
+   placed-dot SVG rather than a dotted border: CSS tiles each edge on its own,
+   so the dots drift out of step and the corners come out ragged. Here the
+   count is a multiple of four and the walk starts a half-step in, which keeps
+   all four sides matching and puts a dot on each corner arc. */
+.mark i:nth-child(2){
+  background:none;opacity:1;border-radius:0;
+  background-image:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%23FAF9F6'><circle cx='30.4' cy='7' r='6.95'/><circle cx='46.3' cy='7' r='6.95'/><circle cx='62.2' cy='7' r='6.95'/><circle cx='78.1' cy='7' r='6.95'/><circle cx='91.1' cy='14.8' r='6.95'/><circle cx='93' cy='30.4' r='6.95'/><circle cx='93' cy='46.3' r='6.95'/><circle cx='93' cy='62.2' r='6.95'/><circle cx='93' cy='78.1' r='6.95'/><circle cx='85.2' cy='91.1' r='6.95'/><circle cx='69.6' cy='93' r='6.95'/><circle cx='53.7' cy='93' r='6.95'/><circle cx='37.8' cy='93' r='6.95'/><circle cx='21.9' cy='93' r='6.95'/><circle cx='8.9' cy='85.2' r='6.95'/><circle cx='7' cy='69.6' r='6.95'/><circle cx='7' cy='53.7' r='6.95'/><circle cx='7' cy='37.8' r='6.95'/><circle cx='7' cy='21.9' r='6.95'/><circle cx='14.8' cy='8.9' r='6.95'/></svg>");
+  background-size:100% 100%;background-repeat:no-repeat;
+}
+
+/* ------------------------------------------------------------------- nav */
+header{position:sticky;top:0;z-index:50;background:#FAF9F6E6;backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .2s}
+header.stuck{border-bottom-color:var(--border)}
+nav{display:flex;align-items:center;justify-content:space-between;height:74px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
+.brand span{font-family:var(--serif);font-size:22px;color:var(--head)}
+.navlinks{display:flex;align-items:center;gap:22px;font-size:14.5px}
+.navlinks a:not(.btn){text-decoration:none;color:var(--body);transition:color .15s}
+.navlinks a:not(.btn):hover{color:var(--head)}
+
+.btn{
+  display:inline-flex;align-items:center;gap:9px;
+  font-family:var(--sans);font-size:14.5px;font-weight:500;
+  padding:11px 20px;border-radius:9px;
+  background:var(--accent);color:#fff;text-decoration:none;
+  transition:transform .15s, opacity .15s;
+  white-space:nowrap;
+}
+.btn:hover{opacity:.9;transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--head);border:1px solid var(--border)}
+.btn.ghost:hover{border-color:var(--muted);opacity:1}
+.btn.lg{font-size:16px;padding:14px 26px}
+
+/* ------------------------------------------------------------ gh badge */
+/* Repo link with a live star count. The count span stays empty until the
+ * API answers, and `.has-stars` is what reveals it, so a failed request or a
+ * repo with no stars yet simply renders a plain GitHub button. */
+.ghbtn{
+  display:inline-flex;align-items:center;
+  border:1px solid var(--border);border-radius:9px;
+  background:var(--surface);text-decoration:none;color:var(--head);
+  font-size:14.5px;font-weight:500;white-space:nowrap;
+  transition:border-color .15s, transform .15s;
+}
+.ghbtn:hover{border-color:var(--muted);transform:translateY(-1px)}
+.ghbtn .gh-label{display:inline-flex;align-items:center;gap:8px;padding:10px 14px}
+.ghbtn svg{width:16px;height:16px;flex:none;fill:currentColor}
+.ghbtn .gh-stars{
+  display:none;align-items:center;gap:5px;
+  padding:10px 14px;border-left:1px solid var(--border);
+  color:var(--body);font-variant-numeric:tabular-nums;
+}
+.ghbtn.has-stars .gh-stars{display:inline-flex}
+.ghbtn .gh-star-ico{width:13px;height:13px;opacity:.75}
+@media (max-width:860px){.ghbtn .gh-label span{display:none}.ghbtn .gh-label{padding:10px 12px}}
+
+/* --------------------------------------------------------- open source */
+.osgrid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,4vw,64px);align-items:start}
+@media (max-width:860px){.osgrid{grid-template-columns:1fr;gap:36px}.osterm{position:static}}
+.osterm{
+  position:sticky;top:104px;
+  background:#14171A;border:1px solid #23282D;border-radius:13px;
+  padding:20px 22px;overflow-x:auto;
+  font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  font-size:13.5px;line-height:1.85;
+}
+.osterm div{white-space:pre}
+.osterm .c{color:#6E7681}
+.osterm .p{color:#8FB3A6}
+.osterm .t{color:#D5D2CA}
+.oslist{display:flex;flex-direction:column;gap:18px;margin-top:26px}
+.osrow h3{font-size:18px;margin-bottom:5px}
+.osrow p{font-size:15px;line-height:1.6}
+
+/* ----------------------------------------------------------------- hero */
+.hero{padding:clamp(64px,9vw,116px) 0 0}
+.hero h1{max-width:15ch;margin:22px 0 24px}
+.hero .lede{font-size:clamp(17px,2vw,20px);line-height:1.6;max-width:56ch;color:var(--body)}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:34px}
+.hero .note{font-size:13.5px;color:var(--muted);margin-top:18px}
+
+/* ------------------------------------------------------- browser frame */
+.frame{
+  border-radius:14px;overflow:hidden;background:#fff;
+  border:1px solid var(--border);
+  box-shadow:0 1px 2px rgba(26,25,23,.04),
+             0 12px 28px -10px rgba(26,25,23,.16),
+             0 40px 80px -32px rgba(26,25,23,.22);
+}
+.frame .chrome{
+  display:flex;align-items:center;gap:14px;
+  padding:0 14px;height:42px;
+  background:linear-gradient(#FCFBF9,#F4F2ED);
+  border-bottom:1px solid var(--border);
+}
+.dots{display:flex;gap:7px;flex:none}
+.dots i{width:11px;height:11px;border-radius:50%;background:#DCD8D0}
+.tabstrip{display:flex;align-items:center;gap:8px;min-width:0}
+.tab{
+  display:flex;align-items:center;gap:8px;
+  font-size:12.5px;color:var(--head);
+  background:#fff;border:1px solid var(--border);border-bottom-color:#fff;
+  padding:6px 14px;border-radius:8px 8px 0 0;margin-bottom:-1px;
+  white-space:nowrap;
+}
+.tab .mark{--s:13px}
+.omni{
+  flex:1;min-width:0;height:26px;border-radius:999px;
+  background:#fff;border:1px solid var(--border);
+  display:flex;align-items:center;padding:0 12px;
+  font-size:11.5px;color:var(--muted);
+}
+.frame img{width:100%;height:auto;display:block;aspect-ratio:16/10;object-fit:cover;background:#F4F2ED}
+
+.heroshot{margin-top:clamp(48px,6vw,76px)}
+
+/* --------------------------------------------------------------- proof */
+.proof{
+  display:flex;flex-wrap:wrap;gap:10px 34px;
+  padding:26px 0 0;font-size:13.5px;color:var(--muted);
+}
+.proof b{color:var(--head);font-weight:600}
+
+/* -------------------------------------------------------------- section */
+section{padding:var(--gap) 0}
+.sechead{max-width:60ch;margin-bottom:44px}
+.sechead h2{margin:18px 0 16px}
+.sechead p{font-size:17.5px;line-height:1.62}
+
+/* ---------------------------------------------------------------- split */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(36px,5vw,64px);align-items:center}
+.split.flip .copy{order:2}
+.split + .split{margin-top:var(--gap)}
+.copy h3{margin-bottom:14px}
+.copy p{font-size:16.5px;line-height:1.66}
+.copy ul{list-style:none;margin-top:20px;display:flex;flex-direction:column;gap:11px}
+.copy li{position:relative;padding-left:22px;font-size:15.5px;line-height:1.55}
+.copy li::before{content:'';position:absolute;left:0;top:.62em;width:9px;height:1px;background:var(--accent)}
+
+/* --------------------------------------------------------------- figure */
+/* A shot that carries a section on its own, with its caption under it. */
+figure{margin:0}
+figure figcaption{
+  margin-top:14px;font-size:14px;color:var(--muted);
+  max-width:70ch;line-height:1.55;
+}
+.showcase{margin-top:40px}
+.showcase + .showcase{margin-top:var(--gap)}
+
+/* ----------------------------------------------------------- plate strip */
+/* The four plate styles, read as one comparison rather than four pictures.
+   Each cell is cropped to the tile grid itself, so they tile without four
+   pages of empty background between them. */
+.plates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:36px}
+.plate{
+  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  background:#111;
+}
+.plate img{width:100%;height:auto;display:block}
+.plate b{
+  display:block;padding:11px 15px;font-size:13px;font-weight:500;
+  color:var(--head);background:var(--surface);border-top:1px solid var(--border);
+}
+.plate b span{color:var(--muted);font-weight:400}
+@media (max-width:640px){.plates{grid-template-columns:1fr}}
+
+/* ---------------------------------------------------------------- cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:26px 24px}
+.card h3{font-size:20px;margin-bottom:9px}
+.card p{font-size:15px;line-height:1.6}
+
+/* --------------------------------------------------------------- privacy */
+.privacy{background:var(--head);color:#B9B4AA;border-radius:18px;padding:clamp(40px,5vw,68px)}
+.privacy h2{color:#FAF9F6}
+.privacy .sechead p{color:#B9B4AA}
+.privacy .cards{margin-top:8px}
+.privacy .card{background:#252320;border-color:#332F2B}
+.privacy .card h3{color:#FAF9F6}
+.privacy .card p{color:#B9B4AA}
+.privacy .eyebrow{color:#8FB3A6}
+
+/* ----------------------------------------------------------------- faq */
+.faq{display:flex;flex-direction:column;gap:2px;max-width:78ch}
+details{border-bottom:1px solid var(--border)}
+summary{
+  cursor:pointer;list-style:none;padding:20px 0;
+  font-size:17px;color:var(--head);font-weight:500;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'+';font-size:19px;color:var(--muted);font-weight:400;flex:none;line-height:1;display:grid;place-items:center;width:19px;height:19px}
+details p{margin:0;padding:0 0 22px;font-size:15.5px;line-height:1.66;max-width:70ch}
+
+/* The answer slides open by animating a grid track from 0fr to 1fr, which
+   interpolates against the content's natural height without measuring it in
+   JS. The inner element must be overflow:hidden and have no margin/padding of
+   its own, or the row cannot collapse fully. */
+.answer{display:grid;grid-template-rows:0fr;transition:grid-template-rows .38s cubic-bezier(.22,.61,.36,1)}
+details[open] .answer{grid-template-rows:1fr}
+/* While closing, `open` is still set so the content stays in flow; this drives
+   the track back to 0fr and wins on source order. */
+details[open][data-closing] .answer{grid-template-rows:0fr}
+.answer-inner{overflow:hidden}
+/* The plus/minus rotates rather than swapping glyphs, so the marker moves with
+   the panel instead of jumping. */
+summary::after{transition:transform .38s cubic-bezier(.22,.61,.36,1)}
+details[open] summary::after{transform:rotate(135deg)}
+details[open][data-closing] summary::after{transform:none}
+
+/* ----------------------------------------------------------------- cta */
+.endcta{text-align:center;padding:var(--gap) 0}
+.endcta h2{margin:18px auto 18px;max-width:16ch}
+.endcta p{max-width:52ch;margin:0 auto;font-size:17px}
+.endcta .ctas{display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+
+/* -------------------------------------------------------------- footer */
+footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;color:var(--muted)}
+.footrow{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
+.footrow a{text-decoration:none}
+.footrow a:hover{color:var(--head)}
+.footlinks{display:flex;gap:24px;flex-wrap:wrap}
+
+/* Sections lift into place as they enter the viewport. Nothing is hidden
+   without JS: .reveal-ready is set by a script in the head, so a scriptless
+   page renders everything as normal static content. */
+.reveal-ready [data-reveal]{opacity:0;transform:translateY(14px)}
+/* The transition is attached only once the hidden state is committed, so the
+   initial hide is instant and rows never fade out on load. */
+.reveal-armed [data-reveal]{transition:opacity .55s cubic-bezier(.22,.61,.36,1),transform .55s cubic-bezier(.22,.61,.36,1)}
+[data-reveal].shown{opacity:1;transform:none}
+
+@media (max-width:820px){
+  .split,.split.flip .copy{grid-template-columns:1fr;order:0}
+  .navlinks a:not(.btn){display:none}
+  .hero{padding-top:52px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+  .reveal-ready [data-reveal]{opacity:1;transform:none}
+}
+</style>
+<script>
+  /* Applied before first paint so revealed elements start hidden rather than
+     fading out once the page script runs. Guarded on IntersectionObserver:
+     without it nothing is ever hidden. */
+  if ('IntersectionObserver' in window) document.documentElement.className += ' reveal-ready'
+</script>
+</head>
+<body>
+
+<header id="top">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="#top">
+        <span class="mark" style="--s:28px"><i></i><i></i><i></i><i></i></span>
+        <span>Open Slate</span>
+      </a>
+      <div class="navlinks">
+        <a href="#what">What it does</a>
+        <a href="#yours">Make it yours</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#source">Open source</a>
+        <a class="ghbtn" id="ghbtn" href="https://github.com/thepropotato/open-slate" target="_blank" rel="noopener" aria-label="Open Slate on GitHub"><span class="gh-label"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span>GitHub</span></span><span class="gh-stars"><svg class="gh-star-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .25l2.4 4.86 5.35.78-3.87 3.77.91 5.34L8 12.48l-4.79 2.52.91-5.34L.25 5.89l5.35-.78L8 .25Z"/></svg><span id="ghstars"></span></span></a>
+        <a class="btn" href="#install" data-cws-jump>Add to Chrome</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- ------------------------------------------------------------- hero -->
+<div class="wrap hero">
+  <div class="eyebrow">Chrome extension</div>
+  <h1>Your most-opened page, finally yours.</h1>
+  <p class="lede">
+    You open a new tab dozens of times a day and never chose what's on it.
+    Open Slate replaces it with a speed dial and dashboard: tiles, widgets and
+    a wallpaper engine, with close to everything about the look under your control.
+  </p>
+  <div class="ctas">
+    <a class="btn lg" href="#install" data-cws-jump>Add to Chrome</a>
+    <a class="btn lg ghost" href="#what">See what it does</a>
+  </div>
+  <p class="note">Free and MIT licensed. No account, no sign-in, no telemetry.</p>
+
+  <div class="heroshot">
+    <div class="frame">
+      <div class="chrome">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <div class="tabstrip">
+          <div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div>
+        </div>
+        <div class="omni">Search or type a URL</div>
+      </div>
+      <img src="img/wallpaper@2x.png" width="2560" height="1600"
+           alt="The Open Slate new tab page over a dusk photograph: a search box above a calendar showing today's events, a clock, a task list, a list of open tabs, a pomodoro timer and the local weather, each on a translucent panel tinted by the wallpaper behind it.">
+    </div>
+  </div>
+
+  <div class="proof">
+    <span><b>15</b> widgets</span>
+    <span><b>23</b> search engines</span>
+    <span><b>233</b> brand logos</span>
+    <span><b>10</b> clock faces</span>
+    <span><b>8</b> palettes</span>
+    <span><b>5</b> wallpaper kinds</span>
+    <span><b>0</b> trackers</span>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------- what -->
+<section id="what">
+  <div class="wrap">
+    <div class="sechead">
+      <div class="eyebrow">What it does</div>
+      <h2>A dashboard that earns the space.</h2>
+      <p>
+        Most new tab replacements give you a photo and a clock. Open Slate gives
+        you the page you'd have built yourself, if you had the time.
+      </p>
+    </div>
+
+    <div class="split">
+      <div class="copy">
+        <h3>Tiles that look like the sites they open</h3>
+        <p>
+          Logos come from a bundled Simple Icons dataset with the brand's own
+          colour. Every other site gets its favicon rendered large on a plate
+          tinted by sampling that favicon, so the grid stays coherent even for
+          sites nobody has a logo for.
+        </p>
+        <ul>
+          <li>Drag to reorder, drop onto a folder to file it away</li>
+          <li>Split tiles across named pages</li>
+          <li><code>Alt</code>+<code>1</code>–<code>9</code> opens by position</li>
+          <li>Paste an image URL or upload your own</li>
+        </ul>
+      </div>
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/speed-dial@2x.png" width="2560" height="1600" loading="lazy"
+             alt="A grid of ten site tiles, each showing the site's brand logo on a plate tinted with the brand colour, with the site name beneath.">
+      </div>
+    </div>
+
+    <figure class="showcase">
+      <div class="plates">
+        <div class="plate">
+          <img src="img/plate-brand@2x.png" width="2200" height="692" loading="lazy"
+               alt="Eight tiles with each plate painted in the site's own brand colour and the logo knocked out in white or black.">
+          <b>Brand: <span>the plate takes the site's colour</span></b>
+        </div>
+        <div class="plate">
+          <img src="img/plate-neutral@2x.png" width="2200" height="692" loading="lazy"
+               alt="The same eight tiles on neutral dark plates, each logo drawn in its own brand colour.">
+          <b>Neutral: <span>the theme surface, coloured logo</span></b>
+        </div>
+        <div class="plate">
+          <img src="img/plate-tinted@2x.png" width="2200" height="692" loading="lazy"
+               alt="The same eight tiles on plates washed with a dim version of each brand colour.">
+          <b>Tinted: <span>a wash of the brand colour</span></b>
+        </div>
+        <div class="plate">
+          <img src="img/plate-transparent@2x.png" width="2200" height="692" loading="lazy"
+               alt="The same eight logos with almost no plate behind them, sitting directly on the page.">
+          <b>Transparent: <span>no plate at all</span></b>
+        </div>
+      </div>
+      <figcaption>
+        The same eight sites, four plate styles apart. One setting, and it
+        applies to every tile at once, including the ones drawn from a favicon
+        rather than a bundled logo.
+      </figcaption>
+    </figure>
+
+    <figure class="showcase">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/folders@2x.png" width="2560" height="1600" loading="lazy"
+             alt="A tile grid over a dusk wallpaper with two folders named Design and Reading beside four ordinary tiles, and a page switcher underneath offering Main and Watch.">
+      </div>
+      <figcaption>
+        Folders hold what you rarely need, and named pages split the rest;
+        here a second page called Watch. A grid of ten scales to a grid of
+        fifty without becoming a wall.
+      </figcaption>
+    </figure>
+
+    <div class="split flip">
+      <div class="copy">
+        <h3>Fifteen widgets, and none of them overlap</h3>
+        <p>
+          A grid of square cells with five standard sizes that widgets snap to,
+          the way phone widgets do. Growing or dropping one moves whatever was in
+          the way, at every window size, not just the one you're looking at.
+        </p>
+        <ul>
+          <li>Clock with ten faces, weather, calendar, notes, tasks, greeting</li>
+          <li>Pomodoro, countdown and stopwatch in one timer</li>
+          <li>RSS feeds, crypto prices</li>
+          <li>Recently closed, most visited, open tabs, bookmarks, history, downloads</li>
+        </ul>
+      </div>
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/dashboard@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The dashboard view: a calendar showing today's hours and three events, a digital clock, a task list, a list of open tabs, a pomodoro timer and a weather widget, laid out on a grid.">
+      </div>
+    </div>
+
+    <figure class="showcase">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/widget-gallery@2x.png" width="2560" height="1600" loading="lazy"
+             alt="A dense dashboard showing twelve widgets at once: a greeting, a flip clock, the weather, a notepad, a task list, an RSS feed, live crypto prices, a list of open tabs, a month calendar, browser history, bookmarks and a pomodoro timer.">
+      </div>
+      <figcaption>
+        Nearly all of them at once, on one page. Downloads, Recently closed and
+        Most visited are missing here for an honest reason: they read your own
+        browser, and this shot was taken in an empty profile that has nothing to
+        show them.
+      </figcaption>
+    </figure>
+
+    <figure class="showcase">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/clock-faces@2x.png" width="2560" height="1600" loading="lazy"
+             alt="Ten clock faces side by side over a wallpaper: digital, minimal, monospace, flip, a words face reading '25 to twelve', a binary dot grid, three analog faces in classic, minimal and bauhaus styles, and a rings face.">
+      </div>
+      <figcaption>
+        Ten clock faces, including one that spells the time out and one that
+        counts in binary. The clock is only the widget with the most faces;
+        every other one has its own settings too.
+      </figcaption>
+    </figure>
+
+    <div class="split">
+      <div class="copy">
+        <h3>Everything, one keystroke away</h3>
+        <p>
+          <code>Cmd</code>/<code>Ctrl</code>+<code>K</code> searches your tabs,
+          tiles, bookmarks, history and every settings command at once, with a web
+          search as the fallback. The search box itself takes bang shortcuts
+          (<code>!yt cats</code>), detects addresses, and does arithmetic inline.
+        </p>
+        <ul>
+          <li>23 search engines</li>
+          <li>Suggestions drawn from your own data, never a remote service</li>
+          <li>Type a host and it navigates instead of searching</li>
+        </ul>
+      </div>
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/command-palette@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The command palette open over the tile grid, showing results for the query 'op': open settings, the extensions page, downloads, history, the bookmark manager, and a web search fallback.">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------ yours -->
+<section id="yours">
+  <div class="wrap">
+    <div class="sechead">
+      <div class="eyebrow">Make it yours</div>
+      <h2>One extension, however you want it.</h2>
+      <p>
+        Eight palettes, automatic light and dark, a corner radius that runs from
+        fully round to fully square, four surface styles, and an accent that can be
+        sampled from your wallpaper. Every preference is searchable, and updates
+        live across every open tab.
+      </p>
+    </div>
+
+    <div class="split">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/make-it-yours@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The same tile grid in a light theme with square corners, white plates and labels below each tile.">
+      </div>
+      <div class="copy">
+        <h3>The same grid, two settings apart</h3>
+        <p>
+          This is the page above with a different palette, a corner radius of two
+          pixels, solid surfaces instead of glass and labels moved below the plate.
+          Nothing was rebuilt; those are four switches in settings.
+        </p>
+        <ul>
+          <li>Solid, gradient, image, video or slideshow wallpaper</li>
+          <li>Dim, blur, brightness, saturation, zoom, vignette, slow drift</li>
+          <li>Export your whole config, or share a theme code that carries the look and none of your content</li>
+          <li>Opt-in sync across devices</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="split flip">
+      <div class="copy">
+        <h3>Settings that don't hide anything</h3>
+        <p>
+          Every preference is declared once and the interface renders itself from
+          that declaration, so there's no settings screen that quietly lags behind
+          what the extension can actually do.
+        </p>
+        <ul>
+          <li>Search every setting by name</li>
+          <li>Changes apply live, in every open tab</li>
+          <li>Ten clock faces, four surface styles, three densities</li>
+          <li>Import and export the whole configuration as a file</li>
+        </ul>
+      </div>
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> Open Slate Settings</div></div>
+          <div class="omni">Settings</div>
+        </div>
+        <img src="img/settings@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The settings page, showing theme controls: light and dark mode, eight palette swatches, accent colour source, corner radius, surface style, opacity, blur and shadow.">
+      </div>
+    </div>
+
+    <figure class="showcase">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div></div>
+          <div class="omni">Search or type a URL</div>
+        </div>
+        <img src="img/light-dashboard@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The same dashboard in a warm light theme with outlined panels: a calendar, a clock reading 23:40, a task list, open tabs, a pomodoro timer and the weather.">
+      </div>
+      <figcaption>
+        The same dashboard as further up, in the light Paper palette with
+        outlined panels instead of glass. The dark shots on this page are a
+        choice, not the only mode.
+      </figcaption>
+    </figure>
+
+    <figure class="showcase">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> Open Slate Settings</div></div>
+          <div class="omni">Settings</div>
+        </div>
+        <img src="img/settings-wallpaper@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The Wallpaper settings section: a type switch offering gradient, solid, image, video and slideshow; a media library holding one image marked 'In use'; a field for an image address; and framing controls for fit, zoom and slow drift.">
+      </div>
+      <figcaption>
+        A wallpaper can be a colour, a gradient, an image, a video or a
+        slideshow. Whatever you add stays in this browser: the library is
+        IndexedDB on your own machine, and nothing is uploaded anywhere.
+      </figcaption>
+    </figure>
+
+    <figure class="showcase">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip"><div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> Open Slate Settings</div></div>
+          <div class="omni">Settings</div>
+        </div>
+        <img src="img/settings-search@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The settings page with 'colour' typed into its search box, returning results grouped under three headings at once: the eight palette swatches and the accent control under Appearance, a theme-matching toggle under Wallpaper, and the plate colour switch under Tiles.">
+      </div>
+      <figcaption>
+        Search every preference by name and the results arrive from wherever
+        they live; here <code>colour</code> reaches into Appearance, Wallpaper
+        and Tiles at once, rather than making you guess which screen it was on.
+      </figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ---------------------------------------------------------- privacy -->
+<section id="privacy">
+  <div class="wrap">
+    <div class="privacy">
+      <div class="sechead">
+        <div class="eyebrow">Privacy</div>
+        <h2>It asks for nothing.</h2>
+        <p>
+          A new tab page sees every tab you open. That is exactly why this one
+          collects nothing, and why most of what it can do stays switched off until
+          you ask for it.
+        </p>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <h3>No analytics</h3>
+          <p>No telemetry, no crash reporting, no identifiers. Nothing is collected, transmitted or sold.</p>
+        </div>
+        <div class="card">
+          <h3>No content scripts</h3>
+          <p>The extension runs on its own page and nowhere else. It cannot read the sites you visit, because it never runs on them.</p>
+        </div>
+        <div class="card">
+          <h3>Permissions on use</h3>
+          <p>It installs with four. Tabs, history, bookmarks, downloads and sessions are requested the moment you add the widget that needs one, and declining leaves the rest working.</p>
+        </div>
+        <div class="card">
+          <h3>Your data stays put</h3>
+          <p>Settings and tiles live in local storage; wallpapers in IndexedDB. Nothing is uploaded, and sync is off unless you turn it on, per device.</p>
+        </div>
+        <div class="card">
+          <h3>No location prompt</h3>
+          <p>Geolocation is never declared and never called. The weather widget places itself from a city-level lookup, or you type a town.</p>
+        </div>
+        <div class="card">
+          <h3>Four outbound calls, all optional</h3>
+          <p>Weather, a one-off city lookup, coin prices and the feeds you added. Each behind a widget you chose and a permission you granted. None carries an identifier.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ----------------------------------------------------- open source -->
+<section id="source">
+  <div class="wrap">
+    <div class="osgrid">
+      <div>
+        <div class="sechead" style="margin-bottom:0">
+          <div class="eyebrow">Open source</div>
+          <h2>Don't take the privacy page's word for it.</h2>
+          <p>
+            Every claim on this page is checkable, because the whole extension is
+            public under the MIT licence. Read the network calls, audit the
+            permissions, then build the exact thing you just installed.
+          </p>
+        </div>
+        <div class="oslist">
+          <div class="osrow">
+            <h3>Auditable</h3>
+            <p>No minified blob to trust. The source that runs in your browser is the source in the repository, and the manifest lists every permission it asks for.</p>
+          </div>
+          <div class="osrow">
+            <h3>Yours to fork</h3>
+            <p>MIT licensed, so you can change anything, ship your own build, or keep a private fork with the two widgets you actually use.</p>
+          </div>
+          <div class="osrow">
+            <h3>No way to take it away</h3>
+            <p>No account, no server, no subscription that lapses. Even if this project stopped tomorrow, your copy keeps working and anyone can pick it up.</p>
+          </div>
+        </div>
+        <div class="ctas" style="margin-top:30px">
+          <a class="btn" href="https://github.com/thepropotato/open-slate" target="_blank" rel="noopener">Browse the source</a>
+          <a class="btn ghost" href="https://github.com/thepropotato/open-slate/issues" target="_blank" rel="noopener">Open an issue</a>
+        </div>
+      </div>
+      <div class="osterm" aria-label="Terminal commands to build the extension from source">
+        <div><span class="c"># build the extension yourself</span></div>
+        <div><span class="p">$</span> <span class="t">git clone https://github.com/thepropotato/open-slate</span></div>
+        <div><span class="p">$</span> <span class="t">cd open-slate</span></div>
+        <div><span class="p">$</span> <span class="t">npm install</span></div>
+        <div><span class="p">$</span> <span class="t">npm run build</span></div>
+        <div>&nbsp;</div>
+        <div><span class="c"># then load dist/ at chrome://extensions</span></div>
+        <div><span class="c"># with developer mode turned on</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- --------------------------------------------------------- honesty -->
+<section>
+  <div class="wrap">
+    <div class="sechead">
+      <div class="eyebrow">Worth knowing</div>
+      <h2>Two things it can't do.</h2>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <h3>It can't read your Chrome theme</h3>
+        <p>
+          Chrome doesn't expose an installed theme's colours to extensions, only
+          whether you're in light or dark mode. So "match Chrome" is automatic
+          light/dark, eight palettes, and an accent sampled from your wallpaper.
+          Close, but not the same thing, and worth saying plainly.
+        </p>
+      </div>
+      <div class="card">
+        <h3>It can't use precise location</h3>
+        <p>
+          Chrome refuses to make geolocation optional, and one widget isn't worth a
+          location warning on every install. Weather is placed from an approximate,
+          city-level lookup, accurate enough for a forecast and correctable by
+          typing a town.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- -------------------------------------------------------------- faq -->
+<section>
+  <div class="wrap">
+    <div class="sechead" data-reveal>
+      <div class="eyebrow">Questions</div>
+      <h2>Before you install.</h2>
+    </div>
+    <div class="faq">
+      <details data-reveal>
+        <summary>What does it look like the moment I install it?</summary>
+        <div class="answer"><div class="answer-inner"><p>
+          A search box, one clock, and a grid seeded from your most-visited sites,
+          with nothing to configure before it's useful. Everything else is opt-in: you
+          add widgets you want, and the permissions come with them.
+        </p></div></div>
+      </details>
+      <details data-reveal>
+        <summary>Will it slow my new tab down?</summary>
+        <div class="answer"><div class="answer-inner"><p>
+          The page is a static bundle loaded from disk with no remote code and no
+          blocking network calls on open. Widgets that fetch (weather, feeds, coin
+          prices) render from a local cache first and refresh behind it.
+        </p></div></div>
+      </details>
+      <details data-reveal>
+        <summary>Why does the feeds widget mention broad host access?</summary>
+        <div class="answer"><div class="answer-inner"><p>
+          RSS feeds live at addresses only you know, so there's no fixed list to
+          declare. The broad pattern is declared as optional and never requested
+          wholesale: adding a feed asks for that one origin by name. A fresh
+          install holds no host permissions at all, and if you never add a feed you
+          never grant one.
+        </p></div></div>
+      </details>
+      <details data-reveal>
+        <summary>Can I move my setup to another machine?</summary>
+        <div class="answer"><div class="answer-inner"><p>
+          Export the whole configuration to a file and import it anywhere, or turn
+          on sync per device. There are also theme codes, which carry the look
+          without carrying your tiles, notes or tasks, so you can share an
+          appearance without sharing anything personal.
+        </p></div></div>
+      </details>
+      <details data-reveal>
+        <summary>What happens to my data if I uninstall?</summary>
+        <div class="answer"><div class="answer-inner"><p>
+          It goes with the extension. Everything lives in Chrome's local storage
+          for this extension and in IndexedDB. There is no server holding a copy,
+          because there is no server. Export first if you want to keep it.
+        </p></div></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- -------------------------------------------------------------- cta -->
+<div class="wrap endcta" id="install">
+  <div class="eyebrow" style="justify-content:center">Get it</div>
+  <h2>Take back the page you open most.</h2>
+  <p>Free, MIT licensed, and it works the moment it installs.</p>
+  <div class="ctas">
+    <a class="btn lg" href="#" data-cws>Add to Chrome</a>
+    <a class="btn lg ghost" href="https://github.com/thepropotato/open-slate">View the source</a>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap footrow">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span class="mark" style="--s:22px"><i></i><i></i><i></i><i></i></span>
+      <span>Open Slate</span>
+    </div>
+    <div class="footlinks">
+      <a href="#privacy">Privacy</a>
+      <a href="https://github.com/thepropotato/open-slate">Source</a>
+      <a href="https://github.com/thepropotato/open-slate/issues">Report an issue</a>
+      <a href="https://github.com/thepropotato/open-slate/blob/main/LICENSE">MIT licence</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  /**
+   * Star count for the repo button. The badge ships as a plain GitHub link and
+   * only grows a count once the API answers with one, so a rate-limited or
+   * offline visitor sees a working link rather than a broken or zeroed badge.
+   * A repo with no stars yet is deliberately treated the same as no answer.
+   */
+  ;(async () => {
+    const btn = document.getElementById('ghbtn')
+    const out = document.getElementById('ghstars')
+    if (!btn || !out) return
+    try {
+      const res = await fetch('https://api.github.com/repos/thepropotato/open-slate', {
+        headers: { Accept: 'application/vnd.github+json' },
+      })
+      if (!res.ok) return
+      const { stargazers_count: stars } = await res.json()
+      if (!Number.isFinite(stars) || stars < 1) return
+      out.textContent = stars < 1000 ? String(stars) : (stars / 1000).toFixed(1).replace(/\.0$/, '') + 'k'
+      btn.classList.add('has-stars')
+      btn.setAttribute('aria-label', `Open Slate on GitHub, ${stars} stars`)
+    } catch {
+      /* Offline, blocked or rate limited: the plain link is the fallback. */
+    }
+  })()
+
+  /**
+   * Set this to the Chrome Web Store listing once it is published. Until then
+   * every "Add to Chrome" button says the listing is pending rather than
+   * pointing somewhere that does not exist.
+   *
+   * The id here is NOT the one an unpacked build shows at chrome://extensions:
+   * that one is derived from the folder path and is local to one machine. The
+   * real id is minted by the Web Store on first upload, so take it from the
+   * developer dashboard URL of the (even unpublished) draft listing:
+   *   https://chrome.google.com/webstore/detail/<id>
+   */
+  const STORE_URL = ''
+
+  for (const el of document.querySelectorAll('[data-cws]')) {
+    if (STORE_URL) {
+      el.href = STORE_URL
+    } else {
+      el.textContent = 'Coming to the Chrome Web Store'
+      el.removeAttribute('href')
+      el.style.opacity = '.55'
+      el.style.cursor = 'default'
+    }
+  }
+
+  // Hairline under the nav only once the page has moved.
+  const header = document.querySelector('header')
+  const onScroll = () => header.classList.toggle('stuck', window.scrollY > 8)
+  addEventListener('scroll', onScroll, { passive: true })
+  onScroll()
+
+  /**
+   * Animated open/close for the FAQ. The browser flips the `open` attribute
+   * instantly, which would remove the panel from flow before it could
+   * collapse — so closing is intercepted here: `open` is held on until the
+   * slide finishes, then cleared. Opening needs no help, since the attribute
+   * lands before the transition starts.
+   */
+  for (const d of document.querySelectorAll('.faq details')) {
+    const summary = d.querySelector('summary')
+    const answer = d.querySelector('.answer')
+    if (!summary || !answer) continue
+
+    summary.addEventListener('click', (e) => {
+      // Let modified clicks and reduced-motion users get default behaviour.
+      if (e.metaKey || e.ctrlKey || e.shiftKey) return
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+      if (!d.open) return // Opening animates on its own.
+
+      e.preventDefault()
+      if (d.dataset.closing) return
+      d.dataset.closing = '1'
+
+      const done = (ev) => {
+        if (ev.target !== answer || ev.propertyName !== 'grid-template-rows') return
+        answer.removeEventListener('transitionend', done)
+        delete d.dataset.closing
+        d.open = false
+      }
+      answer.addEventListener('transitionend', done)
+    })
+  }
+
+  /**
+   * Reveal on scroll. The hidden starting state comes from .reveal-ready,
+   * set in the head, so without JS — or without IntersectionObserver — the
+   * page stays fully readable. Siblings that share a container are staggered
+   * so a group arrives as a sequence rather than all at once.
+   */
+  const reveals = document.querySelectorAll('[data-reveal]')
+  if (reveals.length && 'IntersectionObserver' in window) {
+    const root = document.documentElement
+
+    const order = new Map()
+    for (const el of reveals) {
+      const seen = order.get(el.parentElement) || 0
+      order.set(el.parentElement, seen + 1)
+      el.style.transitionDelay = Math.min(seen, 6) * 70 + 'ms'
+    }
+
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        entry.target.classList.add('shown')
+        io.unobserve(entry.target)
+      }
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 })
+
+    // Force the hidden state to be committed before transitions are armed,
+    // otherwise the rows animate from visible to hidden on load. Reading a
+    // layout property flushes the pending style so the hide is instant.
+    void document.body.offsetHeight
+    root.classList.add('reveal-armed')
+    for (const el of reveals) io.observe(el)
+  }
+</script>
+
+</body>
+</html>
