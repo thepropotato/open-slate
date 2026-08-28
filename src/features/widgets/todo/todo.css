@@ -1,4 +1,9 @@
 .todo {
+  /* Priority colours, named once so the checkbox, chips and buttons agree. */
+  --todo-p1: #e5484d;
+  --todo-p2: #f5a524;
+  --todo-p3: #7c8698;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
@@ -44,9 +49,16 @@
 
 .todo__list > li {
   display: flex;
+  flex-direction: column;
+  padding: 1px 0;
+}
+
+.todo__row {
+  display: flex;
   align-items: center;
   gap: 9px;
   padding: 4px 2px;
+  min-width: 0;
 }
 
 .todo__check {
@@ -66,9 +78,15 @@
   border-color: transparent;
 }
 
-.todo__text {
+.todo__body {
+  display: flex;
   flex: 1;
   min-width: 0;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.todo__text {
   font-size: var(--text-sm);
   overflow-wrap: anywhere;
 }
@@ -90,12 +108,26 @@
   transition: opacity var(--dur-fast) var(--ease);
 }
 
+.todo__more {
+  opacity: 0;
+  color: var(--fg-subtle);
+  padding: 3px;
+  flex: none;
+  font-size: 11px;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
 .todo__list > li:hover .todo__remove,
-.todo__list > li:focus-within .todo__remove {
+.todo__list > li:focus-within .todo__remove,
+.todo__list > li:hover .todo__more,
+.todo__list > li:focus-within .todo__more,
+.todo__list > li[data-open='true'] .todo__more {
   opacity: 1;
 }
 
-.todo__remove:hover {
+.todo__remove:hover,
+.todo__more:hover,
+.todo__more[aria-expanded='true'] {
   color: var(--fg);
 }
 
@@ -104,4 +136,168 @@
   color: var(--fg-subtle);
   text-align: center;
   margin: auto;
+}
+
+/* ----------------------------------------------------- priorities and dates */
+
+/*
+ * Priority rides on the checkbox rather than taking a chip of its own in the
+ * row. The box is already the first thing on the line and already a square of
+ * colour, so tinting its border says "urgent" without spending any width — and
+ * a list with priorities set stays as narrow as one without.
+ */
+.todo__check[data-priority='1'] {
+  border-color: var(--todo-p1);
+}
+
+.todo__check[data-priority='2'] {
+  border-color: var(--todo-p2);
+}
+
+.todo__check[data-priority='3'] {
+  border-color: var(--todo-p3);
+}
+
+
+.todo__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  min-width: 0;
+}
+
+.todo__list > li[data-done='true'] .todo__meta {
+  opacity: 0.55;
+}
+
+.todo__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  font-weight: 650;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 10%);
+  color: var(--fg-muted);
+  flex: none;
+}
+
+.todo__chip[data-priority='1'] {
+  color: var(--todo-p1);
+}
+
+.todo__chip[data-priority='2'] {
+  color: var(--todo-p2);
+}
+
+.todo__chip[data-priority='3'] {
+  color: var(--todo-p3);
+}
+
+.todo__due {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.todo__due[data-state='overdue'] {
+  color: var(--todo-p1);
+}
+
+.todo__due[data-state='today'] {
+  color: var(--accent);
+}
+
+/* What the shorthand read out of the add field, before Enter commits it. */
+.todo__preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-inline: 8px;
+  flex: none;
+}
+
+/* ---------------------------------------------------------- row detail pane */
+
+.todo__detail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+  padding: 2px 2px 6px 28px;
+}
+
+.todo__seg,
+.todo__dates {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.todo__seg button,
+.todo__dates button {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1;
+  padding: 4px 7px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-subtle);
+  background: rgb(var(--surface-tint) / 7%);
+}
+
+.todo__seg button:hover,
+.todo__dates button:hover {
+  color: var(--fg);
+}
+
+.todo__seg button[aria-pressed='true'][data-priority='1'] {
+  background: var(--todo-p1);
+  color: #fff;
+}
+
+.todo__seg button[aria-pressed='true'][data-priority='2'] {
+  background: var(--todo-p2);
+  color: #000;
+}
+
+.todo__seg button[aria-pressed='true'][data-priority='3'] {
+  background: var(--todo-p3);
+  color: #fff;
+}
+
+.todo__dates button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.todo__dates input[type='date'] {
+  font: inherit;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  background: rgb(var(--surface-tint) / 7%);
+  border: 0;
+  border-radius: var(--radius-sm);
+  padding: 3px 5px;
+  max-width: 120px;
+}
+
+.todo__dates input[type='date']::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.todo__clear {
+  color: var(--fg-subtle);
+  padding: 3px;
+  font-size: 10px;
+}
+
+.todo__clear:hover {
+  color: var(--fg);
 }

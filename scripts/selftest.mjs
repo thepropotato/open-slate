@@ -721,6 +721,105 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('cal colour: a negative index still resolves', colorOf(-1), colorOf(7))
 }
 
+/* ------------------------------------------------------ task shorthand */
+
+{
+  const { parseDraft, parseDue, dueLabel, daysUntil, addDays, startOfDay, sortItems } = await load(
+    'features/widgets/todo/parse.ts',
+  )
+
+  // A Wednesday, so weekday arithmetic has somewhere to go in both directions.
+  const today = startOfDay(new Date(2026, 7, 26))
+  const draft = (input) => parseDraft(input, today)
+  const dayOf = (input) => {
+    const due = parseDue(input, today)
+    return due === null ? null : daysUntil(due, today)
+  }
+
+  check('todo: plain text is just text', draft('buy milk'), { text: 'buy milk', priority: 0, due: 0 })
+  check('todo: one bang is high', draft('ship it !').priority, 1)
+  check('todo: two bangs are medium', draft('ship it !!').priority, 2)
+  check('todo: three bangs are low', draft('ship it !!!').priority, 3)
+  check('todo: p-notation works too', draft('ship it p2').priority, 2)
+  check('todo: the marker leaves the title', draft('ship it !').text, 'ship it')
+  check('todo: a mid-sentence marker still parses', draft('call ! the bank').text, 'call the bank')
+  check('todo: a bang inside a word is text', draft('wow!! really').priority, 0)
+
+  check('todo: today', dayOf('today'), 0)
+  check('todo: tomorrow', dayOf('tomorrow'), 1)
+  check('todo: a span in days', dayOf('3d'), 3)
+  check('todo: a span in weeks', dayOf('2w'), 14)
+  check('todo: a weekday ahead', dayOf('friday'), 2)
+  check('todo: an abbreviated weekday', dayOf('fri'), 2)
+  check("todo: today's own weekday means next week", dayOf('wednesday'), 7)
+  check('todo: next pushes a week out', dayOf('next friday'), 9)
+  check('todo: a day-first date', dayOf('25/12'), daysUntil(startOfDay(new Date(2026, 11, 25)), today))
+  check('todo: a past date rolls to next year', dayOf('1/1'), daysUntil(startOfDay(new Date(2027, 0, 1)), today))
+  check('todo: an explicit year is respected', dayOf('1/1/2027'), daysUntil(startOfDay(new Date(2027, 0, 1)), today))
+  check('todo: an impossible day is not a date', dayOf('32/1'), null)
+  check('todo: an impossible month is not a date', dayOf('1/13'), null)
+  check('todo: words are not a date', dayOf('the bank'), null)
+
+  check('todo: a date leaves the title', draft('pay rent @ tomorrow').text, 'pay rent')
+  check('todo: a date and a priority together', draft('pay rent ! @ friday').priority, 1)
+  check('todo: both markers leave the title', draft('pay rent ! @ friday').text, 'pay rent')
+  check(
+    'todo: unparseable @ text is left alone',
+    draft('email @ the bank'),
+    { text: 'email @ the bank', priority: 0, due: 0 },
+  )
+  check('todo: an address survives', draft('mail sam@example.com').text, 'mail sam@example.com')
+  check(
+    'todo: markers are inert while the features are off',
+    parseDraft('ship it ! @ friday', today, { priorities: false, dueDates: false }),
+    { text: 'ship it ! @ friday', priority: 0, due: 0 },
+  )
+  check(
+    'todo: a date parses while priorities are off',
+    parseDraft('ship it @ friday', today, { priorities: false, dueDates: true }).text,
+    'ship it',
+  )
+
+
+  /* Ordering. `manual` is the old behaviour and must stay it. */
+  {
+    const task = (id, priority, due, done = false) => ({ id, priority, due, done })
+    const ids = (items) => items.map((item) => item.id).join('')
+
+    const mixed = [
+      task('a', 3, addDays(today, 5)),
+      task('b', 1, addDays(today, 9)),
+      task('c', 0, 0),
+      task('d', 2, addDays(today, 1)),
+    ]
+    check('todo sort: manual keeps insertion order', ids(sortItems(mixed, 'manual')), 'abcd')
+    check('todo sort: by priority', ids(sortItems(mixed, 'priority')), 'bdac')
+    check('todo sort: by due date', ids(sortItems(mixed, 'due')), 'dabc')
+    check('todo sort: undated tasks sort last', ids(sortItems([task('x', 0, 0), task('y', 0, addDays(today, 1))], 'due')), 'yx')
+    check(
+      'todo sort: unprioritised tasks sort last',
+      ids(sortItems([task('x', 0, 0), task('y', 3, 0)], 'priority')),
+      'yx',
+    )
+
+    const withDone = [task('a', 1, 0, true), task('b', 3, 0), task('c', 2, 0)]
+    check('todo sort: done sinks under manual', ids(sortItems(withDone, 'manual')), 'bca')
+    check('todo sort: done sinks under priority', ids(sortItems(withDone, 'priority')), 'cba')
+    check('todo sort: sorting does not mutate', ids(withDone), 'abc')
+  }
+
+  check('todo: label for today', dueLabel(today, today, 'en-GB'), 'Today')
+  check('todo: label for tomorrow', dueLabel(addDays(today, 1), today, 'en-GB'), 'Tomorrow')
+  check('todo: label for this week is a weekday', dueLabel(addDays(today, 2), today, 'en-GB'), 'Friday')
+  check('todo: label for overdue', dueLabel(addDays(today, -3), today, 'en-GB'), '3 days ago')
+  // Against Intl rather than a literal: month abbreviations differ by ICU version.
+  check(
+    'todo: label for far off is a date',
+    dueLabel(addDays(today, 30), today, 'en-GB'),
+    new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(addDays(today, 30)),
+  )
+}
+
 /* ------------------------------------------------------------------ output */
 
 console.log(`${passed} checks passed, ${failures.length} failed`)
