@@ -87,7 +87,7 @@ Free and open source.
 
 ## Screenshots
 
-In order, from `screenshots/`:
+The store allows five. In order, from `screenshots/`:
 
 | # | File | Caption |
 | --- | --- | --- |
@@ -96,12 +96,12 @@ In order, from `screenshots/`:
 | 3 | `speed-dial.png` | Your sites, drawn in their own brand colours |
 | 4 | `command-palette.png` | Tabs, tiles, bookmarks and history, one keystroke away |
 | 5 | `make-it-yours.png` | The same grid, four settings apart |
-| 6 | `settings.png` | Every preference, searchable and live |
 
 `npm run marketing:shots` writes several more scenes to `marketing/site/img/`
-than the store takes — the widget gallery, the ten clock faces, folders and
-pages, the four tile plate styles, the light dashboard, and two more settings
-sections. Those carry the website; the six above are the store's.
+than the store takes — the settings page, the widget gallery, the ten clock
+faces, folders and pages, the four tile plate styles, the light dashboard, and
+two more settings sections. Those carry the website; the five above are the
+store's.
 
 The dashboard and wallpaper shots reproduce the layout this project's author
 actually runs, with curated content: the calendar and feed are subscribed to

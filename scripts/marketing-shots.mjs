@@ -13,10 +13,11 @@
  * well-known sites, and every widget that reads browser data is either seeded
  * or left to its own empty state. Nothing personal ends up on a store listing.
  *
- * The scene list is deliberately wider than the store needs. The store takes
- * five (`store: true`), and the website takes all of them — a page that shows
- * three variations of the same dark tile grid undersells an extension whose
- * whole pitch is how far it bends.
+ * The scene list is deliberately wider than the store needs. The store caps a
+ * listing at five screenshots, so exactly five scenes carry `store: true`, and
+ * the website takes all of them — a page that shows three variations of the
+ * same dark tile grid undersells an extension whose whole pitch is how far it
+ * bends.
  *
  *   node scripts/marketing-shots.mjs
  */
@@ -720,7 +721,6 @@ const scenes = [
   {
     name: 'settings',
     site: 'settings',
-    store: true,
     scheme: 'dark',
     settings: {},
     async act(page, id) {
