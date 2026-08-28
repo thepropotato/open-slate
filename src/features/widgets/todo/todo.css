@@ -46,52 +46,149 @@
 
 /* ---------------------------------------------------------------- filters */
 
-/*
- * The views, as a row of chips rather than a menu: the point of a filter here
- * is that it is one click away and that you can see which one is on without
- * opening anything. Scrolls sideways rather than wrapping, so turning one on
- * never costs the list a row of height.
- */
-.todo__filters {
+/* The add field and the filter button share one line. */
+.todo__bar {
   display: flex;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   flex: none;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
-.todo__filters::-webkit-scrollbar {
-  display: none;
+.todo__bar .todo__add {
+  flex: 1;
+  min-width: 0;
 }
 
-.todo__filter {
+/*
+ * Sized like the row affordances but not one of them: this button is always
+ * visible, because it is the only clue that a shortened list is shortened and
+ * so cannot wait for a hover.
+ */
+.todo__filter-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--todo-ctl);
+  height: var(--todo-ctl);
+  aspect-ratio: 1;
   flex: none;
-  padding: 3px 7px;
-  border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  line-height: 1;
-  white-space: nowrap;
+  border-radius: var(--radius-sm);
   color: var(--fg-subtle);
+  font-size: 11px;
 }
 
-
-.todo__filter:hover {
+.todo__filter-btn:hover {
   color: var(--fg);
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+/* The dot that says a facet is set. */
+.todo__filter-btn[data-on='true'] {
+  color: var(--accent);
+}
+
+.todo__filter-btn[data-on='true']::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/*
+ * One scroll area for the panel and the list together, so opening the filters
+ * pushes the tasks down and the whole thing scrolls as a single surface. A
+ * panel with its own scroller put two nested scrollbars on a card barely tall
+ * enough for one.
+ */
+.todo__scroll {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+  min-height: 0;
+}
+
+.todo__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: none;
+  padding: 8px;
+  border-radius: var(--radius-sm);
   background: rgb(var(--surface-tint) / 8%);
 }
 
-.todo__filter[aria-selected='true'] {
-  background: rgb(var(--surface-tint) / 14%);
+.todo__panel-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todo__search {
+  flex: 1;
+  min-width: 0;
+  height: var(--todo-ctl);
+  padding-inline: 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 10%);
+  font-size: var(--text-xs);
   color: var(--fg);
+  outline: none;
+}
+
+.todo__search::placeholder {
+  color: var(--fg-subtle);
+}
+
+/*
+ * A label above its row rather than beside it: the value rows are what the eye
+ * scans, and an inline label pushes them into a narrower, ragged column.
+ */
+.todo__facet {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.todo__facet-label {
+  font-size: var(--text-xs);
+  font-weight: 650;
+  color: var(--fg-subtle);
+}
+
+.todo__facet .todo__group {
+  flex-wrap: wrap;
+}
+
+.todo__panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+}
+
+.todo__link {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--accent);
+  padding: 0;
+}
+
+.todo__link:hover {
+  text-decoration: underline;
 }
 
 .todo__list {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  flex: 1;
+  flex: none;
 }
 
 .todo__list > li {
@@ -332,6 +429,11 @@
 .todo__btn[aria-pressed='true']:not([data-priority]) {
   background: var(--accent);
   color: var(--accent-fg);
+}
+
+/* An unticked facet reads as available, not as disabled. */
+.todo__facet .todo__btn[aria-pressed='false'] {
+  background: rgb(var(--surface-tint) / 10%);
 }
 
 /*

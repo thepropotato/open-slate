@@ -199,61 +199,92 @@ export function sortItems<T extends { done: boolean; priority: number; due: numb
 /* ----------------------------------------------------------------- filters */
 
 /**
- * The views the chip row offers.
+ * What the list is showing.
  *
- * Deliberately a short list of questions people actually ask a task list —
- * "what needs doing now", "what is coming", "what is urgent" — rather than a
- * filter builder. Anything finer is a search box, which this widget is not.
+ * Every facet is a set of the values it admits, and empty means "no opinion" —
+ * so the default, all sets empty, shows everything and the widget starts
+ * unfiltered. That is what lets the facets combine freely: picking P1 and P2
+ * while picking overdue and today asks for exactly the four-way intersection,
+ * with no precedence rules to learn.
  */
-export type Filter = 'all' | 'today' | 'upcoming' | 'high' | 'done'
-
-export const FILTER_LABELS: Record<Filter, string> = {
-  all: 'All',
-  today: 'Today',
-  upcoming: 'Upcoming',
-  high: 'High',
-  done: 'Done',
+export interface TaskFilter {
+  /** `active` and `done`. Empty shows both. */
+  status: Status[]
+  /** Priorities admitted, 0 meaning "none set". Empty admits any. */
+  priority: Priority[]
+  /** Date buckets admitted. Empty admits any. */
+  due: DueBucket[]
+  /** Case-insensitive substring of the task text. */
+  text: string
 }
 
+export type Status = 'active' | 'done'
+export type DueBucket = 'overdue' | 'today' | 'week' | 'later' | 'none'
+
+export const EMPTY_FILTER: TaskFilter = { status: [], priority: [], due: [], text: '' }
+
+export const STATUS_LABELS: Record<Status, string> = {
+  active: 'Active',
+  done: 'Completed',
+}
+
+export const DUE_LABELS: Record<DueBucket, string> = {
+  overdue: 'Overdue',
+  today: 'Today',
+  week: 'This week',
+  later: 'Later',
+  none: 'No date',
+}
+
+/** Which date bucket a task falls in. The buckets tile the whole timeline. */
+export function dueBucket(due: number, today: number): DueBucket {
+  if (due <= 0) return 'none'
+  if (due < today) return 'overdue'
+  if (due === today) return 'today'
+  return daysUntil(due, today) <= 7 ? 'week' : 'later'
+}
+
+/** True when no facet is narrowing anything, so the list is showing everything. */
+export const isFilterEmpty = (filter: TaskFilter): boolean =>
+  filter.status.length === 0 &&
+  filter.priority.length === 0 &&
+  filter.due.length === 0 &&
+  filter.text.trim() === ''
+
+/** How many facets are narrowing the list, for the badge on the filter button. */
+export const activeFacetCount = (filter: TaskFilter): number =>
+  (filter.status.length > 0 ? 1 : 0) +
+  (filter.priority.length > 0 ? 1 : 0) +
+  (filter.due.length > 0 ? 1 : 0) +
+  (filter.text.trim() !== '' ? 1 : 0)
+
 /**
- * Whether one task belongs in one view.
+ * Whether one task survives the filter.
  *
- * `today` includes overdue on purpose: a task that slipped past its date is
- * more of a today problem than one merely dated today, and a view that hid it
- * would be the one place the widget lies about what needs doing. Both exclude
- * completed tasks, which have their own view.
+ * Facets are ANDed and the values within a facet are ORed — the arrangement
+ * people expect from every faceted list, and the one that makes "P1 or P2, due
+ * overdue or today" expressible without a query language.
  */
 export function matchesFilter(
-  item: { done: boolean; priority: number; due: number },
-  filter: Filter,
+  item: { done: boolean; priority: number; due: number; text: string },
+  filter: TaskFilter,
   today: number,
 ): boolean {
-  if (filter === 'done') return item.done
-  if (filter === 'all') return true
-  if (item.done) return false
-  if (filter === 'today') return item.due > 0 && item.due <= today
-  if (filter === 'upcoming') return item.due > today
-  return item.priority === 1
+  if (filter.status.length > 0) {
+    const status: Status = item.done ? 'done' : 'active'
+    if (!filter.status.includes(status)) return false
+  }
+  if (filter.priority.length > 0 && !filter.priority.includes(item.priority as Priority)) {
+    return false
+  }
+  if (filter.due.length > 0 && !filter.due.includes(dueBucket(item.due, today))) return false
+
+  const needle = filter.text.trim().toLowerCase()
+  if (needle && !item.text.toLowerCase().includes(needle)) return false
+  return true
 }
 
-/**
- * The filters worth offering for a given list.
- *
- * A chip that leads to an empty list is noise, and one for a field the widget
- * has switched off is a lie, so both are dropped. `all` always survives — the
- * row either offers a real choice or is not drawn at all.
- */
-export function availableFilters(
-  items: readonly { done: boolean; priority: number; due: number }[],
-  enabled: { priorities: boolean; dueDates: boolean },
-  today: number,
-): Filter[] {
-  const candidates: Filter[] = ['all']
-  if (enabled.dueDates) candidates.push('today', 'upcoming')
-  if (enabled.priorities) candidates.push('high')
-  candidates.push('done')
-  return candidates.filter(
-    (filter) =>
-      filter === 'all' || items.some((item) => matchesFilter(item, filter, today)),
-  )
+/** Adds or removes one value from a facet, which is how every checkbox writes. */
+export function toggleFacet<T>(values: readonly T[], value: T): T[] {
+  return values.includes(value) ? values.filter((v) => v !== value) : [...values, value]
 }

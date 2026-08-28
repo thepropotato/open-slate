@@ -8,18 +8,24 @@ import type { WidgetProps } from '@/core/widgets/types'
 import { uid } from '@/core/util/id'
 import { resolveLocale } from '@/core/util/time'
 import {
-  FILTER_LABELS,
+  DUE_LABELS,
+  EMPTY_FILTER,
   PRIORITY_LABELS,
   PRIORITY_SHORT,
+  STATUS_LABELS,
+  activeFacetCount,
   addDays,
-  availableFilters,
   dueLabel,
   parseDraft,
+  isFilterEmpty,
   matchesFilter,
   sortItems,
   startOfDay,
-  type Filter,
+  toggleFacet,
+  type DueBucket,
   type Priority,
+  type Status,
+  type TaskFilter,
 } from './parse'
 import './todo.css'
 
@@ -73,14 +79,10 @@ type TodoItem = z.infer<typeof TodoItem>
 
 const PRIORITIES: Priority[] = [1, 2, 3]
 
-/** What an empty list means depends on the view that emptied it. */
-const EMPTY_TEXT: Record<Filter, string> = {
-  all: 'Nothing on the list.',
-  today: 'Nothing due today.',
-  upcoming: 'Nothing coming up.',
-  high: 'Nothing urgent.',
-  done: 'Nothing finished yet.',
-}
+const STATUSES: Status[] = ['active', 'done']
+const BUCKETS: DueBucket[] = ['overdue', 'today', 'week', 'later', 'none']
+/** 0 last: "no priority" is the absence of the other three, so it reads after them. */
+const PRIORITY_FACETS: Priority[] = [1, 2, 3, 0]
 
 function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   const { behavior } = useSettings()
@@ -96,7 +98,9 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
    * filter is what you are looking at now, not a preference. Persisting it
    * means reopening the browser to a list that silently hides most of itself.
    */
-  const [filter, setFilter] = useState<Filter>('all')
+  const [filter, setFilter] = useState<TaskFilter>(EMPTY_FILTER)
+  /** Whether the filter panel is open. */
+  const [panel, setPanel] = useState(false)
 
   const rich = config.priorities || config.dueDates
   const write = (items: TodoItem[]) => setConfig({ items })
@@ -138,55 +142,88 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   const remove = (id: string) => write(config.items.filter((item) => item.id !== id))
 
   const ordered = useMemo(() => sortItems(config.items, config.sortBy), [config.items, config.sortBy])
-  const filters = useMemo(
-    () =>
-      availableFilters(config.items, {
-        priorities: config.priorities,
-        dueDates: config.dueDates,
-      }, today),
-    [config.items, config.priorities, config.dueDates, today],
+  const matching = useMemo(
+    () => ordered.filter((item) => matchesFilter(item, filter, today)),
+    [ordered, filter, today],
   )
   /*
-   * A filter that stops applying — its last task completed, or the option
-   * switched off — falls back to `all` rather than showing an empty list the
-   * user cannot explain.
+   * `hideDone` is the standing preference; asking for completed tasks in the
+   * filter is an explicit request that overrides it, otherwise the panel would
+   * offer a checkbox that silently does nothing.
    */
-  /*
-   * Five chips do not fit a two-cell widget, and a clipped one reads as broken
-   * rather than scrollable. `upcoming` is the one to lose: it is the least
-   * urgent view, and everything in it is still under `all`.
-   */
-  const shownFilters = size.w > 2 ? filters : filters.filter((f) => f !== 'upcoming')
-  const active = shownFilters.includes(filter) ? filter : 'all'
-  const matching = ordered.filter((item) => matchesFilter(item, active, today))
-  // `hideDone` is the standing preference; the `done` view is an explicit ask.
-  const visible = config.hideDone && active !== 'done'
-    ? matching.filter((item) => !item.done)
-    : matching
+  const visible =
+    config.hideDone && !filter.status.includes('done')
+      ? matching.filter((item) => !item.done)
+      : matching
   const remaining = config.items.filter((item) => !item.done).length
   // A one-row widget has no room for a second line under a task.
   const compact = size.h < 2
 
   return (
     <div className="todo" data-rich={rich}>
-      <form
-        className="todo__add"
-        onSubmit={(event) => {
-          event.preventDefault()
-          add()
-        }}
-      >
-        <Icon name="add" />
-        <input
-          value={draft}
-          onChange={(event) => setDraft(event.target.value)}
-          placeholder={rich ? 'Add a task, ! or @ friday' : 'Add a task'}
-          aria-label="Add a task"
-        />
-        {config.showCount && config.items.length > 0 ? (
-          <span className="todo__count">{remaining}</span>
+      {/*
+        The filter button sits in the add bar, beside the field it narrows —
+        a row of chips of its own spends a line of a small widget whether or
+        not anything is filtered. It carries a dot while a facet is set, so a
+        shortened list always has a visible cause.
+      */}
+      <div className="todo__bar">
+        <form
+          className="todo__add"
+          onSubmit={(event) => {
+            event.preventDefault()
+            add()
+          }}
+        >
+          <Icon name="add" />
+          <input
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            placeholder={rich ? 'Add a task, ! or @ friday' : 'Add a task'}
+            aria-label="Add a task"
+          />
+          {config.showCount && config.items.length > 0 ? (
+            <span className="todo__count">{remaining}</span>
+          ) : null}
+        </form>
+
+        {rich && config.items.length > 0 ? (
+          <button
+            type="button"
+            className="todo__filter-btn"
+            data-on={!isFilterEmpty(filter)}
+            onClick={() => setPanel((open) => !open)}
+            aria-expanded={panel}
+            aria-label={
+              isFilterEmpty(filter)
+                ? 'Filter tasks'
+                : `Filter tasks, ${activeFacetCount(filter)} facets active`
+            }
+            title="Filter tasks"
+          >
+            <Icon name="sliders" />
+          </button>
         ) : null}
-      </form>
+      </div>
+
+      {/*
+        The panel and the list share one scroll area, so opening the filters
+        pushes the tasks down and you scroll through the whole thing as one
+        surface. Giving the panel its own scroller made two nested scrollbars
+        on a card that is barely tall enough for one.
+      */}
+      <div className="todo__scroll scroll-y">
+        {panel ? (
+          <FilterPanel
+            filter={filter}
+            setFilter={setFilter}
+            priorities={config.priorities}
+            dueDates={config.dueDates}
+            shown={visible.length}
+            total={config.items.length}
+            onClose={() => setPanel(false)}
+          />
+        ) : null}
 
       {/*
         What the shorthand caught, shown only once it has caught something. It is
@@ -208,188 +245,293 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
         </p>
       ) : null}
 
-      {/*
-        Only drawn when there is a real choice to make: one chip is not a
-        filter, and a short list does not need narrowing. `compact` widgets are
-        a single row tall and have no line to spare for it.
-      */}
-      {!compact && shownFilters.length > 1 ? (
-        <div className="todo__filters" role="tablist" aria-label="Filter tasks">
-          {shownFilters.map((option) => (
-            <button
-              key={option}
-              type="button"
-              role="tab"
-              className="todo__filter"
-              aria-selected={active === option}
-              onClick={() => setFilter(option)}
-            >
-              {FILTER_LABELS[option]}
+        <ul className="todo__list">
+          {visible.map((item) => {
+            const overdue = config.dueDates && item.due > 0 && !item.done && item.due < today
+            const dueToday = config.dueDates && item.due > 0 && !item.done && item.due === today
+            const open = editing === item.id
+            return (
+              <li key={item.id} data-done={item.done} data-open={open}>
+                {/*
+                  The checkbox belongs to the title, so the two sit on one line and
+                  the metadata hangs below it — a box vertically centred against a
+                  two-line block reads as belonging to neither line.
+                */}
+                <div className="todo__row">
+                  <button
+                    type="button"
+                    className="todo__check"
+                    onClick={() => toggle(item.id)}
+                    aria-pressed={item.done}
+                    aria-label={
+                      item.done ? `Mark ${item.text} as not done` : `Mark ${item.text} as done`
+                    }
+                  >
+                    {item.done ? <Icon name="check" /> : null}
+                  </button>
+
+                  <span className="todo__body">
+                    <span className="todo__text" data-strike={config.strikeDone && item.done}>
+                      {item.text}
+                    </span>
+                    {!compact && rich && (item.due > 0 || item.priority > 0) ? (
+                      <span className="todo__meta">
+                        {config.priorities && item.priority > 0 ? (
+                          <span className="todo__chip" data-priority={item.priority}>
+                            {PRIORITY_SHORT[item.priority]}
+                          </span>
+                        ) : null}
+                        {config.dueDates && item.due > 0 ? (
+                          <span
+                            className="todo__due"
+                            data-state={
+                              config.flagOverdue && overdue
+                                ? 'overdue'
+                                : config.flagOverdue && dueToday
+                                  ? 'today'
+                                  : 'plain'
+                            }
+                          >
+                            <Icon name="calendar" />
+                            {dueLabel(item.due, today, locale)}
+                          </span>
+                        ) : null}
+                      </span>
+                    ) : null}
+                  </span>
+
+                  {rich ? (
+                    <button
+                      type="button"
+                      className="todo__icon todo__more"
+                      onClick={() => setEditing(open ? null : item.id)}
+                      aria-expanded={open}
+                      aria-label={`Edit details for ${item.text}`}
+                    >
+                      <Icon name="sliders" />
+                    </button>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    className="todo__icon todo__remove"
+                    onClick={() => remove(item.id)}
+                    title="Remove"
+                    aria-label={`Remove ${item.text}`}
+                  >
+                    <Icon name="close" />
+                  </button>
+                </div>
+
+                {/*
+                  Only ever drawn for the one row being edited, so the list stays a
+                  list. Everything here is reachable by typing instead.
+                */}
+                {open ? (
+                  <div className="todo__detail">
+                    {config.priorities ? (
+                      <div className="todo__group" role="group" aria-label="Priority">
+                        {PRIORITIES.map((level) => (
+                          <button
+                            key={level}
+                            type="button"
+                            className="todo__btn"
+                            data-priority={level}
+                            aria-pressed={item.priority === level}
+                            title={PRIORITY_LABELS[level]}
+                            onClick={() =>
+                              patch(item.id, { priority: item.priority === level ? 0 : level })
+                            }
+                          >
+                            {PRIORITY_SHORT[level]}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {config.dueDates ? (
+                      <div className="todo__group">
+                        <button
+                          type="button"
+                          className="todo__btn"
+                          aria-pressed={item.due === today}
+                          onClick={() => patch(item.id, { due: item.due === today ? 0 : today })}
+                        >
+                          Today
+                        </button>
+                        <button
+                          type="button"
+                          className="todo__btn"
+                          aria-pressed={item.due === addDays(today, 1)}
+                          onClick={() =>
+                            patch(item.id, {
+                              due: item.due === addDays(today, 1) ? 0 : addDays(today, 1),
+                            })
+                          }
+                        >
+                          Tomorrow
+                        </button>
+                        <label className="todo__btn todo__date">
+                          <Icon name="calendar" />
+                          <input
+                            type="date"
+                            aria-label={`Due date for ${item.text}`}
+                            value={item.due > 0 ? isoDate(item.due) : ''}
+                            onChange={(event) =>
+                              patch(item.id, { due: fromIsoDate(event.target.value) })
+                            }
+                          />
+                        </label>
+                        {item.due > 0 ? (
+                          <button
+                            type="button"
+                            className="todo__btn todo__btn--icon"
+                            onClick={() => patch(item.id, { due: 0 })}
+                            title="Clear due date"
+                            aria-label={`Clear due date for ${item.text}`}
+                          >
+                            <Icon name="close" />
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </li>
+            )
+          })}
+        </ul>
+
+        {visible.length === 0 ? (
+          <p className="todo__empty">
+            {config.items.length === 0 ? (
+              'Nothing on the list.'
+            ) : (
+              <>
+                No tasks match.{' '}
+                <button type="button" className="todo__link" onClick={() => setFilter(EMPTY_FILTER)}>
+                  Clear filters
+                </button>
+              </>
+            )}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The filter panel.
+ *
+ * Every facet is a set of independent checkboxes rather than a single choice,
+ * because the questions people ask overlap: "P1 and P2, overdue or due today"
+ * is one question, not three views. Nothing here is a preset — the presets a
+ * list needs are whatever its owner happens to be looking for.
+ *
+ * An empty facet means "no opinion", so the panel opens showing everything and
+ * each box only ever narrows. That keeps the mental model to one rule: ticking
+ * more boxes in a facet widens it, ticking boxes in more facets narrows.
+ */
+function FilterPanel({
+  filter,
+  setFilter,
+  priorities,
+  dueDates,
+  shown,
+  total,
+  onClose,
+}: {
+  filter: TaskFilter
+  setFilter: (next: TaskFilter) => void
+  priorities: boolean
+  dueDates: boolean
+  shown: number
+  total: number
+  onClose: () => void
+}) {
+  const box = <T,>(facet: 'status' | 'priority' | 'due', values: readonly T[], value: T) => ({
+    'aria-pressed': values.includes(value),
+    onClick: () => setFilter({ ...filter, [facet]: toggleFacet(values, value) }),
+  })
+
+  return (
+    <div className="todo__panel">
+      <div className="todo__panel-head">
+        <input
+          className="todo__search"
+          value={filter.text}
+          onChange={(event) => setFilter({ ...filter, text: event.target.value })}
+          placeholder="Search tasks"
+          aria-label="Search tasks"
+          autoFocus
+        />
+        <button
+          type="button"
+          className="todo__btn todo__btn--icon"
+          onClick={onClose}
+          title="Close filters"
+          aria-label="Close filters"
+        >
+          <Icon name="close" />
+        </button>
+      </div>
+
+      <div className="todo__facet">
+        <span className="todo__facet-label">Status</span>
+        <div className="todo__group">
+          {STATUSES.map((value) => (
+            <button key={value} type="button" className="todo__btn" {...box('status', filter.status, value)}>
+              {STATUS_LABELS[value]}
             </button>
           ))}
         </div>
+      </div>
+
+      {priorities ? (
+        <div className="todo__facet">
+          <span className="todo__facet-label">Priority</span>
+          <div className="todo__group">
+            {PRIORITY_FACETS.map((value) => (
+              <button
+                key={value}
+                type="button"
+                className="todo__btn"
+                data-priority={value || undefined}
+                title={PRIORITY_LABELS[value]}
+                {...box('priority', filter.priority, value)}
+              >
+                {value === 0 ? 'None' : PRIORITY_SHORT[value]}
+              </button>
+            ))}
+          </div>
+        </div>
       ) : null}
 
-      <ul className="todo__list scroll-y">
-        {visible.map((item) => {
-          const overdue = config.dueDates && item.due > 0 && !item.done && item.due < today
-          const dueToday = config.dueDates && item.due > 0 && !item.done && item.due === today
-          const open = editing === item.id
-          return (
-            <li key={item.id} data-done={item.done} data-open={open}>
-              {/*
-                The checkbox belongs to the title, so the two sit on one line and
-                the metadata hangs below it — a box vertically centred against a
-                two-line block reads as belonging to neither line.
-              */}
-              <div className="todo__row">
-                <button
-                  type="button"
-                  className="todo__check"
-                  onClick={() => toggle(item.id)}
-                  aria-pressed={item.done}
-                  aria-label={
-                    item.done ? `Mark ${item.text} as not done` : `Mark ${item.text} as done`
-                  }
-                >
-                  {item.done ? <Icon name="check" /> : null}
-                </button>
-
-                <span className="todo__body">
-                  <span className="todo__text" data-strike={config.strikeDone && item.done}>
-                    {item.text}
-                  </span>
-                  {!compact && rich && (item.due > 0 || item.priority > 0) ? (
-                    <span className="todo__meta">
-                      {config.priorities && item.priority > 0 ? (
-                        <span className="todo__chip" data-priority={item.priority}>
-                          {PRIORITY_SHORT[item.priority]}
-                        </span>
-                      ) : null}
-                      {config.dueDates && item.due > 0 ? (
-                        <span
-                          className="todo__due"
-                          data-state={
-                            config.flagOverdue && overdue
-                              ? 'overdue'
-                              : config.flagOverdue && dueToday
-                                ? 'today'
-                                : 'plain'
-                          }
-                        >
-                          <Icon name="calendar" />
-                          {dueLabel(item.due, today, locale)}
-                        </span>
-                      ) : null}
-                    </span>
-                  ) : null}
-                </span>
-
-                {rich ? (
-                  <button
-                    type="button"
-                    className="todo__icon todo__more"
-                    onClick={() => setEditing(open ? null : item.id)}
-                    aria-expanded={open}
-                    aria-label={`Edit details for ${item.text}`}
-                  >
-                    <Icon name="sliders" />
-                  </button>
-                ) : null}
-
-                <button
-                  type="button"
-                  className="todo__icon todo__remove"
-                  onClick={() => remove(item.id)}
-                  title="Remove"
-                  aria-label={`Remove ${item.text}`}
-                >
-                  <Icon name="close" />
-                </button>
-              </div>
-
-              {/*
-                Only ever drawn for the one row being edited, so the list stays a
-                list. Everything here is reachable by typing instead.
-              */}
-              {open ? (
-                <div className="todo__detail">
-                  {config.priorities ? (
-                    <div className="todo__group" role="group" aria-label="Priority">
-                      {PRIORITIES.map((level) => (
-                        <button
-                          key={level}
-                          type="button"
-                          className="todo__btn"
-                          data-priority={level}
-                          aria-pressed={item.priority === level}
-                          title={PRIORITY_LABELS[level]}
-                          onClick={() =>
-                            patch(item.id, { priority: item.priority === level ? 0 : level })
-                          }
-                        >
-                          {PRIORITY_SHORT[level]}
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {config.dueDates ? (
-                    <div className="todo__group">
-                      <button
-                        type="button"
-                        className="todo__btn"
-                        aria-pressed={item.due === today}
-                        onClick={() => patch(item.id, { due: item.due === today ? 0 : today })}
-                      >
-                        Today
-                      </button>
-                      <button
-                        type="button"
-                        className="todo__btn"
-                        aria-pressed={item.due === addDays(today, 1)}
-                        onClick={() =>
-                          patch(item.id, {
-                            due: item.due === addDays(today, 1) ? 0 : addDays(today, 1),
-                          })
-                        }
-                      >
-                        Tomorrow
-                      </button>
-                      <label className="todo__btn todo__date">
-                        <Icon name="calendar" />
-                        <input
-                          type="date"
-                          aria-label={`Due date for ${item.text}`}
-                          value={item.due > 0 ? isoDate(item.due) : ''}
-                          onChange={(event) =>
-                            patch(item.id, { due: fromIsoDate(event.target.value) })
-                          }
-                        />
-                      </label>
-                      {item.due > 0 ? (
-                        <button
-                          type="button"
-                          className="todo__btn todo__btn--icon"
-                          onClick={() => patch(item.id, { due: 0 })}
-                          title="Clear due date"
-                          aria-label={`Clear due date for ${item.text}`}
-                        >
-                          <Icon name="close" />
-                        </button>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
-            </li>
-          )
-        })}
-      </ul>
-
-      {visible.length === 0 ? (
-        <p className="todo__empty">{EMPTY_TEXT[active]}</p>
+      {dueDates ? (
+        <div className="todo__facet">
+          <span className="todo__facet-label">Due</span>
+          <div className="todo__group">
+            {BUCKETS.map((value) => (
+              <button key={value} type="button" className="todo__btn" {...box('due', filter.due, value)}>
+                {DUE_LABELS[value]}
+              </button>
+            ))}
+          </div>
+        </div>
       ) : null}
+
+      <div className="todo__panel-foot">
+        <span>
+          {/* States the consequence, so a filter that hides most of the list says so. */}
+          {shown === total ? `${total} tasks` : `${shown} of ${total} shown`}
+        </span>
+        {!isFilterEmpty(filter) ? (
+          <button type="button" className="todo__link" onClick={() => setFilter(EMPTY_FILTER)}>
+            Clear all
+          </button>
+        ) : null}
+      </div>
     </div>
   )
 }
