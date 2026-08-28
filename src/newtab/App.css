@@ -1,21 +1,52 @@
+/*
+ * The page is the scroller, not the content column inside it.
+ *
+ * `.page__content` is centred and capped at `--max-width`, so on a wide window
+ * there is dead space either side of it, and on any window there is the padding
+ * gutter. When the scroller was the column itself, all of that belonged to an
+ * `overflow: hidden` parent — putting the pointer in the margin beside the last
+ * widget, which is exactly where a reader reaching for the edge puts it, meant
+ * the wheel had nothing to scroll. Scrolling the whole page instead makes every
+ * pixel of it a valid place to scroll from.
+ */
 .page {
   position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-width: none;
+  /*
+   * Scroll anchoring works against this page. A band that grows after paint —
+   * a widget finishing its load — would have the browser scroll to hold the
+   * content below it still, carrying the reader off the band they were on.
+   */
+  overflow-anchor: none;
 }
 
-.page[data-align='top'] {
-  justify-content: flex-start;
+/*
+ * Alignment is done with auto margins, not `justify-content`.
+ *
+ * The page is the scroller, and centring a flex container's overflowing content
+ * puts the overflow past *both* edges — but there is no scrollable area above
+ * the origin, so whatever spills off the top can never be reached. A stacked
+ * portrait dashboard is taller than the window by design, which is exactly when
+ * this bites: the clock and the first widget were simply cut off.
+ *
+ * An auto margin only takes the space that is actually free. It centres a short
+ * dashboard exactly as before, and collapses to nothing once the content is
+ * taller than the window, so the top stays reachable.
+ */
+.page[data-align='top'] .page__content {
+  margin-block-end: auto;
 }
 
-.page[data-align='center'] {
-  justify-content: center;
+.page[data-align='center'] .page__content {
+  margin-block: auto;
 }
 
-.page[data-align='bottom'] {
-  justify-content: flex-end;
+.page[data-align='bottom'] .page__content {
+  margin-block-start: auto;
 }
 
 .page__content {
@@ -25,15 +56,21 @@
   flex-direction: column;
   width: 100%;
   margin-inline: auto;
-  padding-inline: var(--space-xl);
-  overflow-y: auto;
-  scrollbar-width: none;
   /*
-   * Scroll anchoring works against this page. A band that grows after paint —
-   * a widget finishing its load — would have the browser scroll to hold the
-   * content below it still, carrying the reader off the band they were on.
+   * The gutter gives way before the content does. At a comfortable width it is
+   * the full `--space-xl` on each side; on a narrow window those 60px are a
+   * seventh of everything available, which is width the widgets need more than
+   * the margins do. `min()` scales it with the viewport instead of stepping at
+   * a breakpoint, so there is no width where the frame visibly jumps.
    */
-  overflow-anchor: none;
+  padding-inline: min(var(--space-xl), 4vw);
+  /*
+   * Never grows, never shrinks: the auto margins above do the aligning, and
+   * they only have space to work with while the column stays its natural
+   * height. Shrinking is what would squash a tall dashboard into the window
+   * instead of letting the page scroll it.
+   */
+  flex: 0 0 auto;
 }
 
 .band {
@@ -73,8 +110,12 @@
   }
 }
 
-/* One flick lands on the next band instead of dragging through the widgets. */
-.page[data-view='scroll'] .page__content {
+/*
+ * One flick lands on the next band instead of dragging through the widgets.
+ * On the page, which is the scroller — snapping is a property of whatever
+ * actually scrolls, so this is inert anywhere else.
+ */
+.page[data-view='scroll'] {
   scroll-snap-type: y proximity;
 }
 
