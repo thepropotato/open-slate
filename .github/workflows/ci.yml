@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to a PR makes the previous run irrelevant.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          # The self-test imports the TypeScript sources directly and relies on
+          # Node's built-in type stripping.
+          node-version: '22.x'
+          cache: npm
+
+      - run: npm ci
+
+      # Typecheck, lint, the unused-icon check and the self-test.
+      - run: npm run check
+
+      # Proves the extension still builds into something loadable.
+      - run: npm run build
+
+      - name: Check the build produced a manifest
+        run: test -f dist/manifest.json

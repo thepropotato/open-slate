@@ -1,0 +1,86 @@
+name: Bug report
+description: Something in the extension does not work the way it should
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For anything security-related, please do not file it here — use
+        [private reporting](https://github.com/thepropotato/open-slate/security/advisories/new)
+        instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you expected, and what you got instead.
+      placeholder: I dropped a widget onto an occupied cell and the one underneath disappeared.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Unlock the widget canvas
+        2. Drag the clock onto the notes widget
+        3. Reload the tab
+    validations:
+      required: true
+
+  - type: input
+    id: chrome-version
+    attributes:
+      label: Chrome version
+      description: From `chrome://version`.
+      placeholder: '141.0.7390.55'
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      placeholder: macOS 15.2 / Windows 11 / Fedora 41
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install-source
+    attributes:
+      label: How is it installed
+      options:
+        - Chrome Web Store
+        - Loaded unpacked from a build
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      options:
+        - Widgets or the widget canvas
+        - Tiles, folders or pages
+        - Wallpaper or appearance
+        - Search or the command palette
+        - Settings, import/export or sync
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: Screenshot
+      description: For anything visual this is usually worth more than a description. Drag an image in.
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console errors
+      description: >
+        Right-click the new tab page → Inspect → Console. Paste anything red.
+        Feel free to redact.
+      render: text

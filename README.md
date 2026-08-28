@@ -126,3 +126,14 @@ nobody was looking at.
 New tab overrides get a manual review, so `STORE.md` holds the single-purpose
 description and the per-permission justifications.
 
+## Contributing
+
+Bug reports and patches are welcome. [`CONTRIBUTING.md`](CONTRIBUTING.md) covers
+the setup, the checks to run before opening a PR, and the few conventions that
+lint enforces. Security issues go through
+[private reporting](https://github.com/thepropotato/open-slate/security/advisories/new)
+rather than a public issue — see [`SECURITY.md`](SECURITY.md).
+
+## Licence
+
+MIT. See [`LICENSE`](LICENSE).

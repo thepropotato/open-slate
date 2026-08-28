@@ -1,0 +1,58 @@
+name: Feature request
+description: Suggest something the extension should do
+labels: ['enhancement']
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: >
+        Describe the situation rather than the solution. Knowing what you are
+        actually trying to accomplish often turns up a better answer than the
+        one either of us started with.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you have in mind
+      description: If you have a specific idea for how it should work, describe it here.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change is it
+      options:
+        - A new widget
+        - A setting or option for something that exists
+        - Tiles, folders or pages
+        - Wallpaper or appearance
+        - Search or the command palette
+        - Something else
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: permissions
+    attributes:
+      label: Browser data
+      options:
+        - label: >
+            This would need data from the browser (tabs, history, bookmarks,
+            downloads, sessions) or a network request.
+          required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        Two things that shape what gets accepted, worth knowing before you write
+        a long proposal:
+
+        - **New tab overrides get a manual store review**, and every permission
+          has to be justified. Anything needing a new permission has a much
+          higher bar, and anything needing geolocation is a non-starter — see the
+          note in the README.
+        - **The extension collects nothing and talks to no server of its own.**
+          Features that would need an account, a backend or telemetry are out of
+          scope regardless of how useful they'd be.
