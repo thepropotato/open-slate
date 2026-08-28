@@ -67,7 +67,7 @@ export function SyncPanel() {
 
       <Row
         title="Sync across devices"
-        help="Uses your Chrome profile's sync storage. Wallpapers and uploaded images stay on this device — they are far too large for it."
+        help="Uses your Chrome profile's sync storage. Wallpapers and uploaded images stay on this device; they are far too large for it."
       >
         <Toggle
           value={settings.sync.enabled}

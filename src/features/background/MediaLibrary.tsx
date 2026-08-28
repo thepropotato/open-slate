@@ -44,7 +44,7 @@ export function MediaLibrary() {
           continue
         }
         if (file.size > LARGE_FILE_BYTES) {
-          setError(`${file.name} is ${formatBytes(file.size)} — large files slow the new tab down.`)
+          setError(`${file.name} is ${formatBytes(file.size)}. Large files slow the new tab down.`)
         }
         const { width, height } = await measureMedia(file)
         await mediaStore.put({

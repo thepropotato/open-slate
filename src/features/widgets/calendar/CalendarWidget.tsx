@@ -662,11 +662,11 @@ function CalendarSetup({
           Scroll down to <em>Integrate calendar</em>.
         </li>
         <li>
-          Copy <strong>Secret address in iCal format</strong> — it ends <code>.ics</code>. Take the
+          Copy <strong>Secret address in iCal format</strong>; it ends <code>.ics</code>. Take the
           secret one, not the public one; the public address needs the calendar to be public and
           omits event details.
         </li>
-        <li>Paste it below. It keeps itself up to date after that — this is a one-off.</li>
+        <li>Paste it below. It keeps itself up to date after that; this is a one-off.</li>
       </ol>
       <p className="cal__note">
         <Icon name="lock" /> Treat that address like a password: anyone with it can read the

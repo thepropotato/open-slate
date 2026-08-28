@@ -106,7 +106,7 @@ export const appearanceSection: Section = {
         {
           path: 'appearance.fontFamily',
           label: 'Font',
-          help: 'Only locally installed fonts — a new tab should never wait on a download.',
+          help: 'Only locally installed fonts, because a new tab should never wait on a download.',
           control: {
             kind: 'select',
             options: fontOptions.map((f) => ({ value: f.id, label: f.label })),

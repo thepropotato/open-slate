@@ -152,7 +152,7 @@ export function DataPanel() {
 
       <Row
         title="Theme code"
-        help="The look only — palette, shape, wallpaper treatment and layout. No tiles or notes."
+        help="The look only: palette, shape, wallpaper treatment and layout. No tiles or notes."
         stacked
       >
         <div className="data__row">

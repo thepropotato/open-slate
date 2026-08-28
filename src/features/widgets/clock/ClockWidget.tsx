@@ -125,7 +125,7 @@ const zoneLabel = (zone: string): string => zone.split('/').pop()?.replace(/_/g,
 registerWidget<ClockConfig>({
   type: 'clock',
   name: 'Clock',
-  description: 'The time, in one of ten faces — digital, analog, flip, text and more.',
+  description: 'The time, in one of ten faces: digital, analog, flip, text and more.',
   icon: 'clock',
   configSchema: ClockConfig,
   sizes: ['small', 'medium', 'large', 'wide'],

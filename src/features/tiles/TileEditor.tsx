@@ -169,7 +169,7 @@ export function TileEditor({
             </p>
           ) : draft.url ? (
             <p className="tile-editor__hint">
-              <Icon name="info" /> No brand logo for {hostOf(normalisedUrl) || 'this site'} — the
+              <Icon name="info" /> No brand logo for {hostOf(normalisedUrl) || 'this site'}; the
               favicon is used instead.
             </p>
           ) : null}

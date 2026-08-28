@@ -107,7 +107,7 @@ export const backgroundSection: Section = {
         {
           path: 'background.video.pauseWhenHidden',
           label: 'Pause on other tabs',
-          help: 'Strongly recommended — video decoding is the main battery cost here.',
+          help: 'Strongly recommended: video decoding is the main battery cost here.',
           control: { kind: 'toggle' },
         },
       ],
