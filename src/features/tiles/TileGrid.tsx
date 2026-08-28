@@ -154,11 +154,18 @@ export function TileGrid() {
      * The share is a percentage of the grid's own width, which is what keeps
      * the fitted count at exactly `columns` as the window changes. Zero
      * columns is "as many as fit", where the tile width sets the track.
+     *
+     * The `max` is what keeps that count from dividing the band indefinitely.
+     * Five columns across 360px is a 53px plate whose label truncates to
+     * "g...", and a speed dial you cannot read is not one you can use. Once the
+     * share drops under `--tile-min` the track holds there and `auto-fit` fits
+     * fewer per row instead — so the count is honoured wherever there is room
+     * for it, and gives way before the tiles stop being legible.
      */
     '--tile-track':
       tiles.columns === 0
         ? 'var(--tile-w)'
-        : `calc((100% - ${tiles.gap * (tiles.columns - 1)}px) / ${tiles.columns})`,
+        : `max(var(--tile-min), calc((100% - ${tiles.gap * (tiles.columns - 1)}px) / ${tiles.columns}))`,
     '--tile-label-align': tiles.labelAlign,
   } as React.CSSProperties
 

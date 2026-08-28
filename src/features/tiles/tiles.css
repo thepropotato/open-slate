@@ -15,6 +15,11 @@
    * count fixes how many tiles a row holds.
    */
   --tile-track: var(--tile-w);
+  /*
+   * The narrowest a tile may get before the row wraps instead. Sized so a
+   * short label ("GitHub", "Reddit") still fits on one line.
+   */
+  --tile-min: 96px;
   --tile-aspect: 1.75;
   --tile-gap: 18px;
   --tile-radius: var(--radius);
