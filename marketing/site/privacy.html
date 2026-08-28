@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Slate: privacy policy</title>
+<meta name="description" content="The privacy policy for the Open Slate Chrome extension. It collects nothing: no analytics, no telemetry, no identifiers, and no data leaves your device.">
+<link rel="canonical" href="https://openslate.byvenu.com/privacy">
+<meta name="robots" content="index, follow">
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --page:#FAF9F6;
+  --surface:#FFFFFF;
+  --border:#E4E1D9;
+  --body:#5A5750;
+  --head:#1A1917;
+  --muted:#8A857B;
+  --accent:#2F5D50;
+  --accent-soft:#2F5D5014;
+  --serif:'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --sans:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --measure:720px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--page);color:var(--body);
+  font:400 17px/1.65 var(--sans);
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--measure);margin:0 auto;padding:0 24px}
+header{padding:64px 0 8px}
+a{color:var(--accent)}
+.back{
+  font-size:14px;color:var(--muted);text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.back:hover{color:var(--accent)}
+h1{
+  font:400 clamp(40px,6vw,58px)/1.05 var(--serif);
+  color:var(--head);margin:28px 0 10px;letter-spacing:-.01em;
+}
+.lede{font-size:19px;color:var(--body);margin:0 0 6px}
+.updated{font-size:14px;color:var(--muted);margin:18px 0 0}
+main{padding:20px 0 40px}
+h2{
+  font:600 15px/1.3 var(--sans);text-transform:uppercase;letter-spacing:.08em;
+  color:var(--head);margin:52px 0 14px;
+}
+p{margin:0 0 16px}
+ul{margin:0 0 16px;padding-left:22px}
+li{margin:0 0 9px}
+strong{color:var(--head);font-weight:600}
+.callout{
+  background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  padding:24px 26px;margin:0 0 8px;
+}
+.callout p:last-child{margin-bottom:0}
+table{
+  width:100%;border-collapse:collapse;margin:0 0 18px;font-size:15px;
+  display:block;overflow-x:auto;white-space:nowrap;
+}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--head);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:var(--accent-soft);padding:2px 6px;border-radius:5px;color:var(--head);
+}
+footer{
+  border-top:1px solid var(--border);margin-top:56px;padding:28px 0 64px;
+  font-size:14px;color:var(--muted);display:flex;gap:20px;flex-wrap:wrap;
+}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--accent)}
+@media (prefers-color-scheme:dark){
+  :root{
+    --page:#1A1917;--surface:#252320;--border:#332F2B;
+    --body:#B9B4AA;--head:#FAF9F6;--muted:#8A857B;--accent:#8FB3A6;
+    --accent-soft:#8FB3A61F;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="/">&larr; Open Slate</a>
+    <h1>Privacy policy</h1>
+    <p class="lede">Open Slate collects nothing. No analytics, no telemetry, no
+    identifiers, and no account. Nothing you do on the page is sent anywhere.</p>
+    <p class="updated">Last updated 29 August 2026</p>
+  </header>
+
+  <main>
+    <div class="callout">
+      <p><strong>The short version.</strong> Everything Open Slate stores — your
+      tiles, settings, notes, tasks and wallpapers — stays on your own device. The
+      extension has no server, no analytics and no content scripts, so it cannot
+      see the sites you visit. The only network requests it ever makes are for
+      widgets you added yourself, and each one needs a permission you granted.</p>
+    </div>
+
+    <h2>What is collected</h2>
+    <p>Nothing. There is no analytics, telemetry or crash reporting of any kind,
+    no advertising or tracking library, and no identifier assigned to you or your
+    installation. No data is sold or transferred to anyone.</p>
+
+    <h2>What is stored, and where</h2>
+    <p>All of it locally, on the device you are using:</p>
+    <ul>
+      <li>Your settings, tiles, widget layout, notes and tasks are held in
+      <code>chrome.storage.local</code>.</li>
+      <li>Wallpaper images and videos, and any custom tile images, are held in
+      IndexedDB. They are never uploaded.</li>
+      <li>If you switch on Chrome's own settings sync, your preferences travel
+      through your Google account like any other Chrome setting. That is off
+      unless you enable it, per device, and it is handled by Chrome rather than
+      by us.</li>
+    </ul>
+    <p>You can export or erase everything at any time from the extension's
+    settings, and uninstalling removes all of it.</p>
+
+    <h2>Browser data the page reads</h2>
+    <p>Some widgets show your own browser data: recently closed tabs, open tabs,
+    bookmarks, history, downloads and most-visited sites. These use optional
+    permissions that are requested at the moment you add the widget that needs
+    one, and declining leaves the rest of the page working.</p>
+    <p>That data is read to draw the page in front of you and nothing else. It is
+    never transmitted, never aggregated, and no profile is built from it.</p>
+
+    <h2>Network requests</h2>
+    <p>Open Slate makes no request on its own behalf. Every request below belongs
+    to a widget you added, and needs a host permission you granted for that
+    specific site. None carries an identifier, a cookie or an account, and
+    responses are cached locally to keep the number of requests low.</p>
+    <table>
+      <thead>
+        <tr><th>Request</th><th>Sent by</th><th>What it contains</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>api.open-meteo.com</code></td>
+          <td>Weather widget</td>
+          <td>The coordinates of the place you chose. No account or API key.</td>
+        </tr>
+        <tr>
+          <td><code>get.geojs.io</code> or <code>ipwho.is</code></td>
+          <td>Weather widget, during setup</td>
+          <td>Nothing but the request itself, answered with an approximate city.
+          Called once while the widget is being set up, and not again once a place
+          is set.</td>
+        </tr>
+        <tr>
+          <td><code>api.coingecko.com</code></td>
+          <td>Crypto widget</td>
+          <td>A list of coin ids and a currency code.</td>
+        </tr>
+        <tr>
+          <td>Feed and calendar addresses</td>
+          <td>Feeds and calendar widgets</td>
+          <td>Only the addresses you entered yourself, fetched one origin at a
+          time with your approval for each.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>On location</h2>
+    <p>Open Slate never asks for your location and never calls the browser's
+    geolocation API — the <code>geolocation</code> permission is not declared at
+    all. To place itself, the weather widget performs a single city-level lookup
+    based on your IP address, using one of the two services listed above. Those
+    services see your IP address, as any website you visit does; what comes back
+    is an approximate city, which is stored locally and never sent anywhere.</p>
+    <p>If you would rather not make that lookup, the widget falls back to your
+    browser's timezone, and you can always type a town in by hand — which is also
+    how a wrongly detected place is corrected.</p>
+
+    <h2>Search</h2>
+    <p>Nothing is sent anywhere as you type. Suggestions come from your own tabs,
+    bookmarks, history and tiles, matched on your device. Submitting a search
+    navigates to the engine you chose, exactly as the address bar would.</p>
+
+    <h2>Remote code</h2>
+    <p>All of the extension's code ships inside its package. There are no
+    content scripts, no scripts loaded from a CDN, and nothing is evaluated at
+    runtime. The responses above are parsed as data and never executed.</p>
+
+    <h2>Children</h2>
+    <p>Open Slate is not directed at children and collects no personal
+    information from anyone, of any age.</p>
+
+    <h2>Changes</h2>
+    <p>If this policy ever changes, the updated version will be published on this
+    page with a new date, and its history is visible in the extension's public
+    repository.</p>
+
+    <h2>Contact</h2>
+    <p>Questions or concerns about privacy can be raised as an issue on the
+    <a href="https://github.com/thepropotato/open-slate/issues">project's issue
+    tracker</a>, or reported privately through its
+    <a href="https://github.com/thepropotato/open-slate/security/advisories/new">security
+    advisory form</a>.</p>
+  </main>
+
+  <footer>
+    <a href="/">Open Slate</a>
+    <a href="https://github.com/thepropotato/open-slate">Source</a>
+    <a href="https://github.com/thepropotato/open-slate/blob/main/LICENSE">MIT licence</a>
+  </footer>
+</div>
+
+</body>
+</html>
