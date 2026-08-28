@@ -3,7 +3,7 @@
   --todo-line: 21px;
   /* One detail-pane control. Icon-only ones are this square. */
   --todo-ctl: 24px;
-  /* Priority colours, named once so the checkbox, chips and buttons agree. */
+  /* Priority colours, named once so the chips and buttons agree. */
   --todo-p1: #e5484d;
   --todo-p2: #f5a524;
   --todo-p3: #7c8698;
@@ -151,23 +151,10 @@
 /* ----------------------------------------------------- priorities and dates */
 
 /*
- * Priority rides on the checkbox rather than taking a chip of its own in the
- * row. The box is already the first thing on the line and already a square of
- * colour, so tinting its border says "urgent" without spending any width — and
- * a list with priorities set stays as narrow as one without.
+ * Priority shows in the chip and nowhere else. The checkbox stays one control
+ * with one look: it means "done or not", and tinting it by priority made it
+ * read as two pieces of information at once.
  */
-.todo__check[data-priority='1'] {
-  border-color: var(--todo-p1);
-}
-
-.todo__check[data-priority='2'] {
-  border-color: var(--todo-p2);
-}
-
-.todo__check[data-priority='3'] {
-  border-color: var(--todo-p3);
-}
-
 
 .todo__meta {
   display: flex;

@@ -181,7 +181,6 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
                 <button
                   type="button"
                   className="todo__check"
-                  data-priority={config.priorities ? item.priority : 0}
                   onClick={() => toggle(item.id)}
                   aria-pressed={item.done}
                   aria-label={
