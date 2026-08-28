@@ -249,7 +249,8 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 /* ------------------------------------------------- widget canvas packing */
 
 {
-  const { normalizeLayout, nudgeDown, hasOverlap, colsFor } = await load('core/widgets/layout.ts')
+  const { normalizeLayout, nudgeDown, hasOverlap, stackVertically } =
+    await load('core/widgets/layout.ts')
   const { SIZE_ORDER } = await load('core/widgets/sizes.ts')
   const anySize = () => SIZE_ORDER
   const box = (i, x, y, w, h) => ({ i, x, y, w, h })
@@ -306,7 +307,98 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   ).map((item) => item.y), [0, 2])
 
   check('pack: an empty layout is fine', normalizeLayout([], 6, anySize, 'vertical'), [])
-  check('pack: columns scale down per breakpoint', colsFor(6), { lg: 6, md: 4, sm: 2 })
+  /*
+   * Stacking is the one thing a too-narrow window does. Every widget spans the
+   * band, keeps its height, and follows the one before it in reading order.
+   */
+  {
+    const wide = [box('a', 0, 0, 2, 1), box('b', 2, 0, 2, 2), box('c', 4, 0, 2, 1)]
+    const stack = stackVertically(wide, 1)
+
+    check('stack: everything starts at the left edge', stack.every((i) => i.x === 0), true)
+    check('stack: everything spans the band', stack.every((i) => i.w === 1), true)
+    check('stack: heights are kept', stack.map((i) => i.h), [1, 2, 1])
+    check('stack: rows follow each other with no gaps', stack.map((i) => i.y), [0, 1, 3])
+    check('stack: nothing overlaps', hasOverlap(stack), false)
+    check('stack: order is preserved for react keys', stack.map((i) => i.i), ['a', 'b', 'c'])
+
+    // Reading order decides the sequence, not the order the array happens in.
+    const jumbled = [box('c', 0, 2, 2, 1), box('a', 0, 0, 2, 1), box('b', 2, 0, 2, 1)]
+    const ordered = stackVertically(jumbled, 1)
+    check(
+      'stack: reading order decides the sequence',
+      [...ordered].sort((p, q) => p.y - q.y).map((i) => i.i),
+      ['a', 'b', 'c'],
+    )
+
+    check('stack: an empty layout is fine', stackVertically([], 1), [])
+    check('stack: stacking twice changes nothing', stackVertically(stack, 1), stack)
+  }
+
+  /*
+   * Narrowing has to carry the reader's arrangement down rather than invent a
+   * new one. A layout clamped into fewer columns keeps its reading order —
+   * top row first, then left to right — which is what makes the narrow view
+   * recognisably the same dashboard rather than the same widgets reshuffled.
+   */
+  {
+    const wide = [box('a', 0, 0, 2, 1), box('b', 2, 0, 2, 1), box('c', 4, 0, 2, 1)]
+    const readingOrder = (items) =>
+      [...items].sort((p, q) => p.y - q.y || p.x - q.x).map((item) => item.i)
+
+    for (const cols of [2, 3, 4, 6]) {
+      const narrowed = normalizeLayout(wide, cols, anySize, 'vertical')
+      check(`derive: ${cols} columns keeps reading order`, readingOrder(narrowed), ['a', 'b', 'c'])
+      check(`derive: ${cols} columns does not overlap`, hasOverlap(narrowed), false)
+      check(
+        `derive: ${cols} columns stays in the band`,
+        narrowed.every((item) => item.x >= 0 && item.x + item.w <= cols),
+        true,
+      )
+    }
+
+    // Narrowing then widening again must land back on the original layout.
+    const roundTrip = normalizeLayout(
+      normalizeLayout(wide, 6, anySize, 'vertical'),
+      6,
+      anySize,
+      'vertical',
+    )
+    check('derive: normalising twice is stable', roundTrip, wide)
+  }
+
+  /*
+   * The resize round-trip, which is the whole reason there is one layout now.
+   *
+   * A narrow window renders a stack, and renders it from the stored layout
+   * every time rather than writing it back. So no sequence of resizes changes
+   * what is on disk, and widening always returns the arrangement intact — the
+   * failure that used to need a reload, and survived one.
+   */
+  {
+    const wide = [box('a', 0, 0, 2, 2), box('b', 2, 0, 2, 2), box('c', 4, 0, 2, 2)]
+
+    /** What the canvas commits, given whether the band is too narrow to fit. */
+    const toStore = (isStacked, stored, emitted) => (isStacked ? stored : emitted)
+
+    let disk = wide
+    for (const isStacked of [true, true, false, true, false]) {
+      const emitted = isStacked ? stackVertically(disk, 1) : disk
+      disk = toStore(isStacked, disk, emitted)
+    }
+    check('resize: no sequence of resizes rewrites the layout', disk, wide)
+
+    // A stacked canvas emits the stack; storing it would be the old bug.
+    check(
+      'resize: a stacked canvas never stores what it renders',
+      toStore(true, wide, stackVertically(wide, 1)),
+      wide,
+    )
+
+    // A genuine rearrange at full width is still committed.
+    const rearranged = [box('a', 2, 0, 2, 2), box('b', 0, 0, 2, 2), box('c', 4, 0, 2, 2)]
+    check('resize: a real rearrangement is stored', toStore(false, wide, rearranged), rearranged)
+  }
 }
 
 /* ------------------------------------------------- widget layout migration */
@@ -331,10 +423,11 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   }
   const after = migrate(stored).widgets
 
-  check('migrate: version is current', migrate(stored).version >= 2, true)
+  check('migrate: version is current', migrate(stored).version >= 4, true)
   check('migrate: columns become widgets across', after.columns, 6)
   check('migrate: row height is gone', 'rowHeight' in after, false)
-  check('migrate: a wide short widget becomes medium', after.layouts.lg[0], {
+  check('migrate: per-breakpoint layouts are gone', 'layouts' in after, false)
+  check('migrate: a wide short widget becomes medium', after.layout[0], {
     i: 'a',
     x: 2,
     y: 0,
@@ -343,7 +436,7 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   })
   // The 2 -> 3 step packs whatever the 1 -> 2 step produced, so the gap the
   // rescale left under the clock is closed on the way through.
-  check('migrate: a tall widget becomes large', after.layouts.lg[1], {
+  check('migrate: a tall widget becomes large', after.layout[1], {
     i: 'b',
     x: 0,
     y: 0,
@@ -352,10 +445,11 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   })
   truthy('migrate: junk still parses', Boolean(migrate({ version: 1, widgets: { layouts: 7 } })))
 
-  // The whole point of the 2 -> 3 step: layouts nothing had ever checked.
+  // The 2 -> 3 step separated layouts nothing had ever checked; the 3 -> 4 step
+  // then folds them down to the one the reader actually arranged.
   {
     const { hasOverlap } = await load('core/widgets/layout.ts')
-    const broken = migrate({
+    const folded = migrate({
       version: 2,
       widgets: {
         columns: 6,
@@ -365,11 +459,26 @@ const truthy = (name, value) => check(name, Boolean(value), true)
           sm: [{ i: 'a', x: 0, y: 0, w: 2, h: 2 }, { i: 'b', x: 0, y: 0, w: 2, h: 1 }],
         },
       },
-    }).widgets.layouts
-    check('migrate: a stacked narrow layout is separated', hasOverlap(broken.sm), false)
-    check('migrate: a layout that was already fine is left alone', broken.lg, [
+    }).widgets
+
+    check('migrate: the widest layout is the one kept', folded.layout, [
       { i: 'a', x: 0, y: 0, w: 2, h: 2 },
       { i: 'b', x: 2, y: 0, w: 2, h: 1 },
+    ])
+    check('migrate: the folded layout does not overlap', hasOverlap(folded.layout), false)
+    check('migrate: the narrow layouts are dropped', 'layouts' in folded, false)
+
+    // Nothing at `lg` falls through to whatever else was stored.
+    const fallback = migrate({
+      version: 3,
+      widgets: {
+        columns: 6,
+        instances: [{ id: 'a', type: 'clock' }],
+        layouts: { lg: [], sm: [{ i: 'a', x: 0, y: 0, w: 2, h: 1 }] },
+      },
+    }).widgets
+    check('migrate: an empty widest layout falls back', fallback.layout, [
+      { i: 'a', x: 0, y: 0, w: 2, h: 1 },
     ])
   }
 }

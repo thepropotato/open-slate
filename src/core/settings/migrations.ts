@@ -1,5 +1,5 @@
 import { SETTINGS_VERSION, Settings, type GridItem, type Settings as SettingsType } from './schema'
-import { colsFor, normalizeLayout, type CompactMode } from '@/core/widgets/layout'
+import { normalizeLayout, type CompactMode } from '@/core/widgets/layout'
 import { SIZE_ORDER, WIDGET_SIZES, snapSize } from '@/core/widgets/sizes'
 
 type Migration = (raw: Record<string, unknown>) => Record<string, unknown>
@@ -13,6 +13,7 @@ const migrations: Record<number, Migration> = {
   // 0: (raw) => ({ ...raw, appearance: { ...raw.appearance, ... } }),
   1: toStandardWidgetSizes,
   2: separateOverlappingWidgets,
+  3: toSingleLayout,
 }
 
 /* --------------------------------------------------------------- 1 -> 2 */
@@ -90,16 +91,49 @@ function separateOverlappingWidgets(raw: Record<string, unknown>): Record<string
       ? widgets.compact
       : 'vertical'
   ) as CompactMode
-  const cols = colsFor(num(widgets.columns, NEW_COLS))
+  const columns = num(widgets.columns, NEW_COLS)
 
   const next: Record<string, GridItem[]> = {}
   for (const [breakpoint, items] of Object.entries(layouts)) {
     if (!Array.isArray(items)) continue
-    const clean = items.filter(isGridItem)
-    const columns = cols[breakpoint as keyof typeof cols] ?? cols.lg
-    next[breakpoint] = normalizeLayout(clean, columns, () => SIZE_ORDER, compact)
+    next[breakpoint] = normalizeLayout(items.filter(isGridItem), columns, () => SIZE_ORDER, compact)
   }
   return { ...raw, widgets: { ...widgets, layouts: next } }
+}
+
+/* --------------------------------------------------------------- 3 -> 4 */
+
+/**
+ * Three per-breakpoint layouts become the one the reader actually arranged.
+ *
+ * Keeping a layout per breakpoint meant three arrangements to hold correct, and
+ * the narrow ones were only ever derived from the wide one anyway — nobody sat
+ * down and arranged the 2-column view. Worse, the grid regenerated them on
+ * every resize and they were written straight back, so dragging a window narrow
+ * could overwrite the wide arrangement for good. A window too narrow to show
+ * the layout is now given a vertical stack, derived and never stored.
+ *
+ * `lg` is what is kept: it is the widest, so it is the only one that was ever
+ * arranged at full fidelity, and the narrower ones were clamped copies of it.
+ */
+function toSingleLayout(raw: Record<string, unknown>): Record<string, unknown> {
+  const widgets = (raw.widgets ?? {}) as Record<string, unknown>
+  const layouts = widgets.layouts
+  const rest = { ...widgets }
+  delete rest.layouts
+
+  if (layouts === null || typeof layouts !== 'object') return { ...raw, widgets: rest }
+
+  const byBreakpoint = layouts as Record<string, unknown>
+  // Widest first: `lg` if it has anything, else whatever else was stored.
+  const candidates = ['lg', 'md', 'sm', ...Object.keys(byBreakpoint)]
+  for (const key of candidates) {
+    const items = byBreakpoint[key]
+    if (!Array.isArray(items)) continue
+    const clean = items.filter(isGridItem)
+    if (clean.length > 0) return { ...raw, widgets: { ...rest, layout: clean } }
+  }
+  return { ...raw, widgets: rest }
 }
 
 const isGridItem = (value: unknown): value is GridItem => {

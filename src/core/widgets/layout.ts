@@ -1,16 +1,15 @@
 /**
  * Keeping the canvas free of stacked widgets.
  *
- * `ResponsiveGridLayout` only ever compacts the layout for the breakpoint that
- * is currently on screen. Everything that rewrites the *other* breakpoints —
- * clamping a footprint into a narrower column count, applying a size from the
- * config dialog, placing a newly added widget — used to do so with no collision
- * handling at all, and then the whole set was persisted. Narrow the window and
- * you were looking at a layout nothing had ever validated.
+ * There is one stored layout, and non-overlap is an invariant of it rather than
+ * a side effect of what the grid happens to be rendering. `ResponsiveGridLayout`
+ * only ever compacts what is on screen, so everything that writes a layout —
+ * clamping a footprint, applying a size from the config dialog, placing a newly
+ * added widget — goes through `normalizeLayout` before it is stored.
  *
- * So non-overlap is treated as an invariant of the stored data rather than as a
- * side effect of which breakpoint happens to be visible: every write goes
- * through `normalizeLayout`, for every breakpoint.
+ * A window too narrow to show that layout legibly is given `stackVertically`
+ * instead. That is derived on the way to the screen and never written back,
+ * which is what makes narrowing a window non-destructive.
  */
 
 import type { Compactor } from 'react-grid-layout/core'
@@ -144,19 +143,30 @@ function compactHorizontal<T extends Box>(items: readonly T[], cols: number): T[
 export type CompactMode = 'vertical' | 'horizontal' | 'none'
 
 /**
- * Cells across at each breakpoint, scaled down from the configured width.
+ * The layout as a single column, in reading order.
  *
- * Shared with the migration so a stored layout is separated against exactly the
- * column counts the canvas will later render it at.
+ * What a window too narrow for the arrangement gets instead of a squeezed
+ * version of it. Each widget keeps its height and spans the whole band, and
+ * they follow each other down the page in the order they were arranged in —
+ * top row first, then left to right within a row.
+ *
+ * Derived on the way to the screen and never stored. That is the whole reason
+ * the stored layout survives a resize: narrowing the window does not write
+ * anything, so widening it again has the original arrangement to come back to.
  */
-export const colsFor = (columns: number) => ({
-  lg: columns,
-  md: Math.max(2, Math.ceil(columns * (2 / 3))),
-  sm: 2,
-})
+export function stackVertically<T extends Box>(items: readonly T[], cols: number): T[] {
+  let y = 0
+  const stacked = new Map<string, T>()
+  for (const item of [...items].sort(byRowCol)) {
+    stacked.set(item.i, { ...item, x: 0, y, w: cols })
+    y += item.h
+  }
+  // The caller's order, so React keys stay stable across the switch.
+  return items.map((item) => stacked.get(item.i) ?? item)
+}
 
 /**
- * Brings one breakpoint's layout into a state the canvas can render: every
+ * Brings a layout into a state the canvas can render: every
  * footprint is one of the widget's standard sizes, sits inside the grid, and
  * overlaps nothing.
  *

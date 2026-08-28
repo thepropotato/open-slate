@@ -13,7 +13,7 @@ import { z } from 'zod'
  */
 
 export const SETTINGS_KEY = 'settings'
-export const SETTINGS_VERSION = 3
+export const SETTINGS_VERSION = 4
 
 const hex = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/)
 const unit = z.number().min(0).max(1)
@@ -203,16 +203,18 @@ const DEFAULT_CLOCK_ID = 'clock-default'
 export const Widgets = z.object({
   enabled: z.boolean().default(true),
   instances: z.array(WidgetInstance).prefault([{ id: DEFAULT_CLOCK_ID, type: 'clock' }]),
-  /** Layouts keyed by breakpoint name (`lg`, `md`, `sm`). */
-  layouts: z.record(z.string(), z.array(GridItem)).prefault({
-    lg: [{ i: DEFAULT_CLOCK_ID, x: 2, y: 0, w: 2, h: 1 }],
-    md: [{ i: DEFAULT_CLOCK_ID, x: 1, y: 0, w: 2, h: 1 }],
-    sm: [{ i: DEFAULT_CLOCK_ID, x: 0, y: 0, w: 2, h: 1 }],
-  }),
   /**
-   * Cells across at the widest breakpoint. One cell is a small widget, and
-   * cells are square, so this is really "how big is a widget" — fewer columns
-   * means larger widgets. Narrower breakpoints scale down from here.
+   * The one arrangement the reader has made, at `columns` across.
+   *
+   * There is no per-breakpoint variant of this. A window too narrow to show
+   * the arrangement at a legible size is given a plain vertical stack instead,
+   * derived on the fly and never stored — so there is exactly one layout to
+   * keep correct, and widening the window always brings it back untouched.
+   */
+  layout: z.array(GridItem).prefault([{ i: DEFAULT_CLOCK_ID, x: 2, y: 0, w: 2, h: 1 }]),
+  /**
+   * Cells across. One cell is a small widget, and cells are square, so this is
+   * really "how big is a widget" — fewer columns means larger widgets.
    */
   columns: z.number().min(4).max(10).default(6),
   margin: z.number().min(0).max(48).default(14),

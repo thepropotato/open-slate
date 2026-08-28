@@ -1,21 +1,18 @@
 import { Suspense, useCallback, useEffect, useId, useMemo, useState, type Ref } from 'react'
 import { lazyChunk } from '@/core/util/lazyChunk'
 import {
-  ResponsiveGridLayout,
-  getBreakpointFromWidth,
-  getColsFromBreakpoint,
+  GridLayout,
   horizontalCompactor,
   useContainerWidth,
   verticalCompactor,
   type Layout,
-  type ResponsiveLayouts,
 } from 'react-grid-layout'
 import { gridBounds, type LayoutConstraint } from 'react-grid-layout/core'
 import { Icon } from '@/core/icons'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { WidgetInstance, type GridItem, type Settings } from '@/core/settings/schema'
 import { getWidget, parseWidgetConfig } from '@/core/widgets/registry'
-import { colsFor, freeCompactor, normalizeLayout } from '@/core/widgets/layout'
+import { freeCompactor, normalizeLayout, stackVertically } from '@/core/widgets/layout'
 import {
   DEFAULT_SIZES,
   nameOfSize,
@@ -42,21 +39,38 @@ import 'react-grid-layout/css/styles.css'
 import './widgets.css'
 
 /**
- * Cells stay square and roughly this wide, which is what makes the standard
- * sizes read as the same shapes at every window width: the breakpoints are
- * derived from the column count rather than fixed, so a band never stretches
- * a cell far past this.
+ * The smallest a cell may get before the canvas stops trying to show the
+ * reader's arrangement at all.
+ *
+ * There is no middle ground any more — no intermediate column counts, no
+ * squeezing, no centring. Either the layout fits at a legible size and is shown
+ * exactly as arranged, or the window is too narrow and everything stacks into
+ * one column. Two outcomes, and the width decides which.
  */
-const TARGET_CELL = 158
+const MIN_CELL = 120
+
+/**
+ * How much of a narrow band the stack takes, leaving the rest as side margin.
+ *
+ * A stacked widget does not need the whole window: at full bleed it runs edge
+ * to edge against the browser frame and reads as a wall rather than a column of
+ * cards. Holding it to most of the band keeps the cards distinct and gives the
+ * eye somewhere to rest either side.
+ */
+const STACK_WIDTH = 0.86
+
+/**
+ * A stacked row's height, as a share of the stack's width.
+ *
+ * Cells are square, so a one-column band would otherwise make every widget as
+ * tall as it is wide — a full-width square per widget, and two of them fill the
+ * screen. This is the aspect a stacked card is given instead: taller than the
+ * unstacked cell, which is what made them letterboxes, but well short of square.
+ */
+const STACK_ROW = 0.52
 
 /** Empty rows kept below the last widget while the canvas is unlocked. */
 const EDIT_ROOM_ROWS = 1
-
-/** Thresholds that keep every band close to `TARGET_CELL`, strictly decreasing. */
-function breakpointsFor(cols: ReturnType<typeof colsFor>) {
-  const lg = cols.lg * TARGET_CELL
-  return { lg, md: Math.min(cols.md * TARGET_CELL, lg - 1), sm: 0 }
-}
 
 const COMPACTORS = {
   vertical: verticalCompactor,
@@ -69,9 +83,10 @@ const COMPACTORS = {
 /**
  * The widget dashboard.
  *
- * Layout lives in settings keyed by breakpoint, so a narrow window keeps its own
- * arrangement. Dragging and resizing are off until the canvas is unlocked — a
- * dashboard you can knock out of shape by mis-clicking is worse than a fixed one.
+ * One stored arrangement, shown as arranged whenever it fits and as a plain
+ * vertical stack when the window is too narrow for it. Dragging and resizing
+ * are off until the canvas is unlocked — a dashboard you can knock out of shape
+ * by mis-clicking is worse than a fixed one.
  */
 export function WidgetCanvas() {
   const settings = useSettings()
@@ -98,8 +113,7 @@ export function WidgetCanvas() {
 
   const editing = !widgets.locked
 
-  const cols = useMemo(() => colsFor(widgets.columns), [widgets.columns])
-  const breakpoints = useMemo(() => breakpointsFor(cols), [cols])
+  const cols = widgets.columns
 
   /*
    * `measureBeforeMount` reports the container as unmounted until it has been
@@ -112,14 +126,46 @@ export function WidgetCanvas() {
    */
   const { width, mounted, containerRef } = useContainerWidth({ measureBeforeMount: true })
 
+  /** One cell and the n-1 gutters between them, as the grid divides the band. */
+  const cellAt = (columns: number) => (width - widgets.margin * (columns - 1)) / columns
 
-  // The grid picks its own breakpoint from the width; the same choice has to be
-  // made here to keep cells square, since row height is a single number.
-  const activeCols = getColsFromBreakpoint(getBreakpointFromWidth(breakpoints, width), cols)
+  /**
+   * Whether the window is too narrow to show the arrangement.
+   *
+   * The only question the width is asked. Above this the layout renders exactly
+   * as arranged; below it, everything stacks. Arranging always uses the real
+   * grid, because a drag has to land the widget in the cell under the cursor.
+   */
+  const stacked = !editing && width > 0 && cellAt(cols) < MIN_CELL
+
+  /** Columns actually rendered: the whole band when stacked, else the layout's. */
+  const activeCols = stacked ? 1 : cols
+
+  /**
+   * How wide the stack is, and how much is left over as margin.
+   *
+   * A stacked widget spanning the full band is a very wide, very short box —
+   * the row height still comes from the unstacked cell, which on a narrow
+   * window is small, so a clock ends up a letterbox. Holding the stack to a
+   * share of the band gives it back some of its proportions and puts the
+   * remainder either side as breathing room.
+   */
+  const stackWidth = stacked ? Math.max(MIN_CELL, width * STACK_WIDTH) : width
+  const stackInset = stacked ? (width - stackWidth) / 2 : 0
+
+  /**
+   * Row height, which is the cell size — cells are square.
+   *
+   * Stacked, the band is one column wide, so a square cell would be as tall as
+   * the stack is wide. That is far too tall for a one-cell widget, so the
+   * stacked row is a share of its width instead: still taller than the flat
+   * box the unstacked cell produced, without turning every widget into a
+   * square the height of the screen.
+   */
   const rowHeight =
     width > 0
-      ? Math.max(48, (width - widgets.margin * (activeCols - 1)) / activeCols)
-      : TARGET_CELL
+      ? Math.max(48, stacked ? stackWidth * STACK_ROW : cellAt(cols))
+      : MIN_CELL
 
   /** Standard sizes each instance is allowed to take, by instance id. */
   const allowed = useMemo(() => {
@@ -130,38 +176,38 @@ export function WidgetCanvas() {
     return map
   }, [widgets.instances])
 
-  /**
-   * Normalises every breakpoint at once.
-   *
-   * The grid only ever validates the breakpoint on screen, so anything that
-   * writes a layout has to run all three through here — otherwise the ones off
-   * screen drift into overlapping each other and are saved that way.
-   */
-  const normalizeAll = useCallback(
-    (stored: Record<string, GridItem[] | undefined>) => {
-      const sizesFor = (id: string) => allowed.get(id)
-      const out: Record<string, GridItem[]> = {}
-      for (const key of Object.keys(cols)) {
-        const columns = cols[key as keyof typeof cols]
-        out[key] = normalizeLayout(stored[key] ?? [], columns, sizesFor, widgets.compact)
-      }
-      return out
-    },
+  /** Brings a layout into a state the canvas can render. */
+  const normalize = useCallback(
+    (items: readonly GridItem[]) =>
+      normalizeLayout(items, cols, (id) => allowed.get(id), widgets.compact),
     [allowed, cols, widgets.compact],
   )
 
-  const layouts = useMemo<ResponsiveLayouts<string>>(() => {
-    const stored = widgets.layouts as Record<string, GridItem[]>
+  /**
+   * The stored arrangement, with any newly added widget placed into it.
+   *
+   * `place` positions a widget that has no position yet; everything else keeps
+   * exactly the geometry it was stored with.
+   */
+  const layout = useMemo(() => {
     const known = new Set(widgets.instances.map((i) => i.id))
-    const withNew: Record<string, GridItem[]> = {}
-    for (const key of Object.keys(cols)) {
-      const columns = cols[key as keyof typeof cols]
-      const items = (stored[key] ?? []).filter((item) => known.has(item.i))
-      const missing = widgets.instances.filter((i) => !items.some((item) => item.i === i.id))
-      withNew[key] = [...items, ...place(missing, items, columns)]
-    }
-    return normalizeAll(withNew)
-  }, [widgets.layouts, widgets.instances, cols, normalizeAll])
+    const items = widgets.layout.filter((item) => known.has(item.i))
+    const missing = widgets.instances.filter((i) => !items.some((item) => item.i === i.id))
+    return normalize([...items, ...place(missing, items, cols)])
+  }, [widgets.layout, widgets.instances, cols, normalize])
+
+  /**
+   * What the grid actually renders.
+   *
+   * Either the layout as arranged, or a single column of it. Stacking is
+   * derived here and never written back — `onLayoutChange` refuses to store
+   * anything while stacked — which is what lets widening the window bring the
+   * arrangement back exactly as it was.
+   */
+  const shown = useMemo(
+    () => (stacked ? stackVertically(layout, 1) : layout),
+    [layout, stacked],
+  )
 
   /**
    * How tall the canvas is while arranging.
@@ -170,10 +216,10 @@ export function WidgetCanvas() {
    * to. Without it the canvas ends flush with the bottom widget and the only
    * way to make a new row is to drop onto an existing one.
    */
-  const rows = useMemo(() => {
-    const active = getBreakpointFromWidth(breakpoints, width)
-    return (layouts[active] ?? []).reduce((max, item) => Math.max(max, item.y + item.h), 0)
-  }, [layouts, breakpoints, width])
+  const rows = useMemo(
+    () => layout.reduce((max, item) => Math.max(max, item.y + item.h), 0),
+    [layout],
+  )
 
   const stageHeight = (rows + EDIT_ROOM_ROWS) * (rowHeight + widgets.margin) - widgets.margin
 
@@ -199,23 +245,32 @@ export function WidgetCanvas() {
     [allowed],
   )
 
+  /** Stores a layout the reader has actually rearranged. */
   const onLayoutChange = useCallback(
-    (_current: Layout, all: ResponsiveLayouts<string>) => {
-      const geometry: Record<string, GridItem[]> = {}
-      for (const [key, items] of Object.entries(all)) {
-        // Store only the geometry, dropping the library's transient item flags.
-        geometry[key] = (items ?? []).map(({ i, x, y, w, h }) => ({ i, x, y, w, h }))
-      }
-      // The grid hands back its own breakpoint corrected and the others exactly
-      // as they were given, so the whole set is re-checked before it is stored.
-      const next = normalizeAll(geometry)
+    (next: Layout) => {
+      /*
+       * Only a real rearrangement is stored. The grid emits a layout whenever
+       * it re-measures, a window resize included, and writing that back is what
+       * used to replace the reader's arrangement with one nobody had chosen —
+       * a narrow window would flatten it to a single column, on disk, past a
+       * reload. Arranging is the only thing that changes what is stored.
+       *
+       * `stacked` is redundant today, since it implies `!editing` and so cannot
+       * be reached on its own. It is kept because it states the rule the canvas
+       * actually relies on: a derived layout is never written back.
+       */
+      if (!editing || stacked) return
+
+      // Store only the geometry, dropping the library's transient item flags.
+      const geometry = next.map(({ i, x, y, w, h }) => ({ i, x, y, w, h }))
+      const normalized = normalize(geometry)
       update((current) => {
-        // The grid emits a layout on mount as well; skip identical writes.
-        if (JSON.stringify(current.widgets.layouts) === JSON.stringify(next)) return current
-        return { ...current, widgets: { ...current.widgets, layouts: next } }
+        // The grid emits a layout on entering arrange mode too; skip no-ops.
+        if (JSON.stringify(current.widgets.layout) === JSON.stringify(normalized)) return current
+        return { ...current, widgets: { ...current.widgets, layout: normalized } }
       })
     },
-    [update, normalizeAll],
+    [update, normalize, editing, stacked],
   )
 
   const addWidget = (definition: AnyWidgetDefinition) => {
@@ -238,33 +293,24 @@ export function WidgetCanvas() {
       widgets: {
         ...current.widgets,
         instances: current.widgets.instances.filter((i) => i.id !== id),
-        layouts: Object.fromEntries(
-          Object.entries(current.widgets.layouts).map(([key, items]) => [
-            key,
-            items.filter((item) => item.i !== id),
-          ]),
-        ),
+        layout: current.widgets.layout.filter((item) => item.i !== id),
       },
     }))
 
   /**
-   * Applies a standard size to an instance across every breakpoint.
+   * Applies a standard size to an instance.
    *
    * Growing a widget is the one change that cannot be made in place: whatever
-   * used to sit beside or below it has to move, at every breakpoint, not just
-   * the visible one.
+   * used to sit beside or below it has to move, which is what `normalize` does.
    */
   const resizeInstance = (id: string, name: WidgetSizeName) =>
     update((current) => ({
       ...current,
       widgets: {
         ...current.widgets,
-        layouts: normalizeAll(
-          Object.fromEntries(
-            Object.entries(current.widgets.layouts).map(([key, items]) => [
-              key,
-              items.map((item) => (item.i === id ? { ...item, ...sizeOf(name) } : item)),
-            ]),
+        layout: normalize(
+          current.widgets.layout.map((item) =>
+            item.i === id ? { ...item, ...sizeOf(name) } : item,
           ),
         ),
       },
@@ -285,7 +331,7 @@ export function WidgetCanvas() {
   const configuringDefinition = configuringInstance
     ? getWidget(configuringInstance.type)
     : undefined
-  const configuringSize = sizeNameOf(configuringInstance, configuringDefinition, widgets.layouts.lg)
+  const configuringSize = sizeNameOf(configuringInstance, configuringDefinition, widgets.layout)
 
   return (
     <div className="canvas" data-editing={editing} data-settling={settling}>
@@ -296,15 +342,18 @@ export function WidgetCanvas() {
       >
       <GridSlots cell={rowHeight} gutter={widgets.margin} radius={appearance.radius} />
       {mounted ? (
-      <ResponsiveGridLayout
+      <GridLayout
         className="canvas__grid"
-        width={width}
-        layouts={layouts}
-        breakpoints={breakpoints}
-        cols={cols}
-        rowHeight={rowHeight}
-        margin={[widgets.margin, widgets.margin]}
-        containerPadding={[0, 0]}
+        // Indented into the middle of the band when stacked; flush otherwise.
+        style={stackInset > 0 ? { marginInline: stackInset } : undefined}
+        width={stackWidth}
+        layout={shown}
+        gridConfig={{
+          cols: activeCols,
+          rowHeight,
+          margin: [widgets.margin, widgets.margin],
+          containerPadding: [0, 0],
+        }}
         compactor={COMPACTORS[widgets.compact]}
         constraints={constraints}
         /*
@@ -345,7 +394,7 @@ export function WidgetCanvas() {
             />
           </div>
         ))}
-      </ResponsiveGridLayout>
+      </GridLayout>
       ) : null}
       </div>
 
@@ -451,7 +500,7 @@ function WidgetHost({
   }
 
   const config = parseWidgetConfig(definition, instance.config)
-  const sizeName = sizeNameOf(instance, definition, settings.widgets.layouts.lg)
+  const sizeName = sizeNameOf(instance, definition, settings.widgets.layout)
   const size = sizeOf(sizeName)
 
   return (
