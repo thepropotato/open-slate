@@ -179,7 +179,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
           <input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
-            placeholder={rich ? 'Add a task, ! or @ friday' : 'Add a task'}
+            placeholder={rich ? 'Add a task, ! or @ date' : 'Add a task'}
             aria-label="Add a task"
           />
           {config.showCount && config.items.length > 0 ? (
@@ -201,7 +201,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
             }
             title="Filter tasks"
           >
-            <Icon name="sliders" />
+            <Icon name="filter" />
           </button>
         ) : null}
       </div>

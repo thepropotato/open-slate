@@ -46,10 +46,10 @@
 
 /* ---------------------------------------------------------------- filters */
 
-/* The add field and the filter button share one line. */
+/* The add field and the filter button share one line, and one height. */
 .todo__bar {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   gap: 4px;
   flex: none;
 }
@@ -60,21 +60,22 @@
 }
 
 /*
- * Sized like the row affordances but not one of them: this button is always
- * visible, because it is the only clue that a shortened list is shortened and
- * so cannot wait for a hover.
+ * A square the same height as the field beside it, so the bar reads as one
+ * control rather than a field with something stuck on the end. Always visible,
+ * unlike the per-row affordances: it is the only clue that a shortened list is
+ * shortened, so it cannot wait for a hover.
  */
 .todo__filter-btn {
   position: relative;
   display: grid;
   place-items: center;
-  width: var(--todo-ctl);
-  height: var(--todo-ctl);
+  align-self: stretch;
   aspect-ratio: 1;
   flex: none;
   border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 7%);
   color: var(--fg-subtle);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .todo__filter-btn:hover {
