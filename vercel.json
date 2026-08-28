@@ -1,12 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-
-  "//": "The site is a static page committed under marketing/site. There is nothing to build: the repo's `npm run build` builds the *extension* into dist/, which is not what is being served here.",
   "framework": null,
   "buildCommand": null,
   "installCommand": null,
   "outputDirectory": "marketing/site",
-
   "cleanUrls": true,
   "headers": [
     {
