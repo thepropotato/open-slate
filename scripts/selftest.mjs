@@ -726,9 +726,8 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 /* ------------------------------------------------------ task shorthand */
 
 {
-  const { parseDraft, parseDue, dueLabel, daysUntil, addDays, startOfDay, sortItems } = await load(
-    'features/widgets/todo/parse.ts',
-  )
+  const { parseDraft, parseDue, dueLabel, daysUntil, addDays, startOfDay, sortItems,
+    matchesFilter, availableFilters } = await load('features/widgets/todo/parse.ts')
 
   // A Wednesday, so weekday arithmetic has somewhere to go in both directions.
   const today = startOfDay(new Date(2026, 7, 26))
@@ -814,6 +813,52 @@ const truthy = (name, value) => check(name, Boolean(value), true)
     check('todo sort: done sinks under manual', ids(sortItems(withDone, 'manual')), 'bca')
     check('todo sort: done sinks under priority', ids(sortItems(withDone, 'priority')), 'cba')
     check('todo sort: sorting does not mutate', ids(withDone), 'abc')
+  }
+
+
+  /* Filters. */
+  {
+    const task = (id, priority, due, done = false) => ({ id, priority, due, done })
+    const both = { priorities: true, dueDates: true }
+    const overdue = task('overdue', 2, addDays(today, -2))
+    const dueNow = task('today', 3, today)
+    const soon = task('soon', 2, addDays(today, 3))
+    const urgent = task('urgent', 1, 0)
+    const plain = task('plain', 0, 0)
+    const finished = task('finished', 1, today, true)
+    const all = [overdue, dueNow, soon, urgent, plain, finished]
+    const shown = (filter) =>
+      all.filter((item) => matchesFilter(item, filter, today)).map((item) => item.id).join(',')
+
+    check('todo filter: all shows everything', shown('all'), 'overdue,today,soon,urgent,plain,finished')
+    check('todo filter: today includes overdue', shown('today'), 'overdue,today')
+    check('todo filter: upcoming is strictly ahead', shown('upcoming'), 'soon')
+    check('todo filter: high is P1 only', shown('high'), 'urgent')
+    check('todo filter: done is the completed ones', shown('done'), 'finished')
+    check(
+      'todo filter: a completed task is in no live view',
+      ['today', 'upcoming', 'high'].map((f) => matchesFilter(finished, f, today)),
+      [false, false, false],
+    )
+    check('todo filter: an undated task is not upcoming', matchesFilter(urgent, 'upcoming', today), false)
+
+    check('todo filter: offered when they match', availableFilters(all, both, today), ['all', 'today', 'upcoming', 'high', 'done'])
+    check(
+      'todo filter: empty views are not offered',
+      availableFilters([plain], both, today),
+      ['all'],
+    )
+    check(
+      'todo filter: date views go with due dates off',
+      availableFilters(all, { priorities: true, dueDates: false }, today),
+      ['all', 'high', 'done'],
+    )
+    check(
+      'todo filter: the priority view goes with priorities off',
+      availableFilters(all, { priorities: false, dueDates: true }, today),
+      ['all', 'today', 'upcoming', 'done'],
+    )
+    check('todo filter: an empty list offers only all', availableFilters([], both, today), ['all'])
   }
 
   check('todo: label for today', dueLabel(today, today, 'en-GB'), 'Today')

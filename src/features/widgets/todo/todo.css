@@ -44,6 +44,49 @@
   flex: none;
 }
 
+/* ---------------------------------------------------------------- filters */
+
+/*
+ * The views, as a row of chips rather than a menu: the point of a filter here
+ * is that it is one click away and that you can see which one is on without
+ * opening anything. Scrolls sideways rather than wrapping, so turning one on
+ * never costs the list a row of height.
+ */
+.todo__filters {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: none;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.todo__filters::-webkit-scrollbar {
+  display: none;
+}
+
+.todo__filter {
+  flex: none;
+  padding: 3px 7px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--fg-subtle);
+}
+
+
+.todo__filter:hover {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 8%);
+}
+
+.todo__filter[aria-selected='true'] {
+  background: rgb(var(--surface-tint) / 14%);
+  color: var(--fg);
+}
+
 .todo__list {
   display: flex;
   flex-direction: column;

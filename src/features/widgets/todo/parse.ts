@@ -195,3 +195,65 @@ export function sortItems<T extends { done: boolean; priority: number; due: numb
     return 0
   })
 }
+
+/* ----------------------------------------------------------------- filters */
+
+/**
+ * The views the chip row offers.
+ *
+ * Deliberately a short list of questions people actually ask a task list —
+ * "what needs doing now", "what is coming", "what is urgent" — rather than a
+ * filter builder. Anything finer is a search box, which this widget is not.
+ */
+export type Filter = 'all' | 'today' | 'upcoming' | 'high' | 'done'
+
+export const FILTER_LABELS: Record<Filter, string> = {
+  all: 'All',
+  today: 'Today',
+  upcoming: 'Upcoming',
+  high: 'High',
+  done: 'Done',
+}
+
+/**
+ * Whether one task belongs in one view.
+ *
+ * `today` includes overdue on purpose: a task that slipped past its date is
+ * more of a today problem than one merely dated today, and a view that hid it
+ * would be the one place the widget lies about what needs doing. Both exclude
+ * completed tasks, which have their own view.
+ */
+export function matchesFilter(
+  item: { done: boolean; priority: number; due: number },
+  filter: Filter,
+  today: number,
+): boolean {
+  if (filter === 'done') return item.done
+  if (filter === 'all') return true
+  if (item.done) return false
+  if (filter === 'today') return item.due > 0 && item.due <= today
+  if (filter === 'upcoming') return item.due > today
+  return item.priority === 1
+}
+
+/**
+ * The filters worth offering for a given list.
+ *
+ * A chip that leads to an empty list is noise, and one for a field the widget
+ * has switched off is a lie, so both are dropped. `all` always survives — the
+ * row either offers a real choice or is not drawn at all.
+ */
+export function availableFilters(
+  items: readonly { done: boolean; priority: number; due: number }[],
+  enabled: { priorities: boolean; dueDates: boolean },
+  today: number,
+): Filter[] {
+  const candidates: Filter[] = ['all']
+  if (enabled.dueDates) candidates.push('today', 'upcoming')
+  if (enabled.priorities) candidates.push('high')
+  candidates.push('done')
+  return candidates.filter(
+    (filter) =>
+      filter === 'all' || items.some((item) => matchesFilter(item, filter, today)),
+  )
+}

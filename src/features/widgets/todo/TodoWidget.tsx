@@ -8,13 +8,17 @@ import type { WidgetProps } from '@/core/widgets/types'
 import { uid } from '@/core/util/id'
 import { resolveLocale } from '@/core/util/time'
 import {
+  FILTER_LABELS,
   PRIORITY_LABELS,
   PRIORITY_SHORT,
   addDays,
+  availableFilters,
   dueLabel,
   parseDraft,
+  matchesFilter,
   sortItems,
   startOfDay,
+  type Filter,
   type Priority,
 } from './parse'
 import './todo.css'
@@ -69,6 +73,15 @@ type TodoItem = z.infer<typeof TodoItem>
 
 const PRIORITIES: Priority[] = [1, 2, 3]
 
+/** What an empty list means depends on the view that emptied it. */
+const EMPTY_TEXT: Record<Filter, string> = {
+  all: 'Nothing on the list.',
+  today: 'Nothing due today.',
+  upcoming: 'Nothing coming up.',
+  high: 'Nothing urgent.',
+  done: 'Nothing finished yet.',
+}
+
 function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   const { behavior } = useSettings()
   const locale = resolveLocale(behavior.locale)
@@ -78,6 +91,12 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   const [draft, setDraft] = useState('')
   /** Which row has its detail controls pinned open, if any. */
   const [editing, setEditing] = useState<string | null>(null)
+  /*
+   * Which view is up. Kept in component state rather than config on purpose: a
+   * filter is what you are looking at now, not a preference. Persisting it
+   * means reopening the browser to a list that silently hides most of itself.
+   */
+  const [filter, setFilter] = useState<Filter>('all')
 
   const rich = config.priorities || config.dueDates
   const write = (items: TodoItem[]) => setConfig({ items })
@@ -119,7 +138,31 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   const remove = (id: string) => write(config.items.filter((item) => item.id !== id))
 
   const ordered = useMemo(() => sortItems(config.items, config.sortBy), [config.items, config.sortBy])
-  const visible = config.hideDone ? ordered.filter((item) => !item.done) : ordered
+  const filters = useMemo(
+    () =>
+      availableFilters(config.items, {
+        priorities: config.priorities,
+        dueDates: config.dueDates,
+      }, today),
+    [config.items, config.priorities, config.dueDates, today],
+  )
+  /*
+   * A filter that stops applying — its last task completed, or the option
+   * switched off — falls back to `all` rather than showing an empty list the
+   * user cannot explain.
+   */
+  /*
+   * Five chips do not fit a two-cell widget, and a clipped one reads as broken
+   * rather than scrollable. `upcoming` is the one to lose: it is the least
+   * urgent view, and everything in it is still under `all`.
+   */
+  const shownFilters = size.w > 2 ? filters : filters.filter((f) => f !== 'upcoming')
+  const active = shownFilters.includes(filter) ? filter : 'all'
+  const matching = ordered.filter((item) => matchesFilter(item, active, today))
+  // `hideDone` is the standing preference; the `done` view is an explicit ask.
+  const visible = config.hideDone && active !== 'done'
+    ? matching.filter((item) => !item.done)
+    : matching
   const remaining = config.items.filter((item) => !item.done).length
   // A one-row widget has no room for a second line under a task.
   const compact = size.h < 2
@@ -163,6 +206,28 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
             </span>
           ) : null}
         </p>
+      ) : null}
+
+      {/*
+        Only drawn when there is a real choice to make: one chip is not a
+        filter, and a short list does not need narrowing. `compact` widgets are
+        a single row tall and have no line to spare for it.
+      */}
+      {!compact && shownFilters.length > 1 ? (
+        <div className="todo__filters" role="tablist" aria-label="Filter tasks">
+          {shownFilters.map((option) => (
+            <button
+              key={option}
+              type="button"
+              role="tab"
+              className="todo__filter"
+              aria-selected={active === option}
+              onClick={() => setFilter(option)}
+            >
+              {FILTER_LABELS[option]}
+            </button>
+          ))}
+        </div>
       ) : null}
 
       <ul className="todo__list scroll-y">
@@ -322,7 +387,9 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
         })}
       </ul>
 
-      {config.items.length === 0 ? <p className="todo__empty">Nothing on the list.</p> : null}
+      {visible.length === 0 ? (
+        <p className="todo__empty">{EMPTY_TEXT[active]}</p>
+      ) : null}
     </div>
   )
 }
