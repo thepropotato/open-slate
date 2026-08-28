@@ -39,9 +39,10 @@ A grid of square cells with five standard sizes that widgets snap to, the way
 phone widgets do. Growing or dropping one moves whatever was in the way — at
 every window size, not just the one you are looking at.
 
-Clock (ten faces), weather, calendar, notes, tasks, greeting, timer (pomodoro,
-countdown, stopwatch), RSS feeds, crypto prices, recently closed tabs, most
-visited, open tabs with a duplicate finder, bookmarks, history and downloads.
+Clock (ten faces), weather, calendar, notes, greeting, tasks (priorities, due
+dates and filters, all typed rather than clicked), timer (pomodoro, countdown,
+stopwatch), RSS feeds, crypto prices, recently closed tabs, most visited, open
+tabs with a duplicate finder, bookmarks, history and downloads.
 
 SEARCH AND A COMMAND PALETTE
 23 search engines with bang shortcuts (!yt cats), address detection so typing a

@@ -52,9 +52,10 @@ on screen. Unlock the canvas and the cell grid appears behind the widgets, each
 one grows a title bar of its own, and the whole widget is the drag handle.
 Fifteen widgets: clock (ten faces — digital, minimal, mono,
 flip, words, binary, three analog variants, rings), weather, calendar, notes,
-tasks, greeting, timer (pomodoro, countdown,
-stopwatch), feeds, crypto prices, recently closed, most visited, open tabs (with
-a duplicate finder), bookmarks, history and downloads.
+tasks (priorities, due dates and faceted filters, set by typing `!` and
+`@ friday` rather than by filling in a form), greeting, timer (pomodoro,
+countdown, stopwatch), feeds, crypto prices, recently closed, most visited, open
+tabs (with a duplicate finder), bookmarks, history and downloads.
 
 **Widgets and tiles, one page or two.** A dashboard worth having is tall enough
 to push the tiles off screen, and fewer widgets is not the answer. So in **one
