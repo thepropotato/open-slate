@@ -770,6 +770,12 @@ const truthy = (name, value) => check(name, Boolean(value), true)
     draft('email @ the bank'),
     { text: 'email @ the bank', priority: 0, due: 0 },
   )
+  check('todo: a leading date', draft('@today hello'), { text: 'hello', priority: 0, due: today })
+  check('todo: no space after the marker', draft('hello @tomorrow').text, 'hello')
+  check('todo: a date mid-line leaves the rest', draft('@today hello there').text, 'hello there')
+  check('todo: a two-word date takes both words', draft('@ next friday ship it').due, parseDue('next friday', today))
+  check('todo: a two-word date leaves the rest', draft('@ next friday ship it').text, 'ship it')
+  check('todo: an unparseable leading @ is text', draft('@bank call them').text, '@bank call them')
   check('todo: an address survives', draft('mail sam@example.com').text, 'mail sam@example.com')
   check(
     'todo: markers are inert while the features are off',

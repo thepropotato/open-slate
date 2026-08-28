@@ -118,14 +118,23 @@ export function parseDraft(
   let due = 0
 
   if (enabled.dueDates) {
-    // Only the last `@` phrase is a candidate, so an email address earlier in
-    // the line survives. The phrase runs to the end or to a `!`.
-    const at = /\s@\s*([^!@]+?)\s*(?=$|!)/.exec(text)
+    /*
+     * `@` may lead the line or sit anywhere in it, and the space after it is
+     * optional — `@today hello` and `finish it @ friday` are both natural to
+     * type. The phrase is taken greedily and then shortened a word at a time
+     * until something parses, which is what lets `@ next friday` win two words
+     * while `@ today hello` takes only one and leaves "hello" as the title.
+     */
+    const at = /(^|\s)@\s*([^@]+)$/.exec(text)
     if (at) {
-      const parsed = parseDue(at[1], today)
-      if (parsed !== null) {
+      const words = at[2].trim().split(/\s+/)
+      for (let take = Math.min(words.length, 3); take > 0; take -= 1) {
+        const parsed = parseDue(words.slice(0, take).join(' '), today)
+        if (parsed === null) continue
         due = parsed
-        text = text.slice(0, at.index) + text.slice(at.index + at[0].length)
+        const rest = words.slice(take).join(' ')
+        text = `${text.slice(0, at.index)} ${rest}`
+        break
       }
     }
   }
