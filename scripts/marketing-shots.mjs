@@ -231,10 +231,27 @@ const PLACE = {
   longitude: 78.4867,
 }
 
+/**
+ * Local midnight, offset by whole days. Due dates have to move with the capture
+ * date or the shots would show a list that is permanently overdue.
+ */
+const dueIn = (days) => {
+  const date = new Date()
+  date.setDate(date.getDate() + days)
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime()
+}
+
+/*
+ * Priorities and dates are on by default, so a seeded list without them shows
+ * the widget at its plainest. A spread of both — and one task carrying neither
+ * — is what the widget actually looks like in use.
+ */
 const TASKS = [
-  { id: 't1', text: 'Ship the store listing', done: false },
-  { id: 't2', text: 'Reply to the design thread', done: false },
-  { id: 't3', text: 'Export the screenshots', done: true },
+  { id: 't1', text: 'Ship the store listing', done: false, priority: 1, due: dueIn(0) },
+  { id: 't2', text: 'Reply to the design thread', done: false, priority: 2, due: dueIn(2) },
+  { id: 't3', text: 'Renew the domain', done: false, priority: 3, due: dueIn(21) },
+  { id: 't4', text: 'Water the plants', done: false, priority: 0, due: 0 },
+  { id: 't5', text: 'Export the screenshots', done: true, priority: 2, due: dueIn(-1) },
 ]
 
 /**
