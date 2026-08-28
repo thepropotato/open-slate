@@ -102,10 +102,12 @@ const truthy = (name, value) => check(name, Boolean(value), true)
     migrate({ appearance: { radius: 0 } }).appearance.radius,
     0,
   )
+  // Against the schema's own default rather than a literal: the point is that
+  // the untouched field survives, not which preset happens to be default.
   check(
     'migrate: a partial section keeps other defaults',
     migrate({ appearance: { radius: 0 } }).appearance.preset,
-    'midnight',
+    defaults.appearance.preset,
   )
   // A section that fails validation must not take the whole config with it.
   // This deliberately triggers the "[settings] falling back to defaults" warning.
