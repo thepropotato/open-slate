@@ -172,6 +172,11 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
           const open = editing === item.id
           return (
             <li key={item.id} data-done={item.done} data-open={open}>
+              {/*
+                The checkbox belongs to the title, so the two sit on one line and
+                the metadata hangs below it — a box vertically centred against a
+                two-line block reads as belonging to neither line.
+              */}
               <div className="todo__row">
                 <button
                   type="button"
@@ -219,7 +224,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
                 {rich ? (
                   <button
                     type="button"
-                    className="todo__more"
+                    className="todo__icon todo__more"
                     onClick={() => setEditing(open ? null : item.id)}
                     aria-expanded={open}
                     aria-label={`Edit details for ${item.text}`}
@@ -230,7 +235,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
 
                 <button
                   type="button"
-                  className="todo__remove"
+                  className="todo__icon todo__remove"
                   onClick={() => remove(item.id)}
                   title="Remove"
                   aria-label={`Remove ${item.text}`}
@@ -246,11 +251,12 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
               {open ? (
                 <div className="todo__detail">
                   {config.priorities ? (
-                    <div className="todo__seg" role="group" aria-label="Priority">
+                    <div className="todo__group" role="group" aria-label="Priority">
                       {PRIORITIES.map((level) => (
                         <button
                           key={level}
                           type="button"
+                          className="todo__btn"
                           data-priority={level}
                           aria-pressed={item.priority === level}
                           title={PRIORITY_LABELS[level]}
@@ -265,36 +271,44 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
                   ) : null}
 
                   {config.dueDates ? (
-                    <div className="todo__dates">
+                    <div className="todo__group">
                       <button
                         type="button"
+                        className="todo__btn"
                         aria-pressed={item.due === today}
-                        onClick={() =>
-                          patch(item.id, { due: item.due === today ? 0 : today })
-                        }
+                        onClick={() => patch(item.id, { due: item.due === today ? 0 : today })}
                       >
                         Today
                       </button>
                       <button
                         type="button"
+                        className="todo__btn"
                         aria-pressed={item.due === addDays(today, 1)}
-                        onClick={() => patch(item.id, { due: addDays(today, 1) })}
+                        onClick={() =>
+                          patch(item.id, {
+                            due: item.due === addDays(today, 1) ? 0 : addDays(today, 1),
+                          })
+                        }
                       >
                         Tomorrow
                       </button>
-                      <input
-                        type="date"
-                        aria-label={`Due date for ${item.text}`}
-                        value={item.due > 0 ? isoDate(item.due) : ''}
-                        onChange={(event) =>
-                          patch(item.id, { due: fromIsoDate(event.target.value) })
-                        }
-                      />
+                      <label className="todo__btn todo__date">
+                        <Icon name="calendar" />
+                        <input
+                          type="date"
+                          aria-label={`Due date for ${item.text}`}
+                          value={item.due > 0 ? isoDate(item.due) : ''}
+                          onChange={(event) =>
+                            patch(item.id, { due: fromIsoDate(event.target.value) })
+                          }
+                        />
+                      </label>
                       {item.due > 0 ? (
                         <button
                           type="button"
-                          className="todo__clear"
+                          className="todo__btn todo__btn--icon"
                           onClick={() => patch(item.id, { due: 0 })}
+                          title="Clear due date"
                           aria-label={`Clear due date for ${item.text}`}
                         >
                           <Icon name="close" />
