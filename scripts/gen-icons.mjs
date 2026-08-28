@@ -2,8 +2,17 @@
  * Generates the extension's PNG icons with no image dependencies.
  *
  * The mark is a speed-dial motif: a rounded dark plate holding a 2x2 grid of
- * tiles with one accented. Drawn by maths into a raw RGBA buffer and encoded
- * as PNG via zlib, so the build stays dependency-free and byte-reproducible.
+ * tiles, the top-right one an empty slot drawn as a ring of dots. It is the
+ * same mark as marketing/site/favicon.svg, in the same Paper & Ink palette,
+ * with that file's 64-unit geometry scaled to each icon size.
+ *
+ * Drawn by maths into a raw RGBA buffer and encoded as PNG via zlib, so the
+ * build stays dependency-free and byte-reproducible.
+ *
+ * The dots do not survive every size: below DOTS_MIN_SIZE a ring of them
+ * blurs into a grey smear, so the small icons fill the slot faintly instead.
+ * That keeps 16px legible in a toolbar, which is the only place it is ever
+ * seen, at the cost of the two smallest icons being an approximation.
  */
 import { deflateSync } from 'node:zlib'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -13,9 +22,43 @@ import { fileURLToPath } from 'node:url'
 const here = dirname(fileURLToPath(import.meta.url))
 const outDir = resolve(here, '../public/icons')
 
-const PLATE = [17, 20, 27]
-const TILE = [232, 236, 244]
-const ACCENT = [110, 168, 254]
+// Paper & Ink, matching the site and marketing/site/favicon.svg.
+const PLATE = [26, 25, 23] // #1A1917
+const TILE = [250, 249, 246] // #FAF9F6
+
+// The solid tiles are drawn at .9 alpha over the plate, as in the favicon.
+const TILE_ALPHA = 0.9
+
+/**
+ * favicon.svg's geometry, as fractions of its 64-unit viewBox, so every icon
+ * size is the same drawing scaled rather than a second set of numbers to keep
+ * in step.
+ */
+const UNIT = 64
+const PLATE_RADIUS = 15 / UNIT
+const CELL_INSET = 11 / UNIT
+const CELL_SIZE = 18 / UNIT
+const CELL_GAP = 6 / UNIT
+const CELL_RADIUS = 4 / 18 // of the cell, not the icon
+const DOT_RADIUS = 1.25 / UNIT
+
+/** Below this, the dot ring reads as a smudge and the slot is filled instead. */
+const DOTS_MIN_SIZE = 48
+const SLOT_FILL_ALPHA = 0.22
+
+/**
+ * The empty slot's dots, from favicon.svg, as viewBox coordinates. They are
+ * placed explicitly rather than left to a stroke-dasharray: the count is a
+ * multiple of four and the walk starts a half-step in, so all four sides match
+ * and the corners land on the arc.
+ */
+const SLOT_DOTS = [
+  [40.47, 12.25], [43.33, 12.25], [46.19, 12.25], [49.05, 12.25],
+  [51.39, 13.67], [51.75, 16.47], [51.75, 19.33], [51.75, 22.19],
+  [51.75, 25.05], [50.33, 27.39], [47.53, 27.75], [44.67, 27.75],
+  [41.81, 27.75], [38.95, 27.75], [36.61, 26.33], [36.25, 23.53],
+  [36.25, 20.67], [36.25, 17.81], [36.25, 14.95], [37.67, 12.61],
+]
 
 const crcTable = Array.from({ length: 256 }, (_, n) => {
   let c = n
@@ -66,23 +109,49 @@ function roundedRectDistance(px, py, cx, cy, halfW, halfH, radius) {
   return outside + Math.min(Math.max(dx, dy), 0) - radius
 }
 
+/** Signed distance to a circle, used for the slot's dots. */
+function circleDistance(px, py, cx, cy, radius) {
+  return Math.hypot(px - cx, py - cy) - radius
+}
+
+/** Lays `src` over `dst` at `alpha`, both opaque RGB triples. */
+function over(dst, src, alpha) {
+  return [
+    dst[0] + (src[0] - dst[0]) * alpha,
+    dst[1] + (src[1] - dst[1]) * alpha,
+    dst[2] + (src[2] - dst[2]) * alpha,
+  ]
+}
+
 function draw(size) {
   const ss = 3 // supersample factor
   const rgba = Buffer.alloc(size * size * 4)
   const plateHalf = size * 0.5
-  const plateRadius = size * 0.24
-  const inset = size * 0.19
-  const cellGap = size * 0.085
-  const cellSize = (size - inset * 2 - cellGap) / 2
-  const cellRadius = cellSize * 0.28
+  const plateRadius = size * PLATE_RADIUS
+  const inset = size * CELL_INSET
+  const cellSize = size * CELL_SIZE
+  const cellStride = cellSize + size * CELL_GAP
+  const cellRadius = cellSize * CELL_RADIUS
 
-  const cells = [0, 1].flatMap((row) =>
-    [0, 1].map((col) => ({
-      cx: inset + cellSize / 2 + col * (cellSize + cellGap),
-      cy: inset + cellSize / 2 + row * (cellSize + cellGap),
-      color: row === 1 && col === 1 ? ACCENT : TILE,
-    })),
-  )
+  // Three solid tiles; the top-right cell is the empty slot.
+  const cells = [0, 1]
+    .flatMap((row) => [0, 1].map((col) => ({ row, col })))
+    .filter(({ row, col }) => !(row === 0 && col === 1))
+    .map(({ row, col }) => ({
+      cx: inset + cellSize / 2 + col * cellStride,
+      cy: inset + cellSize / 2 + row * cellStride,
+    }))
+
+  // The slot, either as the favicon's dot ring or — where that would smear —
+  // as the same footprint filled faintly.
+  const scale = size / UNIT
+  const drawDots = size >= DOTS_MIN_SIZE
+  const dots = SLOT_DOTS.map(([x, y]) => ({ cx: x * scale, cy: y * scale }))
+  const dotRadius = size * DOT_RADIUS
+  const slot = {
+    cx: inset + cellSize / 2 + cellStride,
+    cy: inset + cellSize / 2,
+  }
 
   for (let y = 0; y < size; y += 1) {
     for (let x = 0; x < size; x += 1) {
@@ -97,12 +166,25 @@ function draw(size) {
           if (roundedRectDistance(px, py, plateHalf, plateHalf, plateHalf, plateHalf, plateRadius) < 0) {
             color = PLATE
             alpha = 1
+
             for (const cell of cells) {
-              const d = roundedRectDistance(px, py, cell.cx, cell.cy, cellSize / 2, cellSize / 2, cellRadius)
-              if (d < 0) {
-                color = cell.color
+              if (roundedRectDistance(px, py, cell.cx, cell.cy, cellSize / 2, cellSize / 2, cellRadius) < 0) {
+                color = over(color, TILE, TILE_ALPHA)
                 break
               }
+            }
+
+            if (drawDots) {
+              for (const dot of dots) {
+                if (circleDistance(px, py, dot.cx, dot.cy, dotRadius) < 0) {
+                  color = TILE
+                  break
+                }
+              }
+            } else if (
+              roundedRectDistance(px, py, slot.cx, slot.cy, cellSize / 2, cellSize / 2, cellRadius) < 0
+            ) {
+              color = over(color, TILE, SLOT_FILL_ALPHA)
             }
           }
           acc = [acc[0] + color[0] * alpha, acc[1] + color[1] * alpha, acc[2] + color[2] * alpha, acc[3] + alpha]
