@@ -50,9 +50,14 @@ const TodoConfig = z.object({
   showCount: z.boolean().default(true),
   strikeDone: z.boolean().default(true),
 
-  /* The serious-todo half, all off unless asked for. */
-  priorities: z.boolean().default(false),
-  dueDates: z.boolean().default(false),
+  /*
+   * Priorities and due dates are the widget, not an upsell — a task list that
+   * hides them behind a settings tab is one nobody discovers. They are still
+   * toggles so a list that only wants checkboxes can say so, but they default
+   * on, and cost nothing until a task actually carries one.
+   */
+  priorities: z.boolean().default(true),
+  dueDates: z.boolean().default(true),
   /** `manual` keeps the order tasks were added in. */
   sortBy: z.enum(['manual', 'priority', 'due']).default('manual'),
   /** Overdue and due-today tasks carry a colour of their own. */
@@ -353,7 +358,6 @@ registerWidget<TodoConfig>({
     {
       path: 'sortBy',
       label: 'Sort by',
-      whenLocal: (values) => Boolean(values.priorities || values.dueDates),
       control: {
         kind: 'segmented',
         options: [
