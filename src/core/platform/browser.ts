@@ -137,7 +137,6 @@ export type OptionalPermission =
   | 'history'
   | 'downloads'
   | 'tabs'
-  | 'tabGroups'
 
 export const permissions = {
   async has(names: OptionalPermission[], origins: string[] = []): Promise<boolean> {

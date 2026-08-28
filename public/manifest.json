@@ -30,8 +30,7 @@
     "bookmarks",
     "history",
     "downloads",
-    "tabs",
-    "tabGroups"
+    "tabs"
   ],
   "optional_host_permissions": [
     "https://*.open-meteo.com/*",
