@@ -30,9 +30,12 @@
     "bookmarks",
     "history",
     "downloads",
-    "tabs"
+    "tabs",
+    "scripting"
   ],
   "optional_host_permissions": [
+    "https://claude.ai/*",
+    "https://chatgpt.com/*",
     "https://*.open-meteo.com/*",
     "https://get.geojs.io/*",
     "https://ipwho.is/*",

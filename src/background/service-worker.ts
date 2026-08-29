@@ -5,6 +5,9 @@
  *  - one-time setup on install
  */
 
+import { CHATGPT } from '@/features/widgets/llm/chatgpt'
+import { CLAUDE } from '@/features/widgets/llm/claude'
+
 const SLIDESHOW_ALARM = 'wallpaper-slideshow'
 
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -72,4 +75,83 @@ function pickDifferent(current: number, count: number): number {
   if (count < 2) return 0
   const offset = 1 + Math.floor(Math.random() * (count - 1))
   return (current + offset) % count
+}
+
+/* ─────────────────────────────────────────────────── LLM usage reader ──── */
+
+/**
+ * Reads one LLM provider's usage on demand.
+ *
+ * The numbers live behind a session-authed endpoint on the provider's own web
+ * app, so we run the fetch *inside* a tab on that origin: `chrome.scripting`
+ * injects the provider's `fetchInPage` function, and the browser attaches the
+ * user's session itself. We never touch the cookie or any token — only the
+ * resulting figures come back.
+ *
+ * If a matching tab is already open we borrow it; otherwise we open one in the
+ * background and close it when done, so the user's foreground is undisturbed.
+ */
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type !== 'usage:refresh') return
+  void readProviderUsage(String(message.provider)).then(sendResponse, (error: unknown) =>
+    sendResponse({ ok: false, reason: describeError(error) }),
+  )
+  return true // keep the message channel open for the async response
+})
+
+async function readProviderUsage(
+  providerId: string,
+): Promise<{ ok: true; usage: unknown } | { ok: false; reason: string }> {
+  // One adapter per provider; each usage widget names its own.
+  const provider = [CLAUDE, CHATGPT].find((p) => p.id === providerId)
+  if (!provider) return { ok: false, reason: `Unknown provider "${providerId}".` }
+
+  const hostAllowed = await chrome.permissions.contains({
+    permissions: ['tabs', 'scripting'],
+    origins: provider.origins,
+  })
+  if (!hostAllowed) return { ok: false, reason: `Access to ${provider.host} has not been granted.` }
+
+  // Match a tab already on the primary origin, else open one in the background.
+  const existing = (await chrome.tabs.query({ url: provider.origins[0] }))[0]
+  const tab = existing ?? (await chrome.tabs.create({ url: provider.tabUrl, active: false }))
+  const opened = !existing
+
+  try {
+    if (opened) await waitForComplete(tab.id!)
+    const [{ result } = { result: undefined }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id! },
+      world: 'MAIN',
+      func: provider.fetchInPage,
+    })
+    const parsed = result as { usage: unknown } | { error: string } | undefined
+    if (!parsed || 'error' in parsed) {
+      return { ok: false, reason: (parsed as { error?: string })?.error ?? 'No usage data.' }
+    }
+    return { ok: true, usage: parsed.usage }
+  } finally {
+    // Only close what we opened.
+    if (opened && tab.id != null) await chrome.tabs.remove(tab.id).catch(() => {})
+  }
+}
+
+function waitForComplete(tabId: number): Promise<void> {
+  return new Promise((resolve) => {
+    const done = () => {
+      chrome.tabs.onUpdated.removeListener(listener)
+      clearTimeout(timer)
+      resolve()
+    }
+    const listener = (id: number, info: chrome.tabs.OnUpdatedInfo) => {
+      if (id === tabId && info.status === 'complete') done()
+    }
+    chrome.tabs.onUpdated.addListener(listener)
+    // Don't hang forever if the load event never fires.
+    const timer = setTimeout(done, 15000)
+  })
+}
+
+function describeError(error: unknown): string {
+  return error instanceof Error ? error.message : 'Could not read usage.'
 }
