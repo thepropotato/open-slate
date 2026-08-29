@@ -1,0 +1,396 @@
+/**
+ * Claude usage panel.
+ *
+ * The widget has one job: show at a glance how much of a limit is gone. So the
+ * headline figure is the largest thing in the tile and everything else — the
+ * provider name, the denominator, the reset time — is deliberately quieter. The
+ * bar supports the number rather than replacing it, because a figure answers
+ * "how much is left" faster than a length does.
+ */
+
+.usage {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: var(--space-xs);
+}
+
+/* ─────────────────────────────────────────────────────────── header ────── */
+
+.usage__head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  min-height: 20px;
+}
+
+.usage__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  color: var(--fg-muted);
+}
+
+.usage__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 5px;
+  color: #fff;
+  /* A brand tint can land on top of a same-toned tile — OpenAI's black on a
+     dark surface vanishes entirely. A hairline keeps the badge's edge readable
+     whatever the tint and whatever the theme. */
+  box-shadow: inset 0 0 0 1px rgb(var(--surface-tint) / 0.18);
+}
+
+/* The marks are drawn on a 24x24 grid with no built-in padding, so they get
+   their inset here rather than each path being redrawn to match. */
+.usage__mark {
+  width: 11px;
+  height: 11px;
+  display: block;
+}
+
+/* Fine interior strokes need more room than a solid mark to stay readable. */
+.usage__mark--openai {
+  width: 12px;
+  height: 12px;
+}
+
+.usage__refresh {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  margin-right: -4px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--fg-subtle);
+  cursor: pointer;
+  /* Held back until the tile is hovered: a control needed once a day should not
+     compete with the number it sits beside. Focus and the busy state reveal it
+     too, so it stays reachable from the keyboard and visible while it spins. */
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.usage:hover .usage__refresh,
+.usage__refresh:focus-visible,
+.usage__refresh:disabled {
+  opacity: 1;
+}
+
+.usage__refresh:hover:not(:disabled) {
+  background: rgb(var(--surface-tint) / 0.1);
+  color: var(--fg);
+}
+
+.usage__refresh:disabled {
+  cursor: default;
+  color: var(--fg-subtle);
+}
+
+/* ───────────────────────────────────────────────────────────── body ────── */
+
+.usage__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 0;
+  gap: var(--space-xs);
+  /* Two meters can outgrow a one-cell-tall tile. Without this they paint over
+     the header instead of being clipped, because a centred flex child
+     overflows both ways. */
+  overflow: hidden;
+}
+
+.usage__body--center {
+  align-items: center;
+  color: var(--fg-subtle);
+}
+
+/* ──────────────────────────────────────────────────────────── meter ────── */
+
+.usage__meter {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.usage__value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  min-width: 0;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The headline: dollars for a balance, percent for a window. */
+.usage__figure {
+  font-size: var(--text-xl);
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+/* The unit attached to the figure: "$" or "%".
+
+   A unit is a modifier, not a digit. Set at the full headline size it carries
+   the same weight as the number it qualifies, which flattens the figure into an
+   undifferentiated block — "$414" reads as four equal glyphs instead of a
+   quantity with a currency. Stepping it down and lightening it keeps the digits
+   as the thing the eye lands on, while the unit stays plainly legible.
+
+   `em` rather than a token, so it tracks whatever size the figure takes across
+   the footprints. */
+.usage__unit {
+  font-size: 0.66em;
+  font-weight: 600;
+  color: var(--fg-muted);
+  /* Nudges the symbol off the digits it abuts without changing the box. */
+  margin: 0 0.06em;
+  /* A smaller glyph sharing the digits' baseline sits visually low against
+     them, as if it were dropping off the number. Lifting it toward the cap
+     height is how a currency symbol is set, and it applies just as well to the
+     percent sign. `vertical-align` moves the glyph without affecting layout. */
+  vertical-align: 0.22em;
+}
+
+/* The denominator, or the window's name — subordinate to the figure. */
+.usage__of {
+  overflow: hidden;
+  min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.usage__track {
+  position: relative;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  /* An empty bar still has to read as a bar, so the track carries its own
+     visible fill and a hairline edge rather than relying on the fill. */
+  background: rgb(var(--surface-tint) / 0.12);
+  box-shadow: inset 0 0 0 1px var(--line);
+  overflow: hidden;
+}
+
+.usage__fill {
+  height: 100%;
+  /* A real 0% still shows a sliver, so "connected and idle" reads differently
+     from a track we simply could not fill. */
+  min-width: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Severity climbs with usage. Both tones hold their contrast on the light and
+   dark surfaces alike. */
+.usage__fill[data-level='mid'] {
+  background: #e0a52b;
+}
+
+.usage__fill[data-level='high'] {
+  background: #e35d58;
+}
+
+.usage__foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+}
+
+.usage__reset,
+.usage__stamp {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.usage__stamp {
+  margin-left: auto;
+  /* Staleness is reference material, not something to read on every glance. */
+  opacity: 0.75;
+}
+
+/* ─────────────────────────────────────────────────────────── states ────── */
+
+.usage__connect {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 0.06);
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+  font-weight: 550;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.usage__connect:hover:not(:disabled) {
+  border-color: rgb(var(--surface-tint) / 0.24);
+  background: rgb(var(--surface-tint) / 0.12);
+  color: var(--fg);
+}
+
+.usage__connect:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.usage__note,
+.usage__error {
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--fg-subtle);
+  text-align: center;
+  text-wrap: balance;
+}
+
+.usage__error {
+  color: #e35d58;
+}
+
+/* ─────────────────────────────────────────────── small-tile density ────── */
+
+/*
+ * A 1×1 tile cannot hold the figure at full size beside a label and a bar, so
+ * it keeps the number — the one thing worth glancing at — and sheds the rest.
+ */
+.usage[data-size='small'] {
+  gap: 2px;
+}
+
+.usage[data-size='small'] .usage__title {
+  font-size: 10px;
+}
+
+.usage[data-size='small'] .usage__figure {
+  font-size: var(--text-lg);
+}
+
+.usage[data-size='small'] .usage__value {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.usage[data-size='small'] .usage__stamp {
+  display: none;
+}
+
+/* ─────────────────────────────────────────── stacked-meter density ────── */
+
+/*
+ * A taller tile can stack meters, but each one has less room than it would
+ * alone, so the type steps down and the staleness marker gives way.
+ */
+.usage__body[data-count='2'] {
+  /* A stack reads as a list and belongs at the top; only a lone meter earns
+     being centred in the tile's height. */
+  justify-content: flex-start;
+  gap: var(--space-sm);
+}
+
+/* A 2x2 tile has roughly twice the height its content needs. Spreading the
+   meters through that slack just isolates them, and leaving them top-aligned
+   strands the bottom half — so the extra room goes into the meters themselves:
+   a bigger figure, a heavier bar, and breathing space between them. The tile
+   earns its footprint by being more legible across the room, not emptier.
+
+   The body is centred in the space *below* the header, which leaves a larger
+   gap under the meters than above them. Padding the bottom back off re-centres
+   the group against the tile as a whole, which is what the eye measures. */
+.usage[data-size='large'] .usage__body {
+  justify-content: center;
+  gap: var(--space-lg);
+  padding-bottom: var(--space-lg);
+}
+
+.usage[data-size='large'] .usage__figure,
+.usage[data-size='large'] .usage__body[data-count='2'] .usage__figure {
+  /* Derived from the top of the scale rather than adding a global token for a
+     single widget — this size exists only on this footprint. */
+  font-size: calc(var(--text-xl) * 1.3);
+}
+
+.usage[data-size='large'] .usage__track {
+  height: 7px;
+}
+
+.usage[data-size='large'] .usage__of {
+  font-size: var(--text-sm);
+}
+
+.usage__body[data-count='2'] .usage__figure {
+  font-size: var(--text-lg);
+}
+
+.usage__body[data-count='2'] .usage__stamp,
+.usage__body[data-count='3'] .usage__stamp {
+  display: none;
+}
+
+.usage__body[data-count='3'] {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
+.usage__body[data-count='3'] .usage__figure {
+  font-size: var(--text-md);
+}
+
+.usage__body[data-count='3'] .usage__track {
+  height: 5px;
+}
+
+/* Marks that a reading is out of view rather than hiding it silently. */
+.usage__more {
+  flex: none;
+  padding: 1px 5px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 0.1);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
+.usage[data-size='small'] .usage__more {
+  display: none;
+}
