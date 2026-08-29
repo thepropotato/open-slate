@@ -157,6 +157,67 @@ await shot('dashboard-browser', async (page) => {
   await settle(page)
 }, { width: 1600, height: 1000 })
 
+// The usage widgets at each footprint, one provider per row. Under `vite dev`
+// the panel has no worker and no session, so this seeds readings directly into
+// their caches. Claude's row carries a spend reading and ChatGPT's carries two
+// rate-limit windows, which is what each provider actually reports — so the
+// shot covers both meter kinds as well as both brand marks.
+const usageDash = [
+  widget('cu1', 'claude-usage', 0, 0, 1, 1),
+  widget('cu2', 'claude-usage', 1, 0, 2, 1),
+  widget('cu3', 'claude-usage', 3, 0, 2, 2),
+  widget('gu1', 'chatgpt-usage', 0, 2, 1, 1),
+  widget('gu2', 'chatgpt-usage', 1, 2, 2, 1),
+  widget('gu3', 'chatgpt-usage', 3, 2, 2, 2),
+]
+
+await shot('widget-llm-usage', async (page) => {
+  await page.addInitScript(
+    ([claude, chatgpt]) => {
+      localStorage.setItem('newtab:local:usageCache:claude', JSON.stringify(claude))
+      localStorage.setItem('newtab:local:usageCache:chatgpt', JSON.stringify(chatgpt))
+    },
+    [
+      {
+        at: Date.now() - 4 * 60 * 1000,
+        usage: {
+          windows: [],
+          spend: {
+            used: 403.66,
+            limit: 500,
+            currency: 'USD',
+            resetsAt: new Date(Date.now() + 4.3e8).toISOString(),
+          },
+        },
+      },
+      {
+        at: Date.now() - 11 * 60 * 1000,
+        usage: {
+          windows: [
+            { label: 'Weekly', percent: 94, resetsAt: new Date(Date.now() + 3.4e8).toISOString() },
+            { label: '5-hour', percent: 12, resetsAt: new Date(Date.now() + 8e6).toISOString() },
+          ],
+          spend: null,
+        },
+      },
+    ],
+  )
+  await seed(page, {
+    version: 3,
+    widgets: {
+      enabled: true,
+      locked: true,
+      instances: usageDash.map((w) => w.instance),
+      layouts: { lg: usageDash.map((w) => w.layout) },
+    },
+    layout: { order: ['widgets'], maxWidth: 1100 },
+    tiles: { enabled: false },
+    search: { enabled: false },
+  })
+  await page.goto(`${base}/newtab.html`)
+  await settle(page)
+}, { width: 1200, height: 820 })
+
 await shot('widget-config', async (page) => {
   await seed(page, { ...dashboardSettings, widgets: { ...dashboardSettings.widgets, locked: false } })
   await page.goto(`${base}/newtab.html`)
