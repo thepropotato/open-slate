@@ -5,3 +5,5 @@ dist
 .vite
 shots
 store
+tsconfig.app.tsbuildinfo
+tsconfig.node.tsbuildinfo
