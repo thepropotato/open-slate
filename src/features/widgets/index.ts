@@ -20,5 +20,7 @@ import './browser/HistoryWidget'
 import './browser/DownloadsWidget'
 import './feed/FeedWidget'
 import './crypto/CryptoWidget'
+import './llm/ClaudeUsageWidget'
+import './llm/ChatGPTUsageWidget'
 
 export { WidgetCanvas } from './WidgetCanvas'
