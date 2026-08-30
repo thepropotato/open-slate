@@ -661,8 +661,16 @@
   height: 5px;
   border-radius: 50%;
   background: var(--slot);
-  /* Sits on the text's own line rather than the baseline it would ride on. */
-  align-self: center;
+  /*
+   * Baseline-aligned like the text beside it, then lifted by half an x-height
+   * so its centre lands on the title's optical centre rather than sitting on
+   * the baseline. `align-self: center` would centre it in the whole block
+   * instead — on a block taller than its first line that drops the dot below
+   * the title it marks.
+   */
+  align-self: baseline;
+  position: relative;
+  top: -0.25em;
 }
 
 .cal__slottitle {
