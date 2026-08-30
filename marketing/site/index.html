@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Open Slate: your most-opened page, finally yours</title>
-<meta name="description" content="A Chrome extension that replaces the new tab page with a speed dial and dashboard: tiles, widgets and a wallpaper engine, with close to everything about the look under your control. No analytics, no content scripts.">
+<meta name="description" content="A Chrome extension that replaces the new tab page with a speed dial and dashboard: tiles, 17 widgets including Claude and ChatGPT usage, and a wallpaper engine, with close to everything about the look under your control. No analytics, no content scripts.">
 <link rel="canonical" href="https://openslate.byvenu.com/">
 
 <meta property="og:type" content="website">
@@ -34,8 +34,12 @@
   --serif:'Instrument Serif', Georgia, 'Times New Roman', serif;
   --sans:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 
-  --measure:1120px;
-  --gap:clamp(72px, 9vw, 128px);
+  --measure:70rem;
+  /* Vertical rhythm and the page gutter both scale with the viewport rather
+     than stepping at a breakpoint, so there is no width at which the layout
+     is momentarily wrong on the way down. */
+  --gap:clamp(3.5rem, 9vw, 8rem);
+  --gutter:clamp(1.25rem, 4vw, 1.75rem);
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -44,43 +48,52 @@ body{
   background:var(--page);
   color:var(--body);
   font-family:var(--sans);
-  font-size:17px;
+  /* Type scales with the viewport between a readable floor and the desktop
+     size, so everything expressed in em/rem below follows it down. */
+  font-size:clamp(1rem, 0.95rem + 0.25vw, 1.0625rem);
   line-height:1.65;
   -webkit-font-smoothing:antialiased;
   text-rendering:optimizeLegibility;
-  overflow-x:hidden;
 }
 img{max-width:100%;display:block}
 a{color:inherit}
 code{
   font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
   font-size:.88em;background:var(--accent-soft);color:var(--head);
-  padding:.12em .42em;border-radius:5px;
+  padding:.12em .42em;border-radius:.3em;
+  /* Inline code holds keyboard shortcuts and shell words that must not force
+     the page wider than the screen. */
+  overflow-wrap:anywhere;
 }
 
-.wrap{max-width:var(--measure);margin:0 auto;padding:0 28px}
+.wrap{max-width:var(--measure);margin:0 auto;padding:0 var(--gutter)}
 
 h1,h2,h3{font-family:var(--serif);font-weight:400;color:var(--head);letter-spacing:-.005em;line-height:1.08}
-h1{font-size:clamp(44px, 6.4vw, 78px)}
-h2{font-size:clamp(32px, 4.2vw, 48px)}
-h3{font-size:23px;line-height:1.25}
+/* Headings are sized against the viewport with a floor that still fits a
+   narrow phone, so none of them needs a breakpoint of its own. */
+h1{font-size:clamp(2.5rem, 8vw, 4.875rem)}
+h2{font-size:clamp(1.875rem, 5.5vw, 3rem)}
+h3{font-size:clamp(1.25rem, 3.2vw, 1.4375rem);line-height:1.25}
+/* Long unbroken strings (a URL, a compound word) wrap rather than pushing the
+   page sideways. */
+h1,h2,h3,p,li,summary{overflow-wrap:break-word}
 
 .eyebrow{
   display:inline-flex;align-items:center;
-  font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
+  font-size:.75rem;font-weight:500;letter-spacing:.1em;text-transform:uppercase;
   color:var(--accent);
 }
 
 /* ------------------------------------------------------------------ mark */
 .mark{
-  width:var(--s,30px);height:var(--s,30px);flex:none;
-  border-radius:calc(var(--s,30px) * .24);
+  width:var(--s,1.875rem);height:var(--s,1.875rem);flex:none;
+  border-radius:calc(var(--s,1.875rem) * .24);
   background:var(--head);
   display:grid;grid-template-columns:1fr 1fr;
-  gap:calc(var(--s,30px) * .085);
-  padding:calc(var(--s,30px) * .17);
+  gap:calc(var(--s,1.875rem) * .085);
+  padding:calc(var(--s,1.875rem) * .17);
 }
-.mark i{aspect-ratio:1;border-radius:calc(var(--s,30px) * .07);background:var(--page);opacity:.9}
+.mark i{aspect-ratio:1;border-radius:calc(var(--s,1.875rem) * .07);background:var(--page);opacity:.9}
 /* One tile is left empty, as the slot you fill yourself. The ring is a
    placed-dot SVG rather than a dotted border: CSS tiles each edge on its own,
    so the dots drift out of step and the corners come out ragged. Here the
@@ -93,19 +106,33 @@ h3{font-size:23px;line-height:1.25}
 }
 
 /* ------------------------------------------------------------------- nav */
-header{position:sticky;top:0;z-index:50;background:#FAF9F6E6;backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .2s}
+header{position:sticky;top:0;z-index:50;background:#FAF9F6E6;backdrop-filter:blur(.75rem);border-bottom:1px solid transparent;transition:border-color .2s}
 header.stuck{border-bottom-color:var(--border)}
-nav{display:flex;align-items:center;justify-content:space-between;height:74px}
-.brand{display:flex;align-items:center;gap:11px;text-decoration:none}
-.brand span{font-family:var(--serif);font-size:22px;color:var(--head)}
-.navlinks{display:flex;align-items:center;gap:22px;font-size:14.5px}
+nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;height:4.625rem}
+.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none}
+.brand span{font-family:var(--serif);font-size:1.375rem;color:var(--head)}
+.navlinks,.navlinks-inner{display:flex;align-items:center;gap:1.4rem;font-size:.9rem}
+.navlinks{position:relative}
 .navlinks a:not(.btn){text-decoration:none;color:var(--body);transition:color .15s}
 .navlinks a:not(.btn):hover{color:var(--head)}
 
+/* The menu toggle exists only in portrait, where the section links move into
+   a panel under the bar. */
+.navtoggle{
+  display:none;align-items:center;justify-content:center;
+  width:2.75rem;height:2.75rem;margin-right:-.5rem;flex:none;
+  background:none;border:0;color:var(--head);cursor:pointer;
+}
+.navtoggle svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round}
+.navtoggle .bar{transition:transform .25s cubic-bezier(.22,.61,.36,1),opacity .2s}
+[data-nav-open] .navtoggle .bar-top{transform:translateY(.3rem) rotate(45deg)}
+[data-nav-open] .navtoggle .bar-mid{opacity:0}
+[data-nav-open] .navtoggle .bar-bot{transform:translateY(-.3rem) rotate(-45deg)}
+
 .btn{
-  display:inline-flex;align-items:center;gap:9px;
-  font-family:var(--sans);font-size:14.5px;font-weight:500;
-  padding:11px 20px;border-radius:9px;
+  display:inline-flex;align-items:center;justify-content:center;gap:.55rem;
+  font-family:var(--sans);font-size:.9rem;font-weight:500;
+  padding:.7rem 1.25rem;border-radius:.55rem;
   background:var(--accent);color:#fff;text-decoration:none;
   transition:transform .15s, opacity .15s;
   white-space:nowrap;
@@ -113,7 +140,7 @@ nav{display:flex;align-items:center;justify-content:space-between;height:74px}
 .btn:hover{opacity:.9;transform:translateY(-1px)}
 .btn.ghost{background:transparent;color:var(--head);border:1px solid var(--border)}
 .btn.ghost:hover{border-color:var(--muted);opacity:1}
-.btn.lg{font-size:16px;padding:14px 26px}
+.btn.lg{font-size:1rem;padding:.875rem 1.6rem}
 
 /* ------------------------------------------------------------ gh badge */
 /* Repo link with a live star count. The count span stays empty until the
@@ -121,160 +148,174 @@ nav{display:flex;align-items:center;justify-content:space-between;height:74px}
  * repo with no stars yet simply renders a plain GitHub button. */
 .ghbtn{
   display:inline-flex;align-items:center;
-  border:1px solid var(--border);border-radius:9px;
+  border:1px solid var(--border);border-radius:.55rem;
   background:var(--surface);text-decoration:none;color:var(--head);
-  font-size:14.5px;font-weight:500;white-space:nowrap;
+  font-size:.9rem;font-weight:500;white-space:nowrap;
   transition:border-color .15s, transform .15s;
 }
 .ghbtn:hover{border-color:var(--muted);transform:translateY(-1px)}
-.ghbtn .gh-label{display:inline-flex;align-items:center;gap:8px;padding:10px 14px}
-.ghbtn svg{width:16px;height:16px;flex:none;fill:currentColor}
+.ghbtn .gh-label{display:inline-flex;align-items:center;gap:.5rem;padding:.625rem .875rem}
+.ghbtn svg{width:1rem;height:1rem;flex:none;fill:currentColor}
 .ghbtn .gh-stars{
-  display:none;align-items:center;gap:5px;
-  padding:10px 14px;border-left:1px solid var(--border);
+  display:none;align-items:center;gap:.3rem;
+  padding:.625rem .875rem;border-left:1px solid var(--border);
   color:var(--body);font-variant-numeric:tabular-nums;
 }
 .ghbtn.has-stars .gh-stars{display:inline-flex}
-.ghbtn .gh-star-ico{width:13px;height:13px;opacity:.75}
-@media (max-width:860px){.ghbtn .gh-label span{display:none}.ghbtn .gh-label{padding:10px 12px}}
+.ghbtn .gh-star-ico{width:.8rem;height:.8rem;opacity:.75}
 
 /* --------------------------------------------------------- open source */
-.osgrid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,4vw,64px);align-items:start}
-@media (max-width:860px){.osgrid{grid-template-columns:1fr;gap:36px}.osterm{position:static}}
+.osgrid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(1.75rem,4vw,4rem);align-items:start}
 .osterm{
-  position:sticky;top:104px;
-  background:#14171A;border:1px solid #23282D;border-radius:13px;
-  padding:20px 22px;overflow-x:auto;
+  position:sticky;top:6.5rem;
+  background:#14171A;border:1px solid #23282D;border-radius:.8rem;
+  padding:1.25rem 1.375rem;overflow-x:auto;
   font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
-  font-size:13.5px;line-height:1.85;
+  /* The commands are copied by hand, so they hold their line and the block
+     scrolls rather than wrapping a URL mid-path. */
+  font-size:clamp(.75rem, 2.4vw, .85rem);line-height:1.85;
+  -webkit-overflow-scrolling:touch;
 }
 .osterm div{white-space:pre}
 .osterm .c{color:#6E7681}
 .osterm .p{color:#8FB3A6}
 .osterm .t{color:#D5D2CA}
-.oslist{display:flex;flex-direction:column;gap:18px;margin-top:26px}
-.osrow h3{font-size:18px;margin-bottom:5px}
-.osrow p{font-size:15px;line-height:1.6}
+.oslist{display:flex;flex-direction:column;gap:1.125rem;margin-top:1.625rem}
+.osrow h3{font-size:1.125rem;margin-bottom:.3rem}
+.osrow p{font-size:.94rem;line-height:1.6}
 
 /* ----------------------------------------------------------------- hero */
-.hero{padding:clamp(64px,9vw,116px) 0 0}
-.hero h1{max-width:15ch;margin:22px 0 24px}
-.hero .lede{font-size:clamp(17px,2vw,20px);line-height:1.6;max-width:56ch;color:var(--body)}
-.hero .ctas{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:34px}
-.hero .note{font-size:13.5px;color:var(--muted);margin-top:18px}
+.hero{padding-block:clamp(2.5rem,9vw,7.25rem) 0}
+.hero h1{max-width:15ch;margin:1.375rem 0 1.5rem}
+.hero .lede{font-size:clamp(1.0625rem,2.6vw,1.25rem);line-height:1.6;max-width:56ch;color:var(--body)}
+.hero .ctas{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center;margin-top:2.125rem}
+.hero .note{font-size:.85rem;color:var(--muted);margin-top:1.125rem}
 
 /* ------------------------------------------------------- browser frame */
 .frame{
-  border-radius:14px;overflow:hidden;background:#fff;
+  border-radius:.875rem;overflow:hidden;background:#fff;
   border:1px solid var(--border);
   box-shadow:0 1px 2px rgba(26,25,23,.04),
-             0 12px 28px -10px rgba(26,25,23,.16),
-             0 40px 80px -32px rgba(26,25,23,.22);
+             0 .75rem 1.75rem -.6rem rgba(26,25,23,.16),
+             0 2.5rem 5rem -2rem rgba(26,25,23,.22);
 }
+/* The fake browser chrome is sized from its own em, so shrinking that one
+   value takes the bar, the tab and the omnibox down together and the row
+   never has to wrap. */
 .frame .chrome{
-  display:flex;align-items:center;gap:14px;
-  padding:0 14px;height:42px;
+  font-size:clamp(.625rem, 2.2vw, .78rem);
+  display:flex;align-items:center;gap:1.1em;
+  padding:0 1.1em;height:3.3em;
   background:linear-gradient(#FCFBF9,#F4F2ED);
   border-bottom:1px solid var(--border);
 }
-.dots{display:flex;gap:7px;flex:none}
-.dots i{width:11px;height:11px;border-radius:50%;background:#DCD8D0}
-.tabstrip{display:flex;align-items:center;gap:8px;min-width:0}
+.dots{display:flex;gap:.55em;flex:none}
+.dots i{width:.86em;height:.86em;border-radius:50%;background:#DCD8D0}
+.tabstrip{display:flex;align-items:center;gap:.6em;min-width:0}
 .tab{
-  display:flex;align-items:center;gap:8px;
-  font-size:12.5px;color:var(--head);
+  display:flex;align-items:center;gap:.6em;min-width:0;
+  font-size:1em;color:var(--head);
   background:#fff;border:1px solid var(--border);border-bottom-color:#fff;
-  padding:6px 14px;border-radius:8px 8px 0 0;margin-bottom:-1px;
-  white-space:nowrap;
+  padding:.5em 1.1em;border-radius:.6em .6em 0 0;margin-bottom:-1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
-.tab .mark{--s:13px}
+.tab .mark{--s:1em}
 .omni{
-  flex:1;min-width:0;height:26px;border-radius:999px;
+  flex:1;min-width:0;height:2em;border-radius:999px;
   background:#fff;border:1px solid var(--border);
-  display:flex;align-items:center;padding:0 12px;
-  font-size:11.5px;color:var(--muted);
+  display:flex;align-items:center;padding:0 1em;
+  font-size:.92em;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .frame img{width:100%;height:auto;display:block;aspect-ratio:16/10;object-fit:cover;background:#F4F2ED}
 
-.heroshot{margin-top:clamp(48px,6vw,76px)}
+.heroshot{margin-top:clamp(2rem,6vw,4.75rem)}
 
 /* --------------------------------------------------------------- proof */
 .proof{
-  display:flex;flex-wrap:wrap;gap:10px 34px;
-  padding:26px 0 0;font-size:13.5px;color:var(--muted);
+  display:flex;flex-wrap:wrap;gap:.6rem clamp(1.1rem,3.5vw,2.125rem);
+  padding:1.625rem 0 0;font-size:.85rem;color:var(--muted);
 }
 .proof b{color:var(--head);font-weight:600}
 
 /* -------------------------------------------------------------- section */
 section{padding:var(--gap) 0}
-.sechead{max-width:60ch;margin-bottom:44px}
-.sechead h2{margin:18px 0 16px}
-.sechead p{font-size:17.5px;line-height:1.62}
+.sechead{max-width:60ch;margin-bottom:clamp(1.75rem,4vw,2.75rem)}
+.sechead h2{margin:1.125rem 0 1rem}
+.sechead p{font-size:1.05rem;line-height:1.62}
 
 /* ---------------------------------------------------------------- split */
-.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(36px,5vw,64px);align-items:center}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(2rem,5vw,4rem);align-items:center}
 .split.flip .copy{order:2}
 .split + .split{margin-top:var(--gap)}
-.copy h3{margin-bottom:14px}
-.copy p{font-size:16.5px;line-height:1.66}
-.copy ul{list-style:none;margin-top:20px;display:flex;flex-direction:column;gap:11px}
-.copy li{position:relative;padding-left:22px;font-size:15.5px;line-height:1.55}
-.copy li::before{content:'';position:absolute;left:0;top:.62em;width:9px;height:1px;background:var(--accent)}
+.copy h3{margin-bottom:.875rem}
+.copy p{font-size:1rem;line-height:1.66}
+.copy ul{list-style:none;margin-top:1.25rem;display:flex;flex-direction:column;gap:.7rem}
+.copy li{position:relative;padding-left:1.375rem;font-size:.97rem;line-height:1.55}
+.copy li::before{content:'';position:absolute;left:0;top:.62em;width:.56rem;height:1px;background:var(--accent)}
 
 /* --------------------------------------------------------------- figure */
 /* A shot that carries a section on its own, with its caption under it. */
 figure{margin:0}
 figure figcaption{
-  margin-top:14px;font-size:14px;color:var(--muted);
+  margin-top:.875rem;font-size:.875rem;color:var(--muted);
   max-width:70ch;line-height:1.55;
 }
-.showcase{margin-top:40px}
+.showcase{margin-top:clamp(1.75rem,4vw,2.5rem)}
 .showcase + .showcase{margin-top:var(--gap)}
 
 /* ----------------------------------------------------------- plate strip */
 /* The four plate styles, read as one comparison rather than four pictures.
    Each cell is cropped to the tile grid itself, so they tile without four
    pages of empty background between them. */
-.plates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:36px}
+/* auto-fit against a rem floor, so the strip drops to one column when a cell
+   would get too small to read rather than at a nominated width. */
+.plates{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,20rem),1fr));
+  gap:.875rem;margin-top:clamp(1.5rem,4vw,2.25rem);
+}
 .plate{
-  border:1px solid var(--border);border-radius:12px;overflow:hidden;
+  border:1px solid var(--border);border-radius:.75rem;overflow:hidden;
   background:#111;
 }
 .plate img{width:100%;height:auto;display:block}
+.bare{border:1px solid var(--border);border-radius:.75rem;overflow:hidden;background:#111}
+.bare img{width:100%;height:auto;display:block}
 .plate b{
-  display:block;padding:11px 15px;font-size:13px;font-weight:500;
+  display:block;padding:.7rem .95rem;font-size:.82rem;font-weight:500;
   color:var(--head);background:var(--surface);border-top:1px solid var(--border);
 }
 .plate b span{color:var(--muted);font-weight:400}
-@media (max-width:640px){.plates{grid-template-columns:1fr}}
 
 /* ---------------------------------------------------------------- cards */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:16px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:26px 24px}
-.card h3{font-size:20px;margin-bottom:9px}
-.card p{font-size:15px;line-height:1.6}
+/* min() keeps the track floor from exceeding the column itself, so the grid
+   cannot overflow on a narrow phone. */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,16.75rem),1fr));gap:1rem}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:.8rem;padding:clamp(1.25rem,3.5vw,1.625rem) clamp(1.15rem,3vw,1.5rem)}
+.card h3{font-size:1.25rem;margin-bottom:.55rem}
+.card p{font-size:.94rem;line-height:1.6}
 
 /* --------------------------------------------------------------- privacy */
-.privacy{background:var(--head);color:#B9B4AA;border-radius:18px;padding:clamp(40px,5vw,68px)}
+.privacy{background:var(--head);color:#B9B4AA;border-radius:1.125rem;padding:clamp(1.5rem,5vw,4.25rem)}
 .privacy h2{color:#FAF9F6}
 .privacy .sechead p{color:#B9B4AA}
-.privacy .cards{margin-top:8px}
+.privacy .cards{margin-top:.5rem}
 .privacy .card{background:#252320;border-color:#332F2B}
 .privacy .card h3{color:#FAF9F6}
 .privacy .card p{color:#B9B4AA}
 .privacy .eyebrow{color:#8FB3A6}
 
 /* ----------------------------------------------------------------- faq */
-.faq{display:flex;flex-direction:column;gap:2px;max-width:78ch}
+.faq{display:flex;flex-direction:column;gap:.125rem;max-width:78ch}
 details{border-bottom:1px solid var(--border)}
 summary{
-  cursor:pointer;list-style:none;padding:20px 0;
-  font-size:17px;color:var(--head);font-weight:500;
-  display:flex;align-items:center;justify-content:space-between;gap:20px;
+  cursor:pointer;list-style:none;padding:1.25rem 0;
+  font-size:clamp(1rem,2.6vw,1.0625rem);color:var(--head);font-weight:500;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
 }
 summary::-webkit-details-marker{display:none}
-summary::after{content:'+';font-size:19px;color:var(--muted);font-weight:400;flex:none;line-height:1;display:grid;place-items:center;width:19px;height:19px}
-details p{margin:0;padding:0 0 22px;font-size:15.5px;line-height:1.66;max-width:70ch}
+summary::after{content:'+';font-size:1.2rem;color:var(--muted);font-weight:400;flex:none;line-height:1;display:grid;place-items:center;width:1.2rem;height:1.2rem}
+details p{margin:0;padding:0 0 1.375rem;font-size:.97rem;line-height:1.66;max-width:70ch}
 
 /* The answer slides open by animating a grid track from 0fr to 1fr, which
    interpolates against the content's natural height without measuring it in
@@ -293,32 +334,80 @@ details[open] summary::after{transform:rotate(135deg)}
 details[open][data-closing] summary::after{transform:none}
 
 /* ----------------------------------------------------------------- cta */
-.endcta{text-align:center;padding:var(--gap) 0}
-.endcta h2{margin:18px auto 18px;max-width:16ch}
-.endcta p{max-width:52ch;margin:0 auto;font-size:17px}
-.endcta .ctas{display:flex;gap:12px;justify-content:center;margin-top:30px;flex-wrap:wrap}
+.endcta{text-align:center;padding-block:var(--gap)}
+.endcta h2{margin:1.125rem auto;max-width:16ch}
+.endcta p{max-width:52ch;margin:0 auto;font-size:1.0625rem}
+.endcta .ctas{display:flex;gap:.75rem;justify-content:center;margin-top:1.875rem;flex-wrap:wrap}
 
 /* -------------------------------------------------------------- footer */
-footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;color:var(--muted)}
-.footrow{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between}
+footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.875rem;color:var(--muted)}
+.footrow{display:flex;flex-wrap:wrap;gap:1.125rem;align-items:center;justify-content:space-between}
 .footrow a{text-decoration:none}
 .footrow a:hover{color:var(--head)}
-.footlinks{display:flex;gap:24px;flex-wrap:wrap}
+.footlinks{display:flex;gap:.75rem 1.5rem;flex-wrap:wrap}
 
 /* Sections lift into place as they enter the viewport. Nothing is hidden
    without JS: .reveal-ready is set by a script in the head, so a scriptless
    page renders everything as normal static content. */
-.reveal-ready [data-reveal]{opacity:0;transform:translateY(14px)}
+.reveal-ready [data-reveal]{opacity:0;transform:translateY(.875rem)}
 /* The transition is attached only once the hidden state is committed, so the
    initial hide is instant and rows never fade out on load. */
 .reveal-armed [data-reveal]{transition:opacity .55s cubic-bezier(.22,.61,.36,1),transform .55s cubic-bezier(.22,.61,.36,1)}
 [data-reveal].shown{opacity:1;transform:none}
 
-@media (max-width:820px){
-  .split,.split.flip .copy{grid-template-columns:1fr;order:0}
-  .navlinks a:not(.btn){display:none}
-  .hero{padding-top:52px}
+/* ---------------------------------------------------------- portrait */
+/* Orientation is the breakpoint, not a pixel width: a phone held upright is
+   the case these rules are for, and it stays the case whatever the device's
+   resolution turns out to be. The one width query below is a guard for narrow
+   landscape windows on a desktop, where orientation alone would miss. */
+@media (orientation:portrait), (max-width:52rem){
+  /* Two-column splits become one column, and a flipped split stops
+     reordering: on one column the copy should always lead. */
+  .split{grid-template-columns:1fr}
+  .split.flip .copy{order:0}
+  .osgrid{grid-template-columns:1fr;gap:2.25rem}
+  .osterm{position:static}
+
+  nav{height:4rem}
+  .navtoggle{display:inline-flex}
+  /* The section links move out of the bar and into the panel; the two
+     buttons stay visible beside the toggle. */
+  .navlinks{
+    position:absolute;left:0;right:0;top:100%;
+    flex-direction:column;align-items:stretch;gap:0;
+    padding:0 var(--gutter);
+    background:var(--page);border-bottom:1px solid var(--border);
+    box-shadow:0 1.5rem 2rem -1.5rem rgba(26,25,23,.25);
+    display:grid;grid-template-rows:0fr;
+    transition:grid-template-rows .3s cubic-bezier(.22,.61,.36,1);
+    overflow:hidden;
+  }
+  [data-nav-open] .navlinks{grid-template-rows:1fr}
+  .navlinks-inner{
+    overflow:hidden;min-height:0;
+    display:flex;flex-direction:column;align-items:stretch;gap:.25rem;
+  }
+  .navlinks a:not(.btn){padding:.85rem .25rem;font-size:1rem}
+  .navlinks a:not(.btn) + a:not(.btn){border-top:1px solid var(--border)}
+  /* The badge and CTA sit inside the panel in portrait, full width. */
+  .navlinks .ghbtn,.navlinks .btn{margin:.5rem 0;justify-content:center}
+  .navlinks .ghbtn{margin-bottom:0}
+  .navlinks .ghbtn .gh-label{flex:1;justify-content:center}
+
+  /* Tap targets: a phone user is aiming with a thumb. */
+  .btn,.ghbtn{min-height:2.75rem}
+  /* Footer links sit in a row of their own, so they get real height to aim
+     at rather than the bare line-box. */
+  .footlinks a{display:inline-flex;align-items:center;min-height:2.25rem}
+  .hero .ctas .btn,.endcta .ctas .btn{flex:1 1 14rem}
+  .hero{padding-block-start:clamp(2rem,7vw,3.25rem)}
+  .privacy{border-radius:1rem}
 }
+/* Coarse pointers get no hover-lift, which on touch sticks after the tap. */
+@media (hover:none){
+  .btn:hover,.ghbtn:hover{transform:none}
+}
+
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
   html{scroll-behavior:auto}
@@ -338,17 +427,24 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
   <div class="wrap">
     <nav>
       <a class="brand" href="#top">
-        <span class="mark" style="--s:28px"><i></i><i></i><i></i><i></i></span>
+        <span class="mark" style="--s:1.75rem"><i></i><i></i><i></i><i></i></span>
         <span>Open Slate</span>
       </a>
-      <div class="navlinks">
+      <button class="navtoggle" id="navtoggle" aria-expanded="false" aria-controls="navlinks" aria-label="Menu">
+        <svg viewBox="0 0 20 20" aria-hidden="true">
+          <path class="bar bar-top" d="M3 6h14"/>
+          <path class="bar bar-mid" d="M3 10h14"/>
+          <path class="bar bar-bot" d="M3 14h14"/>
+        </svg>
+      </button>
+      <div class="navlinks" id="navlinks"><div class="navlinks-inner">
         <a href="#what">What it does</a>
         <a href="#yours">Make it yours</a>
         <a href="#privacy">Privacy</a>
         <a href="#source">Open source</a>
         <a class="ghbtn" id="ghbtn" href="https://github.com/thepropotato/open-slate" target="_blank" rel="noopener" aria-label="Open Slate on GitHub"><span class="gh-label"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span>GitHub</span></span><span class="gh-stars"><svg class="gh-star-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 .25l2.4 4.86 5.35.78-3.87 3.77.91 5.34L8 12.48l-4.79 2.52.91-5.34L.25 5.89l5.35-.78L8 .25Z"/></svg><span id="ghstars"></span></span></a>
         <a class="btn" href="#install" data-cws-jump>Add to Chrome</a>
-      </div>
+      </div></div>
     </nav>
   </div>
 </header>
@@ -378,12 +474,12 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
         <div class="omni">Search or type a URL</div>
       </div>
       <img src="img/wallpaper@2x.png" width="2560" height="1600"
-           alt="The Open Slate new tab page over a dusk photograph: a search box above a calendar showing today's events, a clock, a task list, a list of open tabs, a pomodoro timer and the local weather, each on a translucent panel tinted by the wallpaper behind it.">
+           alt="The Open Slate new tab page over a dusk photograph: a search box above a calendar showing today's events, a clock, a task list, a list of open tabs, the local weather and a Claude usage widget reading $403 of a $500 limit, each on a translucent panel tinted by the wallpaper behind it.">
     </div>
   </div>
 
   <div class="proof">
-    <span><b>15</b> widgets</span>
+    <span><b>17</b> widgets</span>
     <span><b>23</b> search engines</span>
     <span><b>233</b> brand logos</span>
     <span><b>10</b> clock faces</span>
@@ -481,7 +577,7 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
 
     <div class="split flip">
       <div class="copy">
-        <h3>Fifteen widgets, and none of them overlap</h3>
+        <h3>Seventeen widgets, and none of them overlap</h3>
         <p>
           A grid of square cells with five standard sizes that widgets snap to,
           the way phone widgets do. Growing or dropping one moves whatever was in
@@ -492,6 +588,7 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
           <li>Tasks with priorities, due dates and filters &mdash; typed, not clicked</li>
           <li>Pomodoro, countdown and stopwatch in one timer</li>
           <li>RSS feeds, crypto prices</li>
+          <li>Claude and ChatGPT usage &mdash; what you&rsquo;ve spent, what&rsquo;s left, when it resets</li>
           <li>Recently closed, most visited, open tabs, bookmarks, history, downloads</li>
         </ul>
       </div>
@@ -502,7 +599,7 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
           <div class="omni">Search or type a URL</div>
         </div>
         <img src="img/dashboard@2x.png" width="2560" height="1600" loading="lazy"
-             alt="The dashboard view: a calendar showing today's hours and three events, a digital clock, a task list with priority and due-date labels, a list of open tabs, a pomodoro timer and a weather widget, laid out on a grid.">
+             alt="The dashboard view: a calendar showing today's hours and three events, a digital clock, a task list with priority and due-date labels, a list of open tabs, a weather widget and a Claude usage widget reading $403 of a $500 limit, laid out on a grid.">
       </div>
     </div>
 
@@ -517,10 +614,25 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
              alt="A dense dashboard showing twelve widgets at once: a greeting, a flip clock, the weather, a notepad, a task list, an RSS feed, live crypto prices, a list of open tabs, a month calendar, browser history, bookmarks and a pomodoro timer.">
       </div>
       <figcaption>
-        Nearly all of them at once, on one page. Downloads, Recently closed and
+        Twelve of them at once, on one page. Downloads, Recently closed and
         Most visited are missing here for an honest reason: they read your own
         browser, and this shot was taken in an empty profile that has nothing to
-        show them.
+        show them. The two usage widgets are below, since they need an account
+        rather than a profile.
+      </figcaption>
+    </figure>
+
+    <figure class="showcase">
+      <div class="bare">
+        <img src="img/llm-usage@2x.png" width="2200" height="614" loading="lazy"
+             alt="Six usage widgets in a row: three showing Claude at $403 of a $500 spend limit, 81% used and resetting in 5 days, and three showing ChatGPT at 94% of its weekly limit and 12% of its five-hour one. Each is shown small, medium and large.">
+      </div>
+      <figcaption>
+        Claude and ChatGPT usage, on the page you already open in every tab.
+        Both widgets read the account you are already signed in to &mdash; no
+        API key, no second login &mdash; and a tile too small for every meter
+        shows the one closest to its limit. Nothing is read until you add the
+        widget and grant that one site.
       </figcaption>
     </figure>
 
@@ -643,7 +755,7 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
           <div class="omni">Search or type a URL</div>
         </div>
         <img src="img/light-dashboard@2x.png" width="2560" height="1600" loading="lazy"
-             alt="The same dashboard in a warm light theme with outlined panels: a calendar, a clock reading 23:40, a task list, open tabs, a pomodoro timer and the weather.">
+             alt="The same dashboard in a warm light theme with outlined panels: a calendar, a clock, a task list, open tabs, the weather and a ChatGPT usage widget reading 94% of its weekly limit.">
       </div>
       <figcaption>
         The same dashboard as further up, in the light Paper palette with
@@ -712,7 +824,7 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
         </div>
         <div class="card">
           <h3>Permissions on use</h3>
-          <p>It installs with five, none of which can read another site. Tabs, history, bookmarks, downloads and sessions are requested the moment you add the widget that needs one, and declining leaves the rest working.</p>
+          <p>It installs with five, none of which can read another site. Tabs, history, bookmarks, downloads, sessions and scripting are requested the moment you add the widget that needs one, and declining leaves the rest working.</p>
         </div>
         <div class="card">
           <h3>Your data stays put</h3>
@@ -723,8 +835,12 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
           <p>Geolocation is never declared and never called. The weather widget places itself from a city-level lookup, or you type a town.</p>
         </div>
         <div class="card">
-          <h3>Four outbound calls, all optional</h3>
-          <p>Weather, a one-off city lookup, coin prices and the feeds you added. Each behind a widget you chose and a permission you granted. None carries an identifier.</p>
+          <h3>Every outbound call is optional</h3>
+          <p>Weather, a one-off city lookup, coin prices, the feeds you added, and the usage widgets reading your own account. Each behind a widget you chose and a permission you granted.</p>
+        </div>
+        <div class="card">
+          <h3>Usage is read, not relayed</h3>
+          <p>The Claude and ChatGPT widgets read the numbers from your own signed-in tab on that site, and keep them on your device. No API key, no third party, and nothing about your conversations &mdash; only the limits the site shows you.</p>
         </div>
       </div>
     </div>
@@ -877,7 +993,7 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
 <footer>
   <div class="wrap footrow">
     <div style="display:flex;align-items:center;gap:10px">
-      <span class="mark" style="--s:22px"><i></i><i></i><i></i><i></i></span>
+      <span class="mark" style="--s:1.375rem"><i></i><i></i><i></i><i></i></span>
       <span>Open Slate</span>
     </div>
     <div class="footlinks">
@@ -945,6 +1061,37 @@ footer{border-top:1px solid var(--border);padding:38px 0 56px;font-size:14px;col
   const onScroll = () => header.classList.toggle('stuck', window.scrollY > 8)
   addEventListener('scroll', onScroll, { passive: true })
   onScroll()
+
+  /**
+   * Portrait nav. The panel is closed by toggling one attribute on <header>,
+   * which is also what the CSS keys off, so there is no state kept in two
+   * places. In landscape the toggle is display:none and none of this runs.
+   */
+  const navtoggle = document.getElementById('navtoggle')
+  const navlinks = document.getElementById('navlinks')
+  if (navtoggle && navlinks) {
+    const setNav = (open) => {
+      header.toggleAttribute('data-nav-open', open)
+      navtoggle.setAttribute('aria-expanded', String(open))
+    }
+
+    navtoggle.addEventListener('click', () =>
+      setNav(!header.hasAttribute('data-nav-open')))
+
+    // Following a link inside the panel should close it: the anchors jump
+    // within this page, so nothing else would.
+    navlinks.addEventListener('click', (e) => {
+      if (e.target.closest('a')) setNav(false)
+    })
+
+    addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') setNav(false)
+    })
+
+    // Rotating to landscape reveals the links anyway; drop the open state so
+    // the panel is not left open behind them on the way back.
+    matchMedia('(orientation: portrait)').addEventListener('change', () => setNav(false))
+  }
 
   /**
    * Animated open/close for the FAQ. The browser flips the `open` attribute
