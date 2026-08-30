@@ -15,9 +15,19 @@ const outDir = resolve('marketing/promo')
 mkdirSync(outDir, { recursive: true })
 
 /** Inlined so the render needs no file:// access of its own. */
-const shot =
+const inline = (name) =>
   'data:image/png;base64,' +
-  readFileSync(resolve('marketing/screenshots/speed-dial.png')).toString('base64')
+  readFileSync(resolve('marketing/screenshots', name)).toString('base64')
+
+/**
+ * Two shots, because the tiles carry a different claim than the widgets do.
+ *
+ * The wide art sits beside copy promising "tiles, widgets and a wallpaper
+ * engine", which the tile grid alone does not show — so the dashboard carries
+ * those, and the speed dial carries the tiles where there is no room for both.
+ */
+const shot = inline('speed-dial.png')
+const dashShot = inline('dashboard.png')
 
 /** Paper & Ink, the same palette the website uses. */
 const C = {
@@ -136,7 +146,7 @@ const tiles = [
       </div>
       <div style="margin-top:14px;border-radius:12px 12px 0 0;overflow:hidden;
                   box-shadow:0 -1px 0 ${C.border}, 0 24px 60px -20px rgba(26,25,23,.3)">
-        <img src="${shot}" style="width:100%;display:block">
+        <img src="${dashShot}" style="width:100%;display:block">
       </div>
     </div>`,
   },
@@ -179,7 +189,7 @@ const tiles = [
         </div>
       </div>
       <div style="flex:1;align-self:stretch;position:relative;overflow:hidden">
-        <img src="${shot}" style="position:absolute;top:50%;left:0;transform:translateY(-50%);
+        <img src="${dashShot}" style="position:absolute;top:50%;left:0;transform:translateY(-50%);
              width:820px;border-radius:14px 0 0 14px;
              box-shadow:0 24px 60px -18px rgba(26,25,23,.34), 0 0 0 1px ${C.border}">
       </div>

@@ -222,6 +222,8 @@ const DEMO_ORIGIN = `http://127.0.0.1:${demoPort}/*`
 
 const WEATHER_ORIGIN = 'https://*.open-meteo.com/*'
 const CRYPTO_ORIGIN = 'https://api.coingecko.com/*'
+const CLAUDE_ORIGIN = 'https://claude.ai/*'
+const CHATGPT_ORIGIN = 'https://chatgpt.com/*'
 
 const PLACE = {
   name: 'Hyderabad',
@@ -292,7 +294,13 @@ const TAB_TITLES = [
  *
  *   calendar   clock       tasks
  *   calendar   open tabs   tasks
- *   timer      open tabs   weather
+ *   claude     open tabs   weather
+ *
+ * Three rows, not four: a fourth puts the last row past the 800px the store
+ * requires and clips it. Claude's usage takes the cell the timer had, so every
+ * other widget keeps the footprint it was designed around — shrinking Open
+ * tabs instead left a row of links clipped mid-height. The timer is in the
+ * widget gallery and on the website's own dashboard shots.
  */
 const DASHBOARD = [
   widget('w-cal', 'calendar', 0, 0, 2, 2, {
@@ -305,9 +313,25 @@ const DASHBOARD = [
   // the capture's own new tab page is opened last, so capping the list at the
   // number seeded is what keeps `newtab.html` from listing itself.
   widget('w-tabs', 'tabs', 2, 1, 2, 2, { limit: TAB_LIMIT }),
-  widget('w-timer', 'timer', 0, 2, 2, 1, { mode: 'pomodoro', showRounds: true }),
   widget('w-weather', 'weather', 4, 2, 2, 1, { detail: 'compact', place: PLACE }),
+  // The usage widget in its natural home: one tile on a dashboard, not a
+  // specimen sheet. Its reading is seeded like every other widget's content.
+  widget('w-claude', 'claude-usage', 0, 2, 2, 1),
 ]
+
+/**
+ * The same dashboard with the other provider in that cell.
+ *
+ * Both widgets are the same size and shape, so this swaps one for the other
+ * rather than rearranging anything — it exists so the light shot carries
+ * ChatGPT while the two dark ones carry Claude, and neither provider is the
+ * only one a reader ever sees.
+ */
+const DASHBOARD_CHATGPT = DASHBOARD.map((w) =>
+  w.instance.id === 'w-claude'
+    ? widget('w-chatgpt', 'chatgpt-usage', 0, 2, 2, 1)
+    : w,
+)
 
 /**
  * Every widget that can be shown with real content, at once — the shot that
@@ -356,6 +380,71 @@ const GALLERY = [
 ]
 
 /**
+ * The two AI usage widgets, one provider per row, at three footprints each.
+ *
+ * A real read drives a signed-in claude.ai or chatgpt.com tab, which a capture
+ * run has no account for — so the readings are written straight into the cache
+ * the panel reads (`usageCache:<id>` in `chrome.storage.local`, the key
+ * `api.ts` builds). The permissions still have to be genuinely granted, or the
+ * panel renders its Connect prompt instead: the scene promotes them below.
+ *
+ * The two rows are deliberately unalike, because the providers report unalike
+ * things. Claude carries a spend reading and ChatGPT two rate-limit windows,
+ * so the shot covers both meter kinds as well as both brand marks — and the
+ * one-cell tiles show the widget picking the meter closest to its limit, which
+ * is the behaviour worth seeing.
+ */
+const USAGE_READINGS = {
+  claude: {
+    at: Date.now() - 4 * 60 * 1000,
+    usage: {
+      windows: [],
+      spend: {
+        used: 403.66,
+        limit: 500,
+        currency: 'USD',
+        resetsAt: new Date(Date.now() + 4.3e8).toISOString(),
+      },
+    },
+  },
+  chatgpt: {
+    at: Date.now() - 11 * 60 * 1000,
+    usage: {
+      windows: [
+        { label: 'Weekly', percent: 94, resetsAt: new Date(Date.now() + 3.4e8).toISOString() },
+        { label: '5-hour', percent: 12, resetsAt: new Date(Date.now() + 8e6).toISOString() },
+      ],
+      spend: null,
+    },
+  },
+}
+
+// Six columns of two rows, filled edge to edge. The canvas packs upward, so
+// both 2x2 tiles sit on the top row alongside the one-cell tiles, and the two
+// medium (2x1) tiles fill the row beneath them — no staggering and no hole.
+//
+//   small  medium+  claude 2x2  chatgpt 2x2
+//   small  medium+  (the same two, continued)
+const USAGE = [
+  widget('u-c1', 'claude-usage', 0, 0, 1, 1),
+  widget('u-g1', 'chatgpt-usage', 0, 1, 1, 1),
+  widget('u-c2', 'claude-usage', 1, 0, 2, 1),
+  widget('u-g2', 'chatgpt-usage', 1, 1, 2, 1),
+  widget('u-c3', 'claude-usage', 3, 0, 2, 2),
+  widget('u-g3', 'chatgpt-usage', 5, 0, 2, 2),
+]
+
+/** Writes both readings into the cache the usage panels read on mount. */
+const seedUsage = async (page) => {
+  await page.evaluate(async (readings) => {
+    await chrome.storage.local.set({
+      'usageCache:claude': readings.claude,
+      'usageCache:chatgpt': readings.chatgpt,
+    })
+  }, USAGE_READINGS)
+}
+
+/**
  * Ten clock faces at once, as a specimen sheet.
  *
  * Five columns, not ten: a cell under `MIN_CELL` (120px) collapses the whole
@@ -385,10 +474,17 @@ const CLOCK_FACES = [
 
 /* ---------------------------------------------------------------- scenes */
 
-/** Optional hosts the live-data scenes need granted before they render. */
+/**
+ * Optional hosts the live-data scenes need granted before they render.
+ *
+ * The two provider hosts are here because the usage widgets gate on
+ * `chrome.permissions.contains` and would otherwise draw a Connect prompt. The
+ * grant alone reads nothing: a capture run has no account on either site, so
+ * the figures come from `seedUsage` rather than from a real read.
+ */
 const LIVE = {
-  origins: [WEATHER_ORIGIN, CRYPTO_ORIGIN, DEMO_ORIGIN],
-  permissions: ['tabs', 'bookmarks', 'history', 'downloads', 'sessions'],
+  origins: [WEATHER_ORIGIN, CRYPTO_ORIGIN, DEMO_ORIGIN, CLAUDE_ORIGIN, CHATGPT_ORIGIN],
+  permissions: ['tabs', 'bookmarks', 'history', 'downloads', 'sessions', 'scripting'],
 }
 
 /**
@@ -555,6 +651,7 @@ const scenes = [
     scheme: 'dark',
     ...LIVE,
     before: seedTabs(TAB_TITLES),
+    seedUsage: true,
     settings: {
       appearance: {
         mode: 'dark',
@@ -579,6 +676,7 @@ const scenes = [
     scheme: 'dark',
     ...LIVE,
     before: seedTabs(TAB_TITLES),
+    seedUsage: true,
     settings: {
       widgets: canvas(DASHBOARD),
       layout: { order: ['search', 'widgets'], viewMode: 'tabs', maxWidth: 1180, paddingY: 22, gap: 18 },
@@ -613,6 +711,28 @@ const scenes = [
       background: onWallpaper({ dim: 0.5, blur: 8 }),
       widgets: canvas(CLOCK_FACES, { columns: 5, margin: 14 }),
       layout: { order: ['widgets'], viewMode: 'tabs', maxWidth: 900, paddingY: 40, gap: 12, align: 'center' },
+    },
+  },
+  {
+    // The AI usage widgets, both providers at three footprints. Website only:
+    // the store caps at five, and this sells to a narrower audience than the
+    // scenes that carry the listing.
+    name: 'llm-usage',
+    site: 'llm-usage',
+    scheme: 'dark',
+    // Genuinely granted rather than seeded — the panel gates on
+    // `chrome.permissions.contains` and would draw its Connect prompt instead.
+    origins: [CLAUDE_ORIGIN, CHATGPT_ORIGIN],
+    permissions: ['tabs', 'scripting'],
+    seedUsage: true,
+    // The block itself, not the frame: six tiles centred in a full page leave
+    // more empty wallpaper than subject.
+    clip: '.canvas__grid',
+    settings: {
+      appearance: { mode: 'dark', surface: 'glass', radius: 18 },
+      background: onWallpaper({ dim: 0.5, blur: 8 }),
+      widgets: canvas(USAGE, { columns: 7, margin: 12 }),
+      layout: { order: ['widgets'], viewMode: 'tabs', maxWidth: 1180, paddingY: 0, gap: 12, align: 'center' },
     },
   },
 
@@ -698,10 +818,11 @@ const scenes = [
     scheme: 'light',
     ...LIVE,
     before: seedTabs(TAB_TITLES),
+    seedUsage: true,
     settings: {
       appearance: { mode: 'light', preset: 'paper', surface: 'outline', radius: 10, shadow: 'soft', density: 'comfortable' },
       background: { type: 'solid', followTheme: true },
-      widgets: canvas(DASHBOARD),
+      widgets: canvas(DASHBOARD_CHATGPT),
       layout: { order: ['search', 'widgets'], viewMode: 'tabs', maxWidth: 1180, paddingY: 22, gap: 18 },
     },
   },
@@ -863,6 +984,7 @@ for (const scene of scenes) {
     // are written from the page once the permissions are in place.
     if (scene.seedBrowserData) await seedBookmarks(page)
     if (scene.seedMedia) await seedMedia(page)
+    if (scene.seedUsage) await seedUsage(page)
 
     const apply = async (patch) => {
       await page.evaluate(async (values) => {
@@ -905,7 +1027,12 @@ for (const scene of scenes) {
       const out = isStore
         ? join(storeDir, `${scene.name}.png`)
         : join(siteDir, `${scene.site}@2x.png`)
-      await page.screenshot({ path: out })
+      // A scene may name one element to shoot instead of the whole frame, for
+      // a subject that reads better tight than centred in a full page. The
+      // canvas always reserves an empty row below the last widget as drag
+      // room, so a short arrangement never sits optically centred in a frame.
+      const target = scene.clip ? page.locator(scene.clip).first() : page
+      await target.screenshot({ path: out })
       console.log(out.replace(process.cwd() + '/', ''))
     }
 
