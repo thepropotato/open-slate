@@ -9,7 +9,8 @@ Replace the browser's new tab page with a customisable speed dial and dashboard:
 a grid of user-chosen site tiles (optionally in folders and across pages), a
 search box, and widgets showing the user's own browser data (recently closed tabs,
 open tabs, bookmarks, history, downloads, most-visited sites) alongside a clock,
-calendar, weather, notes, tasks, a timer, feeds and crypto prices.
+calendar, weather, notes, tasks, a timer, feeds, crypto prices, and the user's
+own usage figures from AI services they are already signed in to.
 
 Everything the extension does serves that one page. It has no content scripts, no
 remote code, and no analytics.
@@ -36,9 +37,12 @@ adds the widget that needs them. Declining leaves the rest of the page working.
 | `bookmarks` | The bookmarks widget and palette results. |
 | `history` | The history widget and palette results. |
 | `downloads` | The downloads widget. |
+| `scripting` | The Claude and ChatGPT usage widgets, to run one read on the provider's own page. See below. |
 | `https://*.open-meteo.com/*` | The weather widget's forecast and place search. Open-Meteo needs no account or API key. |
 | `https://get.geojs.io/*`, `https://ipwho.is/*` | A one-off, city-level location lookup so the weather widget can place itself without a permission prompt. Two providers because either free service may rate-limit. Requested together with Open-Meteo, and never called again once a place is set. |
 | `https://api.coingecko.com/*` | The crypto widget's only network request. CoinGecko's public endpoint needs no account or API key. |
+| `https://claude.ai/*` | The Claude usage widget, to read that account's own usage figures. |
+| `https://chatgpt.com/*` | The ChatGPT usage widget, to read that account's own usage figures. |
 | `https://*/*` | Required so the feeds widget can request access to **one origin at a time**, chosen by the user. See below. |
 
 ### On geolocation
@@ -52,6 +56,36 @@ extension page, but the call fails without the manifest permission and logs a
 console warning. It places itself with a city-level IP lookup instead, falling
 back to the browser's timezone, and then to a search box for typing a town by
 hand — which is also how the detected place is corrected.
+
+### On `scripting` and the two AI usage widgets
+
+The Claude and ChatGPT usage widgets show the user their own limits — spend,
+rate-limit windows and reset times — as those services already show them. They
+work without an API key by reading the session the user is already signed in to,
+which is why they need `scripting` and one host.
+
+A refresh, and only a refresh, does this: the service worker finds an existing
+tab on `claude.ai` or `chatgpt.com`, or opens one in the background, calls
+`chrome.scripting.executeScript` on that tab with a single function that requests
+the provider's own usage endpoint, and closes the tab again if it opened one. The
+reply is validated against a Zod schema and cached locally. See
+`readProviderUsage` in `src/background/service-worker.ts` and the two adapters in
+`src/features/widgets/llm/`.
+
+What keeps this narrow:
+
+- `scripting` is **optional** and unused until a usage widget is added. It is
+  requested together with `tabs` and that one provider's origin, in one prompt,
+  at the moment the widget is added.
+- The injected function is a static part of the bundle, not remote code, and it
+  is the only thing ever injected. There are still no content scripts, so nothing
+  runs on any page at any other time.
+- Only the two provider origins are reachable. Neither is covered by the broad
+  feeds pattern below, because both are declared by name.
+- Only usage figures are read — percentages, amounts and reset times. Nothing
+  from conversations, prompts or account details is read or stored.
+- Nothing leaves the device. The reading is written to `chrome.storage.local` and
+  rendered; it is not transmitted anywhere, including to us.
 
 ### On the broad `https://*/*` optional host pattern
 
@@ -80,14 +114,18 @@ What matters is that it is **optional and never requested wholesale**:
   uploaded.
 - Browser data read through the optional permissions above is used only to render
   the page and never leaves the device.
-- Outbound requests are limited to four cases, each behind a widget the user
+- Outbound requests are limited to the cases below, each behind a widget the user
   added and a host permission the user granted:
   `api.open-meteo.com` (the coordinates of a chosen place),
   `get.geojs.io` or `ipwho.is` (nothing but the request itself, answered with an
   approximate city; called once, while the weather widget is being set up),
   `api.coingecko.com` (a list of coin ids and a currency code),
-  and the feed addresses the user entered. No request carries an identifier of
-  any kind, and responses are cached locally to keep the request count low.
+  the feed addresses the user entered,
+  and `claude.ai` or `chatgpt.com` (that provider's own usage endpoint, requested
+  from within a tab on that site, so it carries the user's existing session for
+  that site exactly as loading the page normally would — and nothing else).
+  No request carries an identifier of ours, and responses are cached locally to
+  keep the request count low.
 - The search box sends nothing anywhere as you type: suggestions come from local
   tabs, bookmarks, history and tiles. Submitting a search navigates to the chosen
   engine, exactly as the address bar would.
@@ -110,11 +148,16 @@ The store allows five screenshots. These are them, in order:
 - [x] `wallpaper.png` — a photograph behind glass panels, the accent drawn out
       of the sky
 - [x] `dashboard.png` — the author's own widget layout: calendar day view,
-      clock, tasks, open tabs, timer and weather
+      clock, tasks, open tabs, weather and Claude usage
 - [x] `speed-dial.png` — the tile grid, logos in their own brand colours
 - [x] `command-palette.png` — the command palette over the tiles
 - [x] `make-it-yours.png` — light palette, square corners, neutral plates,
       showing how far the appearance settings go
+
+The two AI usage widgets are captured for the website too, as a `llm-usage`
+scene: both providers at three footprints, with readings seeded into the cache
+the panel reads and the permissions genuinely granted in a throwaway profile, so
+no real account is involved.
 
 The settings page is captured too, but for the website rather than the store:
 five is the cap, and a screenshot of a preferences list sells the extension less

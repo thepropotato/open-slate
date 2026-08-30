@@ -34,15 +34,24 @@ so the grid stays coherent even for sites nobody has a logo for. Drag to
 reorder, drop onto a folder to file it away, split tiles across named pages, or
 open by position with Alt+1 to Alt+9.
 
-FIFTEEN WIDGETS, AND NONE OF THEM OVERLAP
+SEVENTEEN WIDGETS, AND NONE OF THEM OVERLAP
 A grid of square cells with five standard sizes that widgets snap to, the way
 phone widgets do. Growing or dropping one moves whatever was in the way — at
 every window size, not just the one you are looking at.
 
 Clock (ten faces), weather, calendar, notes, greeting, tasks (priorities, due
 dates and filters, all typed rather than clicked), timer (pomodoro, countdown,
-stopwatch), RSS feeds, crypto prices, recently closed tabs, most visited, open
-tabs with a duplicate finder, bookmarks, history and downloads.
+stopwatch), RSS feeds, crypto prices, Claude and ChatGPT usage, recently closed
+tabs, most visited, open tabs with a duplicate finder, bookmarks, history and
+downloads.
+
+YOUR AI LIMITS, WITHOUT OPENING A TAB TO CHECK
+The Claude and ChatGPT widgets show what those services already show you — what
+you have spent, what is left, and when it resets — on the page you open in every
+new tab. They read the account you are already signed in to, so there is no API
+key and no second login, and a widget too small for every meter shows the one
+closest to its limit. Nothing is read until you add the widget and grant access
+to that one site, and the readings stay on your device.
 
 SEARCH AND A COMMAND PALETTE
 23 search engines with bang shortcuts (!yt cats), address detection so typing a
@@ -93,16 +102,16 @@ The store allows five. In order, from `screenshots/`:
 | # | File | Caption |
 | --- | --- | --- |
 | 1 | `wallpaper.png` | Your wallpaper, with the accent drawn out of it |
-| 2 | `dashboard.png` | Fifteen widgets on a grid that never overlaps |
+| 2 | `dashboard.png` | Your day, your tabs and your AI limits, on one grid |
 | 3 | `speed-dial.png` | Your sites, drawn in their own brand colours |
 | 4 | `command-palette.png` | Tabs, tiles, bookmarks and history, one keystroke away |
 | 5 | `make-it-yours.png` | The same grid, four settings apart |
 
 `npm run marketing:shots` writes several more scenes to `marketing/site/img/`
 than the store takes — the settings page, the widget gallery, the ten clock
-faces, folders and pages, the four tile plate styles, the light dashboard, and
-two more settings sections. Those carry the website; the five above are the
-store's.
+faces, the two AI usage widgets at three sizes each, folders and pages, the four
+tile plate styles, the light dashboard, and two more settings sections. Those
+carry the website; the five above are the store's.
 
 The dashboard and wallpaper shots reproduce the layout this project's author
 actually runs, with curated content: the calendar and feed are subscribed to

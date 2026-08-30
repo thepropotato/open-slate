@@ -50,12 +50,14 @@ phone widgets do. A widget never sits on top of another one: growing or dropping
 one moves whatever was in the way, at every breakpoint rather than only the one
 on screen. Unlock the canvas and the cell grid appears behind the widgets, each
 one grows a title bar of its own, and the whole widget is the drag handle.
-Fifteen widgets: clock (ten faces — digital, minimal, mono,
+Seventeen widgets: clock (ten faces — digital, minimal, mono,
 flip, words, binary, three analog variants, rings), weather, calendar, notes,
 tasks (priorities, due dates and faceted filters, set by typing `!` and
 `@ friday` rather than by filling in a form), greeting, timer (pomodoro,
-countdown, stopwatch), feeds, crypto prices, recently closed, most visited, open
-tabs (with a duplicate finder), bookmarks, history and downloads.
+countdown, stopwatch), feeds, crypto prices, Claude and ChatGPT usage (spend and
+rate limits, read from the session you are already signed in to), recently
+closed, most visited, open tabs (with a duplicate finder), bookmarks, history
+and downloads.
 
 **Widgets and tiles, one page or two.** A dashboard worth having is tall enough
 to push the tiles off screen, and fewer widgets is not the answer. So in **one
