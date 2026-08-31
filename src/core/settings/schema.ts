@@ -7,7 +7,7 @@ import { z } from 'zod'
  */
 
 export const SETTINGS_KEY = 'settings'
-export const SETTINGS_VERSION = 4
+export const SETTINGS_VERSION = 5
 
 const hex = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/)
 const unit = z.number().min(0).max(1)
@@ -210,6 +210,8 @@ export const Search = z.object({
   // Evaluate arithmetic typed into the box before searching.
   calculator: z.boolean().default(true),
   suggestions: z.boolean().default(true),
+  // Completions from the chosen engine. Unlike the above, this sends the query out.
+  webSuggestions: z.boolean().default(true),
 }).prefault({})
 
 export const Behavior = z.object({

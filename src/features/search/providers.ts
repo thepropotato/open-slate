@@ -4,7 +4,8 @@ import type { Tile } from '@/core/settings/schema'
 
 /**
  * Local suggestion sources: open tabs, bookmarks, history and the user's tiles.
- * Deliberately no remote suggestion service — no keystrokes leave the page.
+ * Nothing here touches the network. Engine completions, which do, live in
+ * `suggest.ts` behind their own setting.
  */
 
 export type SuggestionKind = 'tab' | 'bookmark' | 'history' | 'tile' | 'search' | 'action'

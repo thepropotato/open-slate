@@ -25,6 +25,9 @@
     "alarms",
     "topSites"
   ],
+  "host_permissions": [
+    "https://suggestqueries.google.com/*"
+  ],
   "optional_permissions": [
     "sessions",
     "bookmarks",
@@ -40,6 +43,13 @@
     "https://get.geojs.io/*",
     "https://ipwho.is/*",
     "https://api.coingecko.com/*",
+    "https://duckduckgo.com/*",
+    "https://www.bing.com/*",
+    "https://search.brave.com/*",
+    "https://ac.ecosia.org/*",
+    "https://www.startpage.com/*",
+    "https://en.wikipedia.org/*",
+    "https://completion.amazon.com/*",
     "https://*/*"
   ],
   "web_accessible_resources": [

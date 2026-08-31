@@ -171,6 +171,14 @@
   background: rgb(var(--surface-tint) / 12%);
 }
 
+/* Splits your own tabs and bookmarks from the engine's guesses below. The rule
+   is drawn as a border on the row so the hover fill stays clear of it. */
+.search__result[data-divided='true'] {
+  margin-top: 5px;
+  border-top: 1px solid rgb(var(--surface-tint) / 14%);
+  padding-top: 12px;
+}
+
 .search__resulticon {
   display: grid;
   place-items: center;

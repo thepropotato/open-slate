@@ -82,12 +82,58 @@ function pickDifferent(current: number, count: number): number {
  */
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  if (message?.type !== 'usage:refresh') return
-  void readProviderUsage(String(message.provider)).then(sendResponse, (error: unknown) =>
-    sendResponse({ ok: false, reason: describeError(error) }),
-  )
-  return true // keep the message channel open for the async response
+  if (message?.type === 'usage:refresh') {
+    void readProviderUsage(String(message.provider)).then(sendResponse, (error: unknown) =>
+      sendResponse({ ok: false, reason: describeError(error) }),
+    )
+    return true // keep the message channel open for the async response
+  }
+  if (message?.type === 'suggest:query') {
+    void fetchSuggestions(String(message.url)).then(sendResponse, () => sendResponse({ ok: false }))
+    return true
+  }
+  return
 })
+
+/**
+ * Proxies a search-suggestion lookup. Fetching here rather than from the newtab
+ * page means the request carries the extension's host permission, which the
+ * engines' varying CORS policies otherwise make unreliable.
+ */
+async function fetchSuggestions(
+  url: string,
+): Promise<{ ok: true; terms: string[] } | { ok: false }> {
+  let target: URL
+  try {
+    target = new URL(url)
+  } catch {
+    return { ok: false }
+  }
+  // Only ever call an origin the user has actually granted.
+  if (target.protocol !== 'https:') return { ok: false }
+  if (!(await chrome.permissions.contains({ origins: [`${target.origin}/*`] }))) {
+    return { ok: false }
+  }
+
+  // Suggestions are worthless once the next keystroke lands; fail fast instead.
+  const abort = new AbortController()
+  const timer = setTimeout(() => abort.abort(), 3000)
+  try {
+    const response = await fetch(target.toString(), {
+      signal: abort.signal,
+      credentials: 'omit',
+      cache: 'no-store',
+    })
+    if (!response.ok) return { ok: false }
+    const payload: unknown = await response.json()
+    if (!Array.isArray(payload) || !Array.isArray(payload[1])) return { ok: false }
+    return { ok: true, terms: payload[1].filter((t): t is string => typeof t === 'string') }
+  } catch {
+    return { ok: false }
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 async function readProviderUsage(
   providerId: string,

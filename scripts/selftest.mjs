@@ -43,6 +43,29 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('calc: no code execution', calculate('constructor'), null)
 }
 
+/* ---------------------------------------------------------- web suggestions */
+
+{
+  const { parseTerms, hasWebSuggestions } = await load('features/search/suggest.ts')
+  const { calculate } = await load('features/search/calculator.ts')
+  const { asDestination } = await load('features/search/engines.ts')
+
+  check('suggest: opensearch payload', parseTerms(['ca', ['cat', 'car']]), ['cat', 'car'])
+  check('suggest: non-string entries dropped', parseTerms(['a', ['ok', 3, null]]), ['ok'])
+  check('suggest: malformed payload', parseTerms({ nope: true }), [])
+  check('suggest: missing completions', parseTerms(['solo']), [])
+  truthy('suggest: google is supported', hasWebSuggestions('google'))
+  check('suggest: claude has no endpoint', hasWebSuggestions('claude'), false)
+
+  // The SearchBar gate: arithmetic and addresses must never reach the network.
+  const asks = (value) => Boolean(!calculate(value) && !asDestination(value) && value.length > 1)
+  check('suggest: arithmetic is not sent', asks('2+2*7'), false)
+  check('suggest: an address is not sent', asks('netflix.com'), false)
+  check('suggest: a url is not sent', asks('https://example.com/x'), false)
+  check('suggest: a plain query is sent', asks('weather in berlin'), true)
+  check('suggest: a bare number is sent', asks('2024'), true)
+}
+
 /* ------------------------------------------------------- engines and bangs */
 
 {

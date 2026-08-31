@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@/core/icons'
-import { useAsyncValue } from '@/core/hooks'
+import { useAsyncValue, useDebounced } from '@/core/hooks'
 import { faviconUrl, openUrl } from '@/core/platform/browser'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { asDestination, buildSearchUrl, getEngine, parseQuery, searchEngines } from './engines'
 import { calculate } from './calculator'
 import { queryLocal, type Suggestion } from './providers'
+import { remoteSuggest } from './suggest'
 import './SearchBar.css'
 
 /**
@@ -26,10 +27,24 @@ export function SearchBar() {
   const destination = useMemo(() => asDestination(value), [value])
   const maths = useMemo(() => (search.calculator ? calculate(value) : null), [value, search.calculator])
 
-  const suggestions =
+  const local =
     useAsyncValue(search.suggestions && value.trim().length > 1 ? `q:${value}` : null, () =>
       queryLocal(value, { tiles: tiles.items, limit: 6 }),
     ) ?? []
+
+  // Never for arithmetic or a bare address: those resolve locally, and this is
+  // the one path that would put the typed text on the network.
+  const askWeb = search.webSuggestions && !maths && !destination && parsed.query.length > 1
+  const debounced = useDebounced(askWeb ? parsed.query : '', 150)
+  const web =
+    useAsyncValue(debounced ? `w:${parsed.engine.id}:${debounced}` : null, () =>
+      remoteSuggest(debounced, parsed.engine.id, { limit: 5, openIn: tiles.openIn }),
+    ) ?? []
+
+  // Local hits first: the web list only ever fills the space below them.
+  const suggestions = [...local, ...web].slice(0, 8)
+  // One rule where your own things end and the engine's guesses begin.
+  const webStartsAt = local.length > 0 && web.length > 0 ? local.length : -1
 
   // The value, not a boolean: editing the expression then drops the
   // confirmation on its own.
@@ -231,6 +246,7 @@ export function SearchBar() {
                 <SuggestionRow
                   item={item}
                   active={index === activeIndex}
+                  divided={index === webStartsAt}
                   onHover={() => setHighlight(index)}
                 />
               </li>
@@ -245,10 +261,12 @@ export function SearchBar() {
 function SuggestionRow({
   item,
   active,
+  divided,
   onHover,
 }: {
   item: Suggestion
   active: boolean
+  divided: boolean
   onHover: () => void
 }) {
   return (
@@ -256,6 +274,7 @@ function SuggestionRow({
       type="button"
       className="search__result"
       data-active={active}
+      data-divided={divided}
       onMouseEnter={onHover}
       onClick={() => void item.run()}
     >

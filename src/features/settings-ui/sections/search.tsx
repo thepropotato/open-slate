@@ -1,4 +1,5 @@
 import { searchEngines } from '@/features/search/engines'
+import { SuggestAccess } from '../SuggestAccess'
 import type { Section } from '../types'
 
 export const searchSection: Section = {
@@ -59,9 +60,20 @@ export const searchSection: Section = {
         },
         {
           path: 'search.suggestions',
-          label: 'Suggestions',
-          help: 'From your own tabs, tiles, bookmarks and history. Nothing is sent anywhere.',
+          label: 'Suggestions from this browser',
+          help: 'From your own tabs, tiles, bookmarks and history. Nothing leaves the machine.',
           control: { kind: 'toggle' },
+        },
+        {
+          path: 'search.webSuggestions',
+          label: 'Suggestions from the search engine',
+          help: 'Completions as you type. This sends what you type to your chosen engine. Arithmetic and addresses are never sent.',
+          control: { kind: 'toggle' },
+        },
+        {
+          label: 'Engine access',
+          control: { kind: 'custom', render: () => <SuggestAccess />, bare: true },
+          when: (s) => s.search.enabled && s.search.webSuggestions,
         },
       ],
     },
