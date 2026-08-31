@@ -111,6 +111,12 @@ body,
   height: 100%;
 }
 
+/* On html as well as body: the canvas takes its colour from html, so navigating
+   between the new tab and settings lands on the themed ground, not a white flash. */
+html {
+  background: var(--bg);
+}
+
 body {
   background: var(--bg);
   color: var(--fg);
