@@ -9,12 +9,9 @@ import { applyTheme, encodeTheme } from '@/core/settings/themeCode'
 import './DataPanel.css'
 
 /**
- * Backup, restore and sharing.
- *
- * Two different things are on offer here, and keeping them separate matters:
- * a full config file (everything, including tiles and notes) for moving to
- * another machine, and a theme code (the look only) for sharing with someone
- * else without handing over your bookmarks-in-tile-form.
+ * Backup, restore and sharing. Two separate things: a full config file
+ * (including tiles and notes) for moving machines, and a theme code (the look
+ * only) that shares nothing personal.
  */
 export function DataPanel() {
   const settings = useSettings()
@@ -23,8 +20,7 @@ export function DataPanel() {
   const [paste, setPaste] = useState('')
   const [themeInput, setThemeInput] = useState('')
   const [message, setMessage] = useState<{ kind: 'ok' | 'bad'; text: string } | null>(null)
-  /* Anything that overwrites or deletes what is already stored waits here for
-     a confirmation, so a stray click cannot take a configuration with it. */
+  // Anything overwriting or deleting stored data waits here for a confirmation.
   const [pending, setPending] = useState<Confirmation | null>(null)
 
   const usage = useAsyncValue('media-usage', () => mediaStore.usage())
@@ -42,8 +38,8 @@ export function DataPanel() {
 
   const loadFile = async (file: File | undefined) => {
     if (!file) return
-    // Read before asking: a file that will not parse is a bad-input message,
-    // not a question about replacing anything.
+    // Read before asking: an unparsable file is a bad-input message, not a
+    // question about replacing anything.
     let incoming: ReturnType<typeof importSettings>
     try {
       incoming = importSettings(await file.text())
@@ -211,7 +207,13 @@ export function DataPanel() {
         </div>
       </Row>
 
-      <Row title="Start over" help="Restores every setting to its default." stacked>
+      {/* Kept away from the controls and behind a confirmation: ordinary edits
+          are discardable, so this is only for starting again. */}
+      <Row
+        title="Start over"
+        help="Restores every setting to its default. To undo a single change you have just made, use Discard at the foot of the sidebar instead."
+        stacked
+      >
         <div className="data__row">
           <Button
             variant="danger"
@@ -263,7 +265,7 @@ interface Confirmation {
 const describe = (error: unknown): string =>
   error instanceof Error ? error.message : 'That did not work.'
 
-/** Local date, so the filename sorts sensibly in a downloads folder. */
+// Local date, so the filename sorts sensibly in a downloads folder.
 function stamp(): string {
   const now = new Date()
   const pad = (n: number) => String(n).padStart(2, '0')

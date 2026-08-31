@@ -1,0 +1,218 @@
+/* The middle column: nav, preview, controls — so a slider and its effect share a glance. */
+.preview {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  /*
+   * Right edge only. The nav already draws the line on the left, and a column
+   * that draws both puts two 1px borders on the same seam — which reads as one
+   * noticeably heavier rule than every other divider on the page.
+   */
+  border-right: 1px solid var(--line);
+  background: rgb(var(--surface-tint) / 3%);
+}
+
+.preview__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-xs) var(--space-sm);
+  padding: var(--space-sm) var(--space);
+  border-bottom: 1px solid var(--line);
+}
+
+.preview__zoom {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 8%);
+}
+
+.preview__zoombtn,
+.preview__zoomlevel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--fg-subtle);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.preview__zoombtn {
+  --icon-btn: 20px;
+}
+
+.preview__zoombtn > svg {
+  width: 11px;
+}
+
+/* Wide enough for "100%" through "400%": the stepper must not move under the cursor. */
+.preview__zoomlevel {
+  min-width: 40px;
+  height: 20px;
+  padding: 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview__zoombtn:hover:not(:disabled),
+.preview__zoomlevel:hover:not(:disabled) {
+  background: rgb(var(--surface-tint) / 12%);
+  color: var(--fg);
+}
+
+.preview__zoombtn:disabled,
+.preview__zoomlevel:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.preview__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+.preview__title > svg {
+  width: 12px;
+}
+
+/* Preview-only: changes nothing that is stored. */
+.preview__panes {
+  display: flex;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 8%);
+}
+
+.preview__pane {
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--fg-subtle);
+}
+
+.preview__pane[aria-pressed='true'] {
+  background: rgb(var(--surface-tint) / 12%);
+  color: var(--fg);
+}
+
+/* The box the scaled frame is fitted into. */
+.preview__host {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 0;
+  padding: var(--space);
+  overflow: hidden;
+}
+
+/*
+ * Zoomed: the frame overflows and becomes pannable. Centring must go — a centred
+ * overflowing flex child spills past the scroll origin, which is unreachable.
+ */
+.preview__host[data-zoomed='true'] {
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+/* The axis that is not overflowing still centres; auto margins collapse when it does. */
+.preview__host[data-zoomed='true'] > .preview__fit {
+  margin: auto;
+}
+
+/*
+ * Room at both ends of the scroll range.
+ *
+ * The padding belongs to the *content*, not the scroll port. A scroll container
+ * lays its own padding out on the start edges only — the end padding is not part
+ * of the scrollable overflow area — so `padding` on the host gives the frame a
+ * gap on the left and top that has no counterpart on the right and bottom. A
+ * pseudo-element spacer does not fix it either: as a flex item it adds room on
+ * the main axis alone, and it adds that room *on top of* the host's own start
+ * padding rather than in place of it, so the two ends still disagree.
+ *
+ * Padding on the flex item itself is inside the scrollable area on all four
+ * sides, so both ends of both axes get exactly `var(--space)`. The host drops
+ * its own padding while zoomed so the two do not stack.
+ */
+.preview__host[data-zoomed='true'] {
+  padding: 0;
+}
+
+.preview__host[data-zoomed='true'] > .preview__fit {
+  /* The inline width/height is the scaled frame's exact footprint, so the
+     padding has to sit outside it rather than eat into it. */
+  box-sizing: content-box;
+  padding: var(--space);
+}
+
+/*
+ * Laid out at a real window's size and scaled down so width-dependent rules
+ * inside resolve correctly. A transform does not change layout size, hence the
+ * .preview__fit wrapper at the scaled size; top-left origin keeps the two agreeing.
+ */
+.preview__frame {
+  flex: 0 0 auto;
+  transform-origin: top left;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: 0 18px 48px rgb(0 0 0 / 34%);
+}
+
+/* Occupies the scaled footprint, so layout and paint line up. */
+.preview__fit {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* `.page` is height:100%, so every wrapper between needs a height or it all collapses. */
+.preview__inert,
+.preview__theme {
+  height: 100%;
+}
+
+/* The wallpaper is painted inside the frame, so it has to clip to it. */
+.preview__theme {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* A still, not a scroller: a scrollbar inside a scaled frame is unusable and unreal. */
+.preview__theme .page {
+  overflow: hidden;
+}
+
+/* Nothing inside is interactive. */
+.preview__inert * {
+  cursor: default !important;
+}
+
+/* Left in the tree when the preview bows out, so its width is still observed. */
+.preview__probe {
+  display: none;
+}
+
+/* Same threshold as the component: covers the frame before the observer reports. */
+@container settings (width < 64rem) {
+  .preview {
+    display: none;
+  }
+}

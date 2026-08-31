@@ -1,5 +1,5 @@
-import { useSetting } from '@/core/settings/SettingsProvider'
-import { useResolvedMode } from '@/core/theme/ThemeProvider'
+import { useSetting, useDraftSettings } from '@/core/settings/SettingsProvider'
+import { usePreviewMode } from '@/core/theme/ThemeProvider'
 import { themePresets } from '@/core/theme/presets'
 import { Icon } from '@/core/icons'
 import './PresetPicker.css'
@@ -7,7 +7,8 @@ import './PresetPicker.css'
 /** Swatch grid for `appearance.preset`, previewed in the active light/dark mode. */
 export function PresetPicker() {
   const [preset, setPreset] = useSetting<string>('appearance.preset')
-  const mode = useResolvedMode()
+  // The draft's mode, so the swatches preview alongside the rest of the draft.
+  const mode = usePreviewMode(useDraftSettings().appearance.mode)
 
   return (
     <div className="preset-grid">

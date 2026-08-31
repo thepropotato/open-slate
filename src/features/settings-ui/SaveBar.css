@@ -1,0 +1,58 @@
+/* Sticky, not in flow: the settings nav scrolls and the bar must stay reachable. */
+.savebar {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  /* Opaque: it overlaps the nav items it is pinned over. */
+  background: var(--bg-elevated);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 22%);
+}
+
+.savebar__count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--fg);
+}
+
+.savebar__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  flex: 0 0 auto;
+}
+
+.savebar__actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.savebar__actions > .ctl-btn:not(.ctl-btn--icon) {
+  flex: 1 1 auto;
+  justify-content: center;
+}
+
+.savebar--done {
+  border-color: var(--line);
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--fg-muted);
+  box-shadow: none;
+}
+
+.savebar--done > svg {
+  width: 12px;
+  color: var(--accent);
+}

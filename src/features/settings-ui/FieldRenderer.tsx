@@ -1,4 +1,4 @@
-import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
+import { useDraftSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { getPath } from '@/core/util/path'
 import {
   ColorInput,
@@ -12,18 +12,15 @@ import {
 } from '@/core/ui'
 import type { Field } from './types'
 
-/**
- * Where a field reads and writes. Defaults to global settings; widget config
- * dialogs pass their own instance config instead.
- */
+/** Where a field reads and writes; widget dialogs pass their own config. */
 export interface FieldScope {
   values: Record<string, unknown>
   write: (path: string, value: unknown) => void
 }
 
-/** Draws one declared field by dispatching on its control descriptor. */
 export function FieldRenderer({ field, scope }: { field: Field; scope?: FieldScope }) {
-  const settings = useSettings()
+  // The draft, not the saved values.
+  const settings = useDraftSettings()
   const { set } = useSettingsActions()
 
   if (field.when && !field.when(settings)) return null

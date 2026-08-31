@@ -875,6 +875,89 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   )
 }
 
+/* Staged settings (draft) */
+
+{
+  const { isStagedPath, stagedDiff } = await load('core/settings/staged.ts')
+  const { Settings } = await load('core/settings/schema.ts')
+
+  // Knobs are held for confirmation; content is written straight through.
+  truthy('staged: a radius is staged', isStagedPath('appearance.radius'))
+  truthy('staged: a nested background knob is staged', isStagedPath('background.gradient.from'))
+  truthy('staged: a tile knob is staged', isStagedPath('tiles.radius'))
+  check('staged: the tile list is not', isStagedPath('tiles.items'), false)
+  check('staged: a tile inside the list is not', isStagedPath('tiles.items.2.title'), false)
+  check('staged: tile pages are not', isStagedPath('tiles.pages'), false)
+  check('staged: the remembered pane is not', isStagedPath('layout.lastPane'), false)
+  check('staged: a dragged widget layout is not', isStagedPath('widgets.layout'), false)
+  check('staged: widget instances are not', isStagedPath('widgets.instances'), false)
+  check('staged: uploaded slideshow media is not', isStagedPath('background.slideshow.blobIds'), false)
+  // ...but the slideshow's own knobs still are.
+  truthy('staged: the slideshow interval is', isStagedPath('background.slideshow.intervalMinutes'))
+  truthy('staged: a widget column count is', isStagedPath('widgets.columns'))
+  check('staged: an unknown tree is not', isStagedPath('sync.provider'), false)
+
+  const base = Settings.parse({})
+  check('diff: nothing changed', stagedDiff(base, base), [])
+
+  const radius = { ...base, appearance: { ...base.appearance, radius: 4 } }
+  check('diff: one knob', stagedDiff(base, radius), ['appearance.radius'])
+
+  // Edited and put back is clean; the bar has to disappear again.
+  check('diff: edited back to saved', stagedDiff(base, { ...radius, appearance: base.appearance }), [])
+
+  const two = {
+    ...radius,
+    layout: { ...base.layout, gap: 40 },
+  }
+  check('diff: counted per leaf', stagedDiff(base, two).length, 2)
+
+  // Content changes never reach the save bar, however they were made.
+  const withTile = {
+    ...base,
+    tiles: { ...base.tiles, items: [{ id: 'x', url: 'https://a.b', title: 'A' }] },
+  }
+  check('diff: a new tile is not a pending change', stagedDiff(base, withTile), [])
+
+  const bothPaneAndKnob = {
+    ...radius,
+    layout: { ...base.layout, lastPane: 'tiles' },
+  }
+  check('diff: the remembered pane is skipped', stagedDiff(base, bothPaneAndKnob), ['appearance.radius'])
+}
+
+/* Theme vars */
+
+{
+  const { themeVars, themeFlags, resolveMode, resolvePalette, resolveAccent } = await load(
+    'core/theme/themeVars.ts',
+  )
+  const { Settings } = await load('core/settings/schema.ts')
+  const base = Settings.parse({})
+
+  check('theme: auto follows dark', resolveMode('auto', true), 'dark')
+  check('theme: auto follows light', resolveMode('auto', false), 'light')
+  check('theme: explicit wins over preference', resolveMode('light', true), 'light')
+
+  const palette = resolvePalette(base.appearance, 'dark')
+  const accent = resolveAccent({ ...base.appearance, accentSource: 'preset' }, palette, null)
+  check('theme: preset accent comes from the palette', accent, palette.accent)
+  check(
+    'theme: custom accent is taken as given',
+    resolveAccent({ ...base.appearance, accentSource: 'custom', accent: '#ff0000' }, palette, null),
+    '#ff0000',
+  )
+
+  // The preview paints these onto a wrapper, so the map has to be complete.
+  const vars = themeVars(base.appearance, palette, accent)
+  truthy('theme: vars carry the background', Boolean(vars['--bg']))
+  truthy('theme: vars carry the radius', vars['--radius'].endsWith('px'))
+  check('theme: radius follows the setting', themeVars({ ...base.appearance, radius: 3 }, palette, accent)['--radius'], '3px')
+  check('theme: motion is off when animations are', themeVars({ ...base.appearance, animations: false }, palette, accent)['--motion'], '0')
+  check('theme: flags carry the mode', themeFlags(base.appearance, 'light').mode, 'light')
+}
+
+
 /* ------------------------------------------------------------------ output */
 
 console.log(`${passed} checks passed, ${failures.length} failed`)

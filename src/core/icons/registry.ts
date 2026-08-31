@@ -1,20 +1,13 @@
 /**
- * The one place Font Awesome is imported.
- *
- * Every icon in the app is referenced by a key from this map. That keeps the
- * bundle tree-shaken to icons actually in use, gives settings a stable string to
- * persist, and makes the "Font Awesome only, no emoji or ad-hoc glyphs" rule
- * enforceable by lint (see `eslint.config.js`).
- *
- * Keep this pruned: unused entries are dead weight on a page whose whole job is
- * to paint instantly. `npm run icons:check` reports anything unreferenced.
+ * The one place Font Awesome is imported; every icon is referenced by a key here,
+ * which keeps the bundle tree-shaken and makes the icons-only rule lintable.
+ * Keep it pruned — `npm run icons:check` reports unreferenced entries.
  */
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
   faArrowRightFromBracket,
   faArrowRotateLeft,
   faBoxArchive,
-  faArrowUpRightFromSquare,
   faBookmark,
   faCalculator,
   faCalendarDays,
@@ -60,6 +53,8 @@ import {
   faLock,
   faLockOpen,
   faMagnifyingGlass,
+  faMagnifyingGlassMinus,
+  faMagnifyingGlassPlus,
   faMoon,
   faNoteSticky,
   faPalette,
@@ -98,7 +93,6 @@ export const icons = {
   drag: faGrip,
   reset: faArrowRotateLeft,
   upload: faUpload,
-  external: faArrowUpRightFromSquare,
   lock: faLock,
   unlock: faLockOpen,
   spinner: faSpinner,
@@ -126,6 +120,8 @@ export const icons = {
   export: faFileExport,
   import: faFileImport,
   search: faMagnifyingGlass,
+  zoomIn: faMagnifyingGlassPlus,
+  zoomOut: faMagnifyingGlassMinus,
   stocks: faChartLine,
   clock: faClock,
   timer: faHourglassHalf,

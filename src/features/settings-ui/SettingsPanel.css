@@ -1,24 +1,90 @@
-.settings {
-  display: grid;
-  grid-template-columns: 236px 1fr;
+/*
+ * Nav, preview, fields. Tracks are percentages, not fixed widths, so each column
+ * keeps the same share of the page at every window size. The ratio is declared
+ * once on `.settings` below.
+ */
+/* Wrapper, not the grid: a container query cannot style its own container. */
+.settings-shell {
+  container-type: inline-size;
+  container-name: settings;
   height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Outside the grid: it spans the page, so the close button keeps one position. */
+.settings__header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  padding: var(--space);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.settings__apptitle {
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+}
+
+/* The only statement of the page split. Must sum to 100. */
+.settings {
+  --nav: 20%;
+  --preview: 40%;
+  --fields: 40%;
+
+  /* minmax(0, …) not the bare percentage: a track's auto minimum is its content. */
+  --cols-3: minmax(0, var(--nav)) minmax(0, var(--preview)) minmax(0, var(--fields));
+  /* No preview: the fields inherit its share. */
+  --cols-2: minmax(0, var(--nav)) minmax(0, calc(var(--preview) + var(--fields)));
+
+  /* Every state below sets only this. */
+  --cols: var(--cols-3);
+
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: var(--cols);
   min-height: 0;
   background: var(--bg);
   color: var(--fg);
 }
 
+/* Preview off, or bowed out for want of room (probe left behind). */
+.settings[data-preview='false'],
+.settings:has(.preview__probe) {
+  --cols: var(--cols-2);
+}
+
+/*
+ * Below this the preview's share is unreadable, so it goes. SettingsPreview.tsx
+ * watches the same threshold. `:where()` keeps specificity at zero so the
+ * narrower query below, which comes later, wins the tie.
+ */
+@container settings (width < 64rem) {
+  :where(.settings) {
+    --cols: var(--cols-2);
+  }
+}
+
 .settings__nav {
   display: flex;
+  /* The save bar pins to the bottom of this column, so it is the scroller. */
+  position: relative;
   flex-direction: column;
   gap: var(--space-sm);
-  padding: var(--space-lg) var(--space);
+  padding: var(--space);
   border-right: 1px solid var(--line);
   background: rgb(var(--surface-tint) / 3%);
   overflow-y: auto;
+  /* No width of its own: the track sets it. A min-width here overflows narrow windows. */
+  min-width: 0;
 }
 
-/* The icon sits inside the field rather than beside it, so the search bar
-   reads as one control and lines up with the nav items below it. */
 .settings__search {
   position: relative;
   display: flex;
@@ -47,7 +113,15 @@
   font-size: var(--text-sm);
   font-weight: 550;
   color: var(--fg-muted);
+  text-align: left;
   transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.settings__navitem > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .settings__navitem:hover {
@@ -62,6 +136,7 @@
 
 .settings__navitem > svg {
   width: 15px;
+  flex: 0 0 auto;
   color: var(--accent);
 }
 
@@ -74,25 +149,20 @@
   gap: var(--space-xs);
 }
 
-.settings__navfooter > .ctl-btn {
+.settings__navfooter > .ctl-btn:not(.ctl-btn--icon) {
   justify-content: flex-start;
 }
 
 .settings__body {
   position: relative;
-  padding: var(--space-xl) var(--space-xl) 96px;
-  max-width: 720px;
+  /* Same step as the header and nav; the extra bottom clears the last row. */
+  padding: var(--space);
+  padding-bottom: var(--space-xl);
   width: 100%;
 }
 
-.settings__close {
-  position: absolute;
-  top: var(--space);
-  right: var(--space);
-}
-
 .settings__section + .settings__section {
-  margin-top: var(--space-xl);
+  margin-top: var(--space-lg);
 }
 
 .settings__sectiontitle {
@@ -102,7 +172,7 @@
 }
 
 .settings__group + .settings__group {
-  margin-top: var(--space-xl);
+  margin-top: var(--space-lg);
 }
 
 .settings__grouptitle {
@@ -130,17 +200,15 @@
   font-size: var(--text-sm);
 }
 
-@media (width < 720px) {
+/* Too narrow for two columns: the nav becomes a strip above the fields. */
+@container settings (width < 45rem) {
   .settings {
-    grid-template-columns: 1fr;
+    --cols: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
   }
 
   .settings__nav {
     border-right: 0;
     border-bottom: 1px solid var(--line);
-  }
-
-  .settings__body {
-    padding: var(--space-lg) var(--space-lg) 80px;
   }
 }

@@ -7,13 +7,8 @@ const PANES: { id: Pane; label: string; icon: IconName }[] = [
 ]
 
 /**
- * The widgets/tiles switch.
- *
- * Tabs only: it picks which band is on screen. A single scrolling page already
- * shows both, so there is nothing there for it to do.
- *
- * Arrow keys move between the two once it has focus; the page owns the
- * modifier shortcuts, since those have to work wherever the pointer is.
+ * The widgets/tiles switch. Tabs mode only — a scrolling page already shows both.
+ * Arrow keys move between the two once focused; the page owns the modifier shortcuts.
  */
 export function PaneSwitch({
   active,
@@ -21,16 +16,16 @@ export function PaneSwitch({
   onSelect,
 }: {
   active: Pane
-  /** Which panes exist. A band that is switched off does not get a tab. */
   panes: readonly Pane[]
-  onSelect: (pane: Pane) => void
+  /** Omitted in the settings preview, whose subtree is `inert`. */
+  onSelect?: (pane: Pane) => void
 }) {
   const shown = PANES.filter((pane) => panes.includes(pane.id))
   if (shown.length < 2) return null
 
   const step = (delta: number) => {
     const index = shown.findIndex((pane) => pane.id === active)
-    onSelect(shown[(index + delta + shown.length) % shown.length].id)
+    onSelect?.(shown[(index + delta + shown.length) % shown.length].id)
   }
 
   return (
@@ -49,7 +44,7 @@ export function PaneSwitch({
           type="button"
           className="paneswitch__item"
           aria-current={pane.id === active}
-          onClick={() => onSelect(pane.id)}
+          onClick={() => onSelect?.(pane.id)}
         >
           <Icon name={pane.icon} />
           <span>{pane.label}</span>

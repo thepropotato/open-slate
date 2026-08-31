@@ -8,8 +8,9 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { setPath } from '@/core/util/path'
+import { getPath, setPath } from '@/core/util/path'
 import type { Settings } from './schema'
+import { isStagedPath, stagedDiff } from './staged'
 import {
   flushSettings,
   loadSettings,
@@ -19,7 +20,6 @@ import {
 } from './store'
 
 export interface SettingsActions {
-  /** Apply an immutable transform to the whole settings object. */
   update: (recipe: (current: Settings) => Settings) => void
   /** Set a single dot-path, e.g. `set('tiles.radius', 0)`. */
   set: (path: string, value: unknown) => void
@@ -27,8 +27,21 @@ export interface SettingsActions {
   replace: (next: Settings) => void
 }
 
+/** Editing a staged draft: what the settings UI and its preview work against. */
+export interface DraftActions {
+  /** Staged paths differing from what is saved. Empty means nothing to save. */
+  changed: string[]
+  dirty: boolean
+  save: () => void
+  discard: () => void
+  /** Restores one path to its saved value, leaving the rest of the draft alone. */
+  revert: (path: string) => void
+}
+
 const SettingsContext = createContext<Settings | null>(null)
 const ActionsContext = createContext<SettingsActions | null>(null)
+const DraftContext = createContext<Settings | null>(null)
+const DraftActionsContext = createContext<DraftActions | null>(null)
 
 export function SettingsProvider({
   children,
@@ -38,7 +51,9 @@ export function SettingsProvider({
   fallback?: ReactNode
 }) {
   const [settings, setSettings] = useState<Settings | null>(null)
-  /** Serialised copy of our own last write, so we can ignore the echo. */
+  // Unsaved edits to staged paths; `null` when there are none.
+  const [draft, setDraft] = useState<Settings | null>(null)
+  // Our own last write, so we can ignore the echo.
   const lastWritten = useRef<string>('')
 
   useEffect(() => {
@@ -59,7 +74,13 @@ export function SettingsProvider({
       const serialised = JSON.stringify(incoming)
       if (serialised === lastWritten.current) return
       lastWritten.current = serialised
-      setSettings(incoming)
+      setSettings((previous) => {
+        // Rebase the draft so an incoming change does not eat edits in progress.
+        setDraft((current) =>
+          current && previous ? rebase(previous, current, incoming) : current,
+        )
+        return incoming
+      })
     })
     return unsubscribe
   }, [])
@@ -80,10 +101,13 @@ export function SettingsProvider({
     lastWritten.current = JSON.stringify(next)
     setSettings(next)
     saveSettings(next)
+    // A wholesale replacement is the new truth; a draft against the old one is meaningless.
+    setDraft(null)
   }, [])
 
   const actions = useMemo<SettingsActions>(
     () => ({
+      // A whole-object recipe says nothing about which paths it touches, so it always commits.
       update: (recipe) =>
         setSettings((current) => {
           if (!current) return current
@@ -92,36 +116,111 @@ export function SettingsProvider({
           saveSettings(next)
           return next
         }),
-      set: (path, value) =>
+      set: (path, value) => {
+        if (isStagedPath(path)) {
+          // The updater form is the only way to read saved settings without making
+          // `actions` depend on them; it must stay referentially stable.
+          setSettings((saved) => {
+            setDraft((current) => {
+              const base = current ?? saved
+              if (!base) return current
+              return setPath(base, path, value)
+            })
+            return saved
+          })
+          return
+        }
         setSettings((current) => {
           if (!current) return current
           const next = setPath(current, path, value)
           lastWritten.current = JSON.stringify(next)
           saveSettings(next)
           return next
-        }),
+        })
+      },
       reset: async () => {
         const fresh = await resetSettings()
         lastWritten.current = JSON.stringify(fresh)
         setSettings(fresh)
+        setDraft(null)
       },
       replace: commit,
     }),
     [commit],
   )
 
-  if (!settings) return <>{fallback}</>
+  const effective = draft ?? settings
+
+  const changed = useMemo(
+    () => (settings && draft ? stagedDiff(settings, draft) : []),
+    [settings, draft],
+  )
+
+  const draftActions = useMemo<DraftActions>(
+    () => ({
+      changed,
+      dirty: changed.length > 0,
+      save: () => {
+        if (!draft) return
+        lastWritten.current = JSON.stringify(draft)
+        setSettings(draft)
+        saveSettings(draft)
+        // Flush rather than wait out the debounce, so other tabs see it now.
+        void flushSettings()
+        setDraft(null)
+      },
+      discard: () => setDraft(null),
+      revert: (path) =>
+        setDraft((current) => {
+          if (!current || !settings) return current
+          const next = setPath(current, path, getPath(settings, path))
+          return stagedDiff(settings, next).length === 0 ? null : next
+        }),
+    }),
+    [changed, draft, settings],
+  )
+
+  if (!settings || !effective) return <>{fallback}</>
 
   return (
     <SettingsContext.Provider value={settings}>
-      <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+      <ActionsContext.Provider value={actions}>
+        <DraftContext.Provider value={effective}>
+          <DraftActionsContext.Provider value={draftActions}>
+            {children}
+          </DraftActionsContext.Provider>
+        </DraftContext.Provider>
+      </ActionsContext.Provider>
     </SettingsContext.Provider>
   )
 }
 
+/** Carries draft edits across a change written by another tab. */
+function rebase(previousSaved: Settings, draft: Settings, incoming: Settings): Settings | null {
+  const edited = stagedDiff(previousSaved, draft)
+  if (edited.length === 0) return null
+  let next = incoming
+  for (const path of edited) next = setPath(next, path, getPath(draft, path))
+  return next
+}
+
+/** The saved settings the app runs on, never a draft. The settings UI uses `useDraftSettings`. */
 export function useSettings(): Settings {
   const value = useContext(SettingsContext)
   if (!value) throw new Error('useSettings must be used inside <SettingsProvider>')
+  return value
+}
+
+/** Saved values with any unsaved edits applied — what the settings UI edits. */
+export function useDraftSettings(): Settings {
+  const value = useContext(DraftContext)
+  if (!value) throw new Error('useDraftSettings must be used inside <SettingsProvider>')
+  return value
+}
+
+export function useDraftActions(): DraftActions {
+  const value = useContext(DraftActionsContext)
+  if (!value) throw new Error('useDraftActions must be used inside <SettingsProvider>')
   return value
 }
 
@@ -131,16 +230,38 @@ export function useSettingsActions(): SettingsActions {
   return value
 }
 
-/** Reads and writes one dot-path — the primitive the settings controls use. */
+/**
+ * Renders `children` as though `settings` were saved, so the preview runs the real
+ * components rather than a second implementation. Writes are dropped.
+ */
+export function SettingsOverride({
+  settings,
+  children,
+}: {
+  settings: Settings
+  children: ReactNode
+}) {
+  const actions = useMemo<SettingsActions>(
+    () => ({
+      update: () => {},
+      set: () => {},
+      reset: async () => {},
+      replace: () => {},
+    }),
+    [],
+  )
+
+  return (
+    <SettingsContext.Provider value={settings}>
+      <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
+    </SettingsContext.Provider>
+  )
+}
+
+/** Reads and writes one dot-path; the primitive the settings controls use. */
 export function useSetting<T>(path: string): [T, (value: T) => void] {
-  const settings = useSettings()
+  const settings = useDraftSettings()
   const { set } = useSettingsActions()
-  const read = path
-    .split('.')
-    .reduce<unknown>(
-      (acc, key) =>
-        acc && typeof acc === 'object' ? (acc as Record<string, unknown>)[key] : undefined,
-      settings,
-    )
+  const read = getPath<T>(settings, path)
   return [read as T, useCallback((value: T) => set(path, value), [set, path])]
 }

@@ -1,28 +1,30 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Icon } from '@/core/icons'
 import { Button, TextInput } from '@/core/ui'
-import { useSettings } from '@/core/settings/SettingsProvider'
+import { useDraftSettings } from '@/core/settings/SettingsProvider'
 import { FieldRenderer } from './FieldRenderer'
+import { SaveBar } from './SaveBar'
+import { SettingsPreview } from './SettingsPreview'
 import { sections as allSections } from './sections'
 import type { Field, Section } from './types'
 import { validateSpecPaths } from './validate'
 import './SettingsPanel.css'
 
-/**
- * Renders the declared settings spec. Used both as the new tab's slide-over
- * panel and as the standalone options page, so it takes no layout decisions of
- * its own beyond its two-column shell.
- */
+// Renders the declared settings spec. The only settings surface: the new tab
+// navigates here rather than sliding a narrower second copy over the page.
 export function SettingsPanel({
   sections = allSections,
   onClose,
   footer,
+  preview = true,
 }: {
   sections?: Section[]
   onClose?: () => void
   footer?: React.ReactNode
+  /** Shows the live preview column. Dropped on a narrow window by the stylesheet. */
+  preview?: boolean
 }) {
-  const settings = useSettings()
+  const settings = useDraftSettings()
   const [activeId, setActiveId] = useState(sections[0]?.id ?? '')
   const [query, setQuery] = useState('')
 
@@ -61,7 +63,19 @@ export function SettingsPanel({
   }, [sections, activeId, searching, needle, settings])
 
   return (
-    <div className="settings">
+    // The wrapper reports its width to the container queries below; a container
+    // query never styles its own container.
+    <div className="settings-shell">
+      {/* Above the columns, not inside one: the close button must not move as
+          the preview appears or the window narrows. */}
+      <header className="settings__header">
+        <h1 className="settings__apptitle">Settings</h1>
+        {onClose ? (
+          <Button icon="close" title="Back to new tab" variant="ghost" onClick={onClose} />
+        ) : null}
+      </header>
+
+    <div className="settings" data-preview={preview}>
       <aside className="settings__nav">
         <div className="settings__search">
           <Icon name="search" />
@@ -85,15 +99,17 @@ export function SettingsPanel({
           ))}
         </nav>
         {footer ? <div className="settings__navfooter">{footer}</div> : null}
+
+        {/* Below the nav, so a change made anywhere can be saved without
+            hunting for its section. */}
+        <SaveBar />
       </aside>
 
-      <div className="settings__body scroll-y">
-        {onClose ? (
-          <div className="settings__close">
-            <Button icon="close" title="Close settings" variant="ghost" onClick={onClose} />
-          </div>
-        ) : null}
+      {/* Between the nav and the controls, so a control borders the thing it
+          changes rather than sitting a whole column away from it. */}
+      {preview ? <SettingsPreview /> : null}
 
+      <div className="settings__body scroll-y">
         {visible.length === 0 ? (
           <p className="settings__empty">No settings match “{query}”.</p>
         ) : null}
@@ -115,6 +131,7 @@ export function SettingsPanel({
           </section>
         ))}
       </div>
+    </div>
     </div>
   )
 }
