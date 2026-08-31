@@ -1,15 +1,8 @@
 import { localStore, permissions } from '@/core/platform/browser'
 
-/**
- * CoinGecko's public price endpoint.
- *
- * Chosen for the same reason as Open-Meteo: no account and no API key, so there
- * is no credential to embed in a published extension. Results are cached, since
- * a new tab can open many times a minute and prices do not.
- *
- * Equities are deliberately absent: every free stock quote API requires a key,
- * and a key shipped inside an extension is public the moment it is published.
- */
+// CoinGecko's public price endpoint: no API key, so no credential to embed in a
+// published extension. Results are cached. Equities are absent because every
+// free quote API requires a key.
 
 export const CRYPTO_ORIGINS = ['https://api.coingecko.com/*']
 
@@ -17,7 +10,7 @@ const PRICE_URL = 'https://api.coingecko.com/api/v3/simple/price'
 const CACHE_KEY = 'cryptoCache'
 const CACHE_TTL_MS = 3 * 60 * 1000
 
-/** A small, stable set — enough to be useful without a coin search UI. */
+// A small, stable set, so no coin search UI is needed.
 export const COINS = [
   { id: 'bitcoin', symbol: 'BTC', name: 'Bitcoin' },
   { id: 'ethereum', symbol: 'ETH', name: 'Ethereum' },
@@ -85,8 +78,7 @@ export async function fetchQuotes(ids: string[], currency: string): Promise<Quot
     await localStore.set(CACHE_KEY, { ...cache, [cacheKey]: { at: Date.now(), quotes } })
     return quotes
   } catch {
-    // Offline, or the host permission was revoked. A stale price beats nothing,
-    // and the widget labels how old it is.
+    // Offline, or the host permission was revoked; the widget labels staleness.
     return hit?.quotes ?? null
   }
 }

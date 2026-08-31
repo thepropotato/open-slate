@@ -73,8 +73,7 @@ export function TileEditor({
   // A folder has no address, so its name is what has to be filled in.
   const valid = isFolder ? draft.title.trim().length > 0 : normalisedUrl.length > 0
 
-  // Tells the user whether "Auto" will actually find a logo. Keyed on the
-  // normalised URL, since "netflix.com" alone has no parsable host.
+  // Keyed on the normalised URL: "netflix.com" alone has no parsable host.
   const autoBrand = useAsyncValue(normalisedUrl ? `brand:${normalisedUrl}` : null, () =>
     resolveBrand(normalisedUrl),
   )

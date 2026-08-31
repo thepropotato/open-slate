@@ -11,11 +11,9 @@ import './MediaLibrary.css'
 const LARGE_FILE_BYTES = 60 * 1024 * 1024
 
 /**
- * Local wallpaper library.
- *
- * Media lives in IndexedDB and never leaves the browser. The library doubles as
- * the picker: which selection action a thumbnail offers depends on whether the
- * current background is a still, a video or a slideshow.
+ * Local wallpaper library, doubling as the picker. Media lives in IndexedDB and
+ * never leaves the browser; a thumbnail's actions depend on the current
+ * background type.
  */
 export function MediaLibrary() {
   const { background } = useSettings()
@@ -158,8 +156,7 @@ export function MediaLibrary() {
             <MediaCard
               key={item.id}
               item={item}
-              /* Being the chosen still or video is not the same as being one of
-                 many slides — only the former is what the page is showing now. */
+              // The chosen still or video, as opposed to one of many slides.
               current={
                 (background.type === 'image' && background.image.blobId === item.id) ||
                 (background.type === 'video' && background.video.blobId === item.id)

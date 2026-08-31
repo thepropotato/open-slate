@@ -3,13 +3,8 @@ import { registerWidget } from '@/core/widgets/registry'
 import type { WidgetProps } from '@/core/widgets/types'
 import './notes.css'
 
-/**
- * A scratchpad.
- *
- * The text lives in the widget's own config, which means it is saved by the
- * ordinary debounced settings write and travels with an exported config. No
- * separate save button, and nothing to lose by closing the tab.
- */
+// Scratchpad. Text lives in the widget's config, so the ordinary debounced
+// settings write saves it and it travels with an exported config.
 
 const NotesConfig = z.object({
   text: z.string().default(''),

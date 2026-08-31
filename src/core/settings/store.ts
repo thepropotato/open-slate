@@ -2,10 +2,7 @@ import { localStore } from '@/core/platform/browser'
 import { SETTINGS_KEY, Settings, type Settings as SettingsType } from './schema'
 import { migrate } from './migrations'
 
-/**
- * Persistence for the settings blob. Writes are debounced so that dragging a
- * slider does not hammer `chrome.storage`, and the last write always wins.
- */
+/** Persistence for the settings blob. Writes are debounced; the last write wins. */
 
 const WRITE_DEBOUNCE_MS = 180
 
@@ -50,7 +47,6 @@ export function exportSettings(settings: SettingsType): string {
   return JSON.stringify(settings, null, 2)
 }
 
-/** Throws with a readable message when the pasted JSON is not usable. */
 export function importSettings(json: string): SettingsType {
   let parsed: unknown
   try {

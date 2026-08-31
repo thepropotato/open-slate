@@ -8,12 +8,7 @@ export interface TimeParts {
   meridiem: 'am' | 'pm'
 }
 
-/**
- * Reads wall-clock fields in a given IANA timezone.
- *
- * Going through `formatToParts` rather than date arithmetic is what makes this
- * correct across daylight-saving boundaries and half-hour offsets.
- */
+/** `formatToParts`, not date arithmetic, so DST boundaries and half-hour offsets are correct. */
 export function timeParts(date: Date, timeZone?: string): TimeParts {
   if (!timeZone) {
     const hours24 = date.getHours()
@@ -46,11 +41,9 @@ export function timeParts(date: Date, timeZone?: string): TimeParts {
   }
 }
 
-/** Resolves the effective locale: an explicit override, else the browser's. */
 export const resolveLocale = (override?: string): string | undefined =>
   override?.trim() ? override.trim() : undefined
 
-/** Timezones offered in pickers, kept to a readable shortlist plus the local zone. */
 export function commonTimezones(): string[] {
   const local = Intl.DateTimeFormat().resolvedOptions().timeZone
   const zones = [

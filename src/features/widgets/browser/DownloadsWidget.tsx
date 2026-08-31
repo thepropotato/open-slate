@@ -10,12 +10,8 @@ import {
   PermissionGate,
 } from '@/features/widgets/shared/ListShell'
 
-/**
- * Recent downloads.
- *
- * Clicking a finished file opens it; clicking one still in progress shows it in
- * the download shelf instead, which is the only useful action at that point.
- */
+// Recent downloads. Clicking a finished file opens it; an in-progress one is
+// revealed in the shelf instead.
 
 const DownloadsConfig = z.object({
   limit: z.number().min(3).max(20).default(6),

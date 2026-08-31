@@ -3,13 +3,8 @@ import type { IconName } from '@/core/icons'
 import type { Tile } from '@/core/settings/schema'
 
 /**
- * Local suggestion sources: open tabs, bookmarks, history and the user's own
- * tiles.
- *
- * Deliberately no remote query-suggestion service. Sending every keystroke to a
- * third party is a poor trade on a page that opens dozens of times a day, and
- * for a browser dashboard "which of my tabs is that in" is the more useful
- * question anyway.
+ * Local suggestion sources: open tabs, bookmarks, history and the user's tiles.
+ * Deliberately no remote suggestion service — no keystrokes leave the page.
  */
 
 export type SuggestionKind = 'tab' | 'bookmark' | 'history' | 'tile' | 'search' | 'action'
@@ -20,7 +15,6 @@ export interface Suggestion {
   title: string
   subtitle?: string
   url?: string
-  /** Favicon source, when the entry represents a page. */
   image?: string
   icon?: IconName
   /** Higher sorts first. */
@@ -61,7 +55,7 @@ export async function queryLocal(query: string, options: ProviderOptions = {}): 
     .slice(0, limit)
 }
 
-/** Keeps the highest-scoring entry per URL, so a bookmarked open tab appears once. */
+// Highest-scoring entry per URL, so a bookmarked open tab appears once.
 function dedupe(items: Suggestion[]): Suggestion[] {
   const best = new Map<string, Suggestion>()
   for (const item of items) {
@@ -81,10 +75,7 @@ const normalise = (url: string): string => {
   }
 }
 
-/**
- * Scores a match: a title that starts with the query beats one that merely
- * contains it, and a title match beats a URL-only match.
- */
+// A title prefix beats a title substring, which beats a URL-only match.
 function relevance(needle: string, title: string, url: string): number {
   const lowerTitle = title.toLowerCase()
   const lowerUrl = url.toLowerCase()
@@ -95,8 +86,6 @@ function relevance(needle: string, title: string, url: string): number {
   if (lowerUrl.includes(needle)) return 35
   return 0
 }
-
-/* ------------------------------------------------------------------- tabs */
 
 async function openTabs(needle: string): Promise<Suggestion[]> {
   if (!isExtension() || !(await permissions.has(['tabs']))) return []
@@ -131,8 +120,6 @@ async function openTabs(needle: string): Promise<Suggestion[]> {
   }
 }
 
-/* -------------------------------------------------------------- bookmarks */
-
 async function bookmarks(needle: string): Promise<Suggestion[]> {
   if (!isExtension() || !(await permissions.has(['bookmarks']))) return []
   try {
@@ -155,8 +142,6 @@ async function bookmarks(needle: string): Promise<Suggestion[]> {
     return []
   }
 }
-
-/* ---------------------------------------------------------------- history */
 
 async function history(needle: string): Promise<Suggestion[]> {
   if (!isExtension() || !(await permissions.has(['history']))) return []
@@ -182,8 +167,6 @@ async function history(needle: string): Promise<Suggestion[]> {
   }
 }
 
-/* ------------------------------------------------------------------ tiles */
-
 function matchTiles(needle: string, tiles: Tile[]): Suggestion[] {
   return tiles
     .map((tile) => ({
@@ -203,8 +186,6 @@ function matchTiles(needle: string, tiles: Tile[]): Suggestion[] {
       run: () => navigate(tile.url),
     }))
 }
-
-/* ----------------------------------------------------------------- shared */
 
 export const hostLabel = (url: string): string => {
   try {

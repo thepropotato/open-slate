@@ -2,29 +2,14 @@ import { z } from 'zod'
 import { isExtension, localStore } from '@/core/platform/browser'
 import type { ProviderAdapter, ProviderUsage } from './types'
 
-/**
- * Shared data layer for the per-provider LLM usage widgets.
- *
- * A provider is read on demand from its own signed-in web session: the widget
- * asks the service worker, which injects that provider's same-origin fetch into
- * a tab on its origin (see `service-worker.ts`). We never read a cookie or
- * token — only the resulting numbers come back, and they are validated here
- * before the UI trusts them.
- *
- * Everything here is keyed by a provider id, so a new provider needs an adapter
- * and a widget and nothing else.
- */
+// Shared data layer for the LLM usage widgets. Readings come from the service
+// worker, which injects a provider's same-origin fetch into a tab on its origin
+// (see `service-worker.ts`), and are validated here before the UI trusts them.
 
 export type { ProviderUsage, ProviderWindow, ProviderSpend, ProviderAdapter } from './types'
 
-/* ────────────────────────────────────────────────────── validation ─────── */
-
-/**
- * The shape a `fetchInPage` must produce. Validated here so that a drifted
- * endpoint can't push a malformed reading into the UI: if a provider's
- * extraction returns something off-shape, we treat it as "shape changed"
- * rather than rendering a wrong or blank number.
- */
+// The shape a `fetchInPage` must produce, so a drifted endpoint reads as "shape
+// changed" rather than a wrong number.
 const WindowSchema = z.object({
   label: z.string(),
   percent: z.number().finite(),
@@ -43,11 +28,8 @@ export const UsageSchema = z.object({
   spend: SpendSchema.nullable(),
 })
 
-/** True if the reading actually carries something to show. */
 export const hasNumbers = (u: ProviderUsage): boolean =>
   u.spend !== null || u.windows.length > 0
-
-/* ─────────────────────────────────────────────────────────── cache ─────── */
 
 export interface CachedUsage {
   at: number
@@ -61,8 +43,6 @@ export const readCache = (providerId: string): Promise<CachedUsage | undefined> 
 
 const writeCache = (providerId: string, entry: CachedUsage): Promise<void> =>
   localStore.set(cacheKey(providerId), entry)
-
-/* ─────────────────────────────────────────────────── permissions ───────── */
 
 /** `tabs` + `scripting` + the provider's host, requested in one gesture. */
 const request = (provider: ProviderAdapter): chrome.permissions.Permissions => ({
@@ -79,8 +59,6 @@ export const requestAccess = (provider: ProviderAdapter): Promise<boolean> => {
   if (!isExtension()) return Promise.resolve(true)
   return chrome.permissions.request(request(provider))
 }
-
-/* ────────────────────────────────────────────────────────── refresh ────── */
 
 /** Dev stub so a widget renders under `vite dev` (no worker, no session). */
 function devStub(providerId: string): ProviderUsage {
@@ -110,10 +88,7 @@ function devStub(providerId: string): ProviderUsage {
   }
 }
 
-/**
- * Triggers a fresh read for one provider. Delegates to the service worker,
- * which owns the tab and scripting APIs, then validates the reply.
- */
+// Delegates to the service worker, which owns the tab and scripting APIs.
 export async function refreshUsage(providerId: string): Promise<CachedUsage> {
   if (!isExtension()) {
     const entry = { at: Date.now(), usage: devStub(providerId) }

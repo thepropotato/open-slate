@@ -9,11 +9,8 @@ import { buildActions, matchAction } from './actions'
 import './CommandPalette.css'
 
 /**
- * One box for everything: open tabs, tiles, bookmarks, history, settings
- * commands, and a web search as the always-available fallback.
- *
- * Ranking is shared with the search bar's provider scoring, so the same query
- * puts the same thing first in both places.
+ * One box for tabs, tiles, bookmarks, history, settings commands and a web
+ * search fallback. Ranking is shared with the search bar's provider scoring.
  */
 export function CommandPalette({ onClose }: { onClose: () => void }) {
   const settings = useSettings()
@@ -55,8 +52,7 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
     return items.slice(0, 40)
   }, [local, commands, needle, query, settings])
 
-  // Clamped rather than reset in an effect, so a shrinking list never points
-  // past its end and no extra render is needed to correct it.
+  // Clamped, not reset in an effect: no extra render to correct a shrunk list.
   const active = results.length === 0 ? 0 : Math.min(highlight, results.length - 1)
 
   // Keep the highlighted row on screen while arrowing through a long list.

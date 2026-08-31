@@ -79,8 +79,6 @@
   max-width: 14ch;
 }
 
-/* --- forecast strip --- */
-
 .weather__strip {
   display: flex;
   gap: var(--space-xs);
@@ -122,8 +120,6 @@
   font-weight: 400;
   padding-left: 3px;
 }
-
-/* --- setup --- */
 
 .weather__setuprow {
   display: flex;
@@ -169,7 +165,6 @@
   margin-left: auto;
 }
 
-/* Hide the secondary column when the widget is narrow. */
 @container (width < 260px) {
   .weather__meta {
     display: none;

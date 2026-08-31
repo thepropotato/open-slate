@@ -1,8 +1,6 @@
 /**
- * Font choices are restricted to stacks that resolve locally. Extension pages
- * cannot pull a webfont without loosening the CSP, and a new tab must paint
- * instantly — so no network fonts. `custom` lets the user name any font they
- * have installed.
+ * Locally-resolving stacks only: a webfont would need a looser CSP, and a new tab
+ * has to paint instantly. A raw family name names any installed font.
  */
 
 export interface FontOption {

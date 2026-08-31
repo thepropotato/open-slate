@@ -1,15 +1,11 @@
 import type { IconName } from '@/core/icons'
 
-/**
- * WMO weather interpretation codes, as returned by Open-Meteo.
- *
- * Grouped rather than enumerated one-to-one: the distinction between "slight"
- * and "moderate" drizzle is not worth a separate icon on a new tab page.
- */
+// WMO weather interpretation codes from Open-Meteo, grouped so near-identical
+// codes share one icon.
 export interface WeatherLook {
   label: string
   icon: IconName
-  /** Alternative icon for night-time, where the day one implies sunshine. */
+  /** Used at night, where the day icon implies sunshine. */
   nightIcon?: IconName
 }
 

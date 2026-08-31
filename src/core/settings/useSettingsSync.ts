@@ -2,16 +2,12 @@ import { useCallback, useEffect, useRef } from 'react'
 import { useSettings, useSettingsActions } from './SettingsProvider'
 import { noteLocalChange, pullSettings, pushSettings, readSyncState, subscribeSync } from './sync'
 
-/** Wait this long after the last change before pushing, to stay well inside quota. */
+// Wait after the last change before pushing, to stay well inside quota.
 const PUSH_DEBOUNCE_MS = 8000
 
 /**
- * Drives automatic sync.
- *
- * Pulls once on load and whenever another device pushes; pushes a debounced copy
- * after local changes. Adoption is refused if this device changed something more
- * recently than the remote copy was written, so an edit made offline is never
- * overwritten by a stale push from elsewhere.
+ * Pulls on load and on remote pushes; pushes debounced after local changes. A
+ * remote copy older than this device's last change is refused, so offline edits survive.
  */
 export function useSettingsSync(): void {
   const settings = useSettings()
@@ -19,17 +15,13 @@ export function useSettingsSync(): void {
 
   const enabled = settings.sync.enabled && settings.sync.auto
 
-  /**
-   * The subscription must not be torn down and rebuilt on every keystroke, so
-   * the latest settings reach the callbacks through a ref instead of the
-   * dependency list. Written in an effect, never during render.
-   */
+  // A ref, not a dependency, so the subscription is not rebuilt on every keystroke.
   const latest = useRef(settings)
   useEffect(() => {
     latest.current = settings
   }, [settings])
 
-  /** Serialised copy of what we last saw, so a pull is not pushed straight back. */
+  // What we last saw, so a pull is not pushed straight back.
   const lastSeen = useRef('')
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 

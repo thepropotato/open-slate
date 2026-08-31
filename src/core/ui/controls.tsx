@@ -2,8 +2,6 @@ import { useId, type ChangeEvent, type ReactNode } from 'react'
 import { Icon, type IconName } from '@/core/icons'
 import './controls.css'
 
-/* ------------------------------------------------------------------- layout */
-
 export function Row({
   title,
   help,
@@ -26,8 +24,6 @@ export function Row({
   )
 }
 
-/* ------------------------------------------------------------------ toggle */
-
 export function Toggle({
   value,
   onChange,
@@ -48,8 +44,6 @@ export function Toggle({
     />
   )
 }
-
-/* ------------------------------------------------------------------ slider */
 
 export function Slider({
   value,
@@ -87,8 +81,6 @@ export function Slider({
 
 const round = (n: number) => (Number.isInteger(n) ? n : Math.round(n * 100) / 100)
 
-/* --------------------------------------------------------------- segmented */
-
 export interface Choice<T extends string = string> {
   value: T
   label?: string
@@ -124,8 +116,6 @@ export function Segmented<T extends string>({
   )
 }
 
-/* ------------------------------------------------------------------ select */
-
 export function Select<T extends string>({
   value,
   onChange,
@@ -149,8 +139,6 @@ export function Select<T extends string>({
     </select>
   )
 }
-
-/* ------------------------------------------------------------------ inputs */
 
 export function TextInput({
   value,
@@ -228,8 +216,6 @@ export function NumberInput({
   )
 }
 
-/* ------------------------------------------------------------------ colour */
-
 export function ColorInput({
   value,
   onChange,
@@ -271,8 +257,6 @@ function normalizeHex(value: string): string {
   if (/^#[0-9a-fA-F]{8}$/.test(v)) return v.slice(0, 7)
   return '#000000'
 }
-
-/* ----------------------------------------------------------------- buttons */
 
 export function Button({
   children,

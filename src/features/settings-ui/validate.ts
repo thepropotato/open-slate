@@ -2,11 +2,8 @@ import { defaultSettings } from '@/core/settings/schema'
 import { getPath } from '@/core/util/path'
 import type { Section } from './types'
 
-/**
- * Development-only guard: every dot-path declared in the settings spec must
- * exist in the parsed defaults. Without this, a typo in a path fails silently
- * as a control that reads `undefined` and writes a field nothing consumes.
- */
+// Dev-only guard: a typo in a spec dot-path otherwise fails silently, as a
+// control reading `undefined` and writing a field nothing consumes.
 export function validateSpecPaths(sections: Section[]): string[] {
   const defaults = defaultSettings() as unknown
   const problems: string[] = []

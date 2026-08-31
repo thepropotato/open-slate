@@ -6,21 +6,14 @@ import { isExtension } from '@/core/platform/browser'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { clearSync, pullSettings, pushSettings, readSyncState } from '@/core/settings/sync'
 
-/**
- * Cross-device sync controls.
- *
- * Manual push and pull sit alongside the automatic toggle because sync
- * necessarily overwrites: when two devices disagree, the user should be able to
- * say which one wins rather than guessing at the timestamps.
- */
+// Cross-device sync. Manual push and pull sit alongside the automatic toggle
+// because sync overwrites: the user says which device wins.
 export function SyncPanel() {
   const settings = useSettings()
   const { set, replace } = useSettingsActions()
   const [revision, setRevision] = useState(0)
   const [message, setMessage] = useState('')
-  /* Both applying the synced copy and deleting it destroy something — this
-     device's settings, or the copy the other devices read. Neither happens
-     on a single click. */
+  // Pull and forget both destroy something, so neither happens on one click.
   const [confirm, setConfirm] = useState<'pull' | 'forget' | null>(null)
 
   const state = useAsyncValue(`syncstate:${revision}`, readSyncState)

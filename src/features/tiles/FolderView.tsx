@@ -10,13 +10,8 @@ const SortableTiles = lazyChunk(() =>
   import('./SortableTiles').then((m) => ({ default: m.SortableTiles })),
 )
 
-/**
- * The contents of one folder.
- *
- * A dialog rather than an inline expansion: expanding in place would reflow the
- * rest of the grid and push the search box and widgets around, which is exactly
- * the kind of movement a page opened dozens of times a day should not do.
- */
+// A dialog rather than an inline expansion, which would reflow the grid and
+// push the search box and widgets around.
 export function FolderView({
   folder,
   items,
@@ -51,7 +46,7 @@ export function FolderView({
     '--tile-fit': settings.imageFit,
   } as React.CSSProperties
 
-  /** The folder's tiles without drag plumbing: the normal path, and the Arrange fallback. */
+  // No drag plumbing: the normal path, and the Arrange fallback.
   const plainTiles = (arranging: boolean) =>
     children.map((tile, index) => (
       <Tile
@@ -82,8 +77,7 @@ export function FolderView({
           style={gridStyle}
         >
           {editing ? (
-            // The plain tiles stand in while the drag chunk loads, so entering
-            // Arrange never blinks the folder's contents away.
+            // Plain tiles stand in while the drag chunk loads.
             <Suspense fallback={plainTiles(true)}>
               <SortableTiles
                 items={children}

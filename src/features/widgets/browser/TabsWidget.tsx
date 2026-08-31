@@ -14,13 +14,7 @@ import {
   PermissionGate,
 } from '@/features/widgets/shared/ListShell'
 
-/**
- * An overview of what is actually open.
- *
- * The duplicate finder is the part that pays for itself: after a long session
- * the same page is usually open three times, and closing the extras is a single
- * click here rather than a hunt across windows.
- */
+// Overview of open tabs, with a duplicate finder that closes extras in one click.
 
 const TabsConfig = z.object({
   limit: z.number().min(5).max(60).default(14),
@@ -113,15 +107,12 @@ function TabList({ config }: { config: TabsConfig }) {
 }
 
 /**
- * The open tabs, kept in step with the browser.
+ * Open tabs, kept in step with the browser.
  *
- * Re-reading only after a close made from this widget left the list stale: a tab
- * closed in the browser itself sat here as a dead row until the new tab page was
- * reopened. Titles and URLs are shown too, so `onUpdated` counts as a change
- * along with the obvious open/close ones — it is noisy during page loads, so the
- * re-read is coalesced onto a short timer rather than run per event. The list is
- * held in state rather than re-keyed, so a refresh replaces the rows in place
- * instead of blinking the widget back to its loading state.
+ * Listens to `onUpdated` as well as open/close, since titles and URLs are shown;
+ * it is noisy during page loads, so re-reads are coalesced onto a short timer.
+ * The list lives in state so a refresh replaces rows in place rather than
+ * blinking back to the loading state.
  */
 function useLiveTabs(scope: TabsConfig['scope']): TabInfo[] | null {
   const [tabs, setTabs] = useState<TabInfo[] | null>(null)
@@ -184,7 +175,7 @@ async function readTabs(scope: TabsConfig['scope']): Promise<TabInfo[]> {
   }
 }
 
-/** Every tab beyond the first for a given URL, so the originals are kept. */
+// Every tab beyond the first for a given URL, so the originals are kept.
 function findDuplicates(tabs: TabInfo[]): TabInfo[] {
   const seen = new Set<string>()
   const extras: TabInfo[] = []

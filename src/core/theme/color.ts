@@ -70,15 +70,10 @@ export function ensureContrast(color: string, against: string, ratio = 3.2): str
   return result
 }
 
-/**
- * Averages an image down to a single vivid colour, used when the accent is
- * derived from the wallpaper. Runs on a tiny offscreen canvas, and scores by
- * saturation so a mostly-grey photo still yields its one colourful region.
- */
+/** Reduces an image to one vivid colour, scoring by saturation so a grey photo still yields its colourful region. */
 export async function dominantColor(src: string, allowCrossOrigin = false): Promise<string | null> {
-  // Reading pixels back from a cross-origin image needs CORS headers the source
-  // may not send. Requesting it anyway costs a failed fetch and a console error,
-  // so callers that sample many URLs opt out.
+  // Reading back a cross-origin image needs CORS headers the source may not send;
+  // trying anyway costs a failed fetch and a console error.
   if (!allowCrossOrigin && !isReadable(src)) return null
   try {
     const bitmap = await loadBitmap(src)

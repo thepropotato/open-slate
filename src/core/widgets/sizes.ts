@@ -1,11 +1,6 @@
 /**
- * Standard widget footprints.
- *
- * The canvas is a grid of square cells — one cell is a "small" widget — and a
- * widget may only occupy one of the footprints below, the way iOS and macOS
- * widgets do. Free-form resizing let every widget land on its own arbitrary
- * height, which is what made a dashboard look ragged; a short list of sizes
- * that always tile against each other cannot.
+ * Standard widget footprints. The canvas is a grid of square cells (one cell is
+ * "small") and a widget may only take one of the sizes below, so they always tile.
  */
 
 /** Grid footprint, measured in canvas cells. */
@@ -24,7 +19,7 @@ export const WIDGET_SIZES = {
 
 export type WidgetSizeName = keyof typeof WIDGET_SIZES
 
-/** Display order, smallest footprint first. */
+// Smallest footprint first.
 export const SIZE_ORDER = ['small', 'medium', 'large', 'wide', 'xlarge'] as const
 
 export const SIZE_LABELS: Record<WidgetSizeName, string> = {
@@ -35,37 +30,28 @@ export const SIZE_LABELS: Record<WidgetSizeName, string> = {
   xlarge: 'Extra large',
 }
 
-/** What a widget gets when its definition does not say otherwise. */
+/** Used when a widget definition does not declare sizes. */
 export const DEFAULT_SIZES: readonly WidgetSizeName[] = ['medium', 'large', 'xlarge']
 
 export const sizeOf = (name: WidgetSizeName): WidgetSize => WIDGET_SIZES[name]
 
 const area = (size: WidgetSize) => size.w * size.h
 
-/** The declared sizes, in display order, with duplicates and typos dropped. */
+/** Declared sizes in display order, with duplicates and typos dropped. */
 export function orderSizes(names: readonly WidgetSizeName[]): WidgetSizeName[] {
   const wanted = new Set(names)
   const out = SIZE_ORDER.filter((name) => wanted.has(name))
   return out.length > 0 ? out : [...DEFAULT_SIZES]
 }
 
-/**
- * The subset that fits inside `cols` columns. Never empty: a canvas narrower
- * than every declared size still has to render something, so the narrowest
- * declared size wins even if it overflows.
- */
+/** Never empty: if nothing fits `cols`, the narrowest declared size wins and overflows. */
 export function sizesFitting(names: readonly WidgetSizeName[], cols: number): WidgetSizeName[] {
   const ordered = orderSizes(names)
   const fitting = ordered.filter((name) => WIDGET_SIZES[name].w <= cols)
   return fitting.length > 0 ? fitting : [ordered[0]]
 }
 
-/**
- * The declared size closest to a free-form footprint.
- *
- * Distance is measured in cells, and a tie goes to the smaller footprint, so
- * dragging a resize handle a little way never jumps a widget up two sizes.
- */
+/** Nearest declared size, in cells. Ties go to the smaller, so a short drag never jumps two sizes. */
 export function snapSize(
   proposed: WidgetSize,
   names: readonly WidgetSizeName[],

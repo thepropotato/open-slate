@@ -140,19 +140,13 @@ function WeatherWidget({ config, setConfig }: WidgetProps<WeatherConfig>) {
   )
 }
 
-/**
- * First-run flow.
- *
- * It tries to place itself before it asks anything: given host access, the
- * detected city is filled in and the widget just starts working. The search box
- * is the fallback for when detection fails, and for correcting it.
- */
+// First-run flow: try to auto-detect the city, falling back to the search box.
 function PlaceSetup({ onPick }: { onPick: (place: WeatherConfig['place']) => void }) {
   const [query, setQuery] = useState('')
   const [granted, setGranted] = useState<boolean | null>(null)
   const [busy, setBusy] = useState(false)
   const [located, setLocated] = useState(true)
-  /** Null while the first automatic attempt is still in flight. */
+  // Null while the first automatic attempt is in flight.
   const [detecting, setDetecting] = useState(false)
 
   const results = useAsyncValue(granted !== false && query.trim().length > 1 ? `geo:${query}` : null, () =>
@@ -161,20 +155,15 @@ function PlaceSetup({ onPick }: { onPick: (place: WeatherConfig['place']) => voi
 
   const take = (place: Place) => onPick({ ...place, admin: place.admin ?? '' })
 
-  /*
-   * One attempt per mount, guarded by a ref: `onPick` writes settings, which
-   * re-renders this component until the write lands, and a second lookup would
-   * be a wasted request against a rate-limited host.
-   */
+  // One attempt per mount, guarded by a ref: `onPick` writes settings and
+  // re-renders us, and a second lookup wastes a rate-limited request.
   const tried = useRef(false)
   useEffect(() => {
     if (tried.current) return
     tried.current = true
     let alive = true
     const detect = async () => {
-      // Without host access there is nothing to call yet; the grant button runs
-      // this again. Never prompts on its own — an unasked-for dialog on a new
-      // tab is worse than a search box.
+      // Never prompts on its own; the grant button runs this again.
       if (!(await hasWeatherAccess())) {
         if (alive) setGranted(false)
         return
@@ -190,8 +179,7 @@ function PlaceSetup({ onPick }: { onPick: (place: WeatherConfig['place']) => voi
     return () => {
       alive = false
     }
-    // Mount-only: the ref above is the real guard, and `onPick` changes identity
-    // on every render of the parent.
+    // Mount-only: the ref above is the real guard, and `onPick` changes identity every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -200,8 +188,7 @@ function PlaceSetup({ onPick }: { onPick: (place: WeatherConfig['place']) => voi
     const ok = await requestWeatherAccess()
     setGranted(ok)
     if (ok) {
-      // Granting access is the moment detection becomes possible, so retry
-      // rather than making the user click a second button.
+      // Detection only becomes possible once access is granted, so retry here.
       setDetecting(true)
       const place = await autoLocate()
       setDetecting(false)

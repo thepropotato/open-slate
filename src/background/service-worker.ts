@@ -1,8 +1,6 @@
 /**
- * Service worker. The new tab does its own work in the page, so this exists
- * only for things that must survive the page being closed:
- *  - rotating the wallpaper slideshow on a schedule
- *  - one-time setup on install
+ * Service worker: only what must survive the page being closed — the wallpaper
+ * slideshow alarm, install-time setup, and on-demand LLM usage reads.
  */
 
 import { CHATGPT } from '@/features/widgets/llm/chatgpt'
@@ -53,10 +51,7 @@ async function syncSlideshowAlarm(): Promise<void> {
   await chrome.alarms.create(SLIDESHOW_ALARM, { periodInMinutes: minutes, delayInMinutes: minutes })
 }
 
-/**
- * Stores the next slideshow index. The page reads `slideshowCursor` rather than
- * deciding for itself, so every open tab shows the same wallpaper.
- */
+/** The page reads `slideshowCursor` rather than deciding, so every tab agrees. */
 async function advanceSlideshow(): Promise<void> {
   const settings = await readSettings()
   const slideshow = settings.background?.slideshow
@@ -77,19 +72,13 @@ function pickDifferent(current: number, count: number): number {
   return (current + offset) % count
 }
 
-/* ─────────────────────────────────────────────────── LLM usage reader ──── */
+/* LLM usage reader */
 
 /**
- * Reads one LLM provider's usage on demand.
- *
- * The numbers live behind a session-authed endpoint on the provider's own web
- * app, so we run the fetch *inside* a tab on that origin: `chrome.scripting`
- * injects the provider's `fetchInPage` function, and the browser attaches the
- * user's session itself. We never touch the cookie or any token — only the
- * resulting figures come back.
- *
- * If a matching tab is already open we borrow it; otherwise we open one in the
- * background and close it when done, so the user's foreground is undisturbed.
+ * Reads one LLM provider's usage on demand. The endpoint is session-authed, so the
+ * fetch runs inside a tab on that origin via `chrome.scripting` and the browser
+ * attaches the session; no cookie or token is ever read. An already-open tab is
+ * borrowed, otherwise a background one is opened and closed again.
  */
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -103,7 +92,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 async function readProviderUsage(
   providerId: string,
 ): Promise<{ ok: true; usage: unknown } | { ok: false; reason: string }> {
-  // One adapter per provider; each usage widget names its own.
   const provider = [CLAUDE, CHATGPT].find((p) => p.id === providerId)
   if (!provider) return { ok: false, reason: `Unknown provider "${providerId}".` }
 
@@ -113,7 +101,6 @@ async function readProviderUsage(
   })
   if (!hostAllowed) return { ok: false, reason: `Access to ${provider.host} has not been granted.` }
 
-  // Match a tab already on the primary origin, else open one in the background.
   const existing = (await chrome.tabs.query({ url: provider.origins[0] }))[0]
   const tab = existing ?? (await chrome.tabs.create({ url: provider.tabUrl, active: false }))
   const opened = !existing

@@ -1,12 +1,8 @@
 import { Settings, type Settings as SettingsType } from './schema'
 
 /**
- * Shareable theme codes.
- *
- * A code carries only the look — palette, shape, surfaces, wallpaper treatment
- * and layout — and deliberately never the content: no tiles, no notes, no place
- * names, and no references to locally stored media, which would not exist on
- * the receiving machine anyway.
+ * Shareable theme codes. A code carries only the look, never content: no tiles,
+ * notes or place names, and no references to locally stored media.
  */
 
 const PREFIX = 'nt1.'
@@ -15,7 +11,7 @@ interface ThemePayload {
   a: SettingsType['appearance']
   b: Omit<SettingsType['background'], 'image' | 'video' | 'slideshow'>
   l: SettingsType['layout']
-  /** Tile appearance only — never the tiles themselves. */
+  // Tile appearance only, never the tiles themselves.
   t: Omit<SettingsType['tiles'], 'items'>
 }
 
@@ -57,7 +53,7 @@ export function applyTheme(settings: SettingsType, code: string): SettingsType {
   return parsed.data
 }
 
-/** Base64url, so a code survives being pasted into a URL or a chat message. */
+// Base64url, so a code survives being pasted into a URL or a chat message.
 function toBase64Url(text: string): string {
   const bytes = new TextEncoder().encode(text)
   let binary = ''

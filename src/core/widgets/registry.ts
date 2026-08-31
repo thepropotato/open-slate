@@ -1,11 +1,8 @@
 import type { AnyWidgetDefinition, WidgetDefinition } from './types'
 
 /**
- * Registry of widget kinds.
- *
- * Widgets register themselves at import time, and `features/widgets/index.ts`
- * is the single import that pulls them all in. Order of registration is the
- * order they appear in the picker.
+ * Registry of widget kinds. Widgets register at import time via
+ * `features/widgets/index.ts`; registration order is picker order.
  */
 
 const registry = new Map<string, AnyWidgetDefinition>()
@@ -21,11 +18,7 @@ export const getWidget = (type: string): AnyWidgetDefinition | undefined => regi
 
 export const allWidgets = (): AnyWidgetDefinition[] => [...registry.values()]
 
-/**
- * Parses an instance's stored config through the widget's own schema. A widget
- * that has gained fields since the config was written gets their defaults, and
- * a corrupted value degrades to defaults instead of throwing during render.
- */
+/** Parses stored config through the widget's schema; anything invalid degrades to defaults. */
 export function parseWidgetConfig(
   definition: AnyWidgetDefinition,
   stored: Record<string, unknown>,

@@ -1,11 +1,9 @@
 import { useEffect, type RefObject } from 'react'
 
 /**
- * Arrow-key navigation across a wrapped grid of links.
- *
- * The column count is measured from the rendered rows rather than read from
- * settings, because with `columns: auto` only the layout knows how many fit —
- * and a per-row measurement also handles a ragged last row correctly.
+ * Arrow-key navigation across a wrapped grid of links. Columns are measured from
+ * the rendered rows, not settings: with `columns: auto` only the layout knows
+ * how many fit, and per-row measurement handles a ragged last row.
  */
 export function useGridArrows(ref: RefObject<HTMLElement | null>, selector: string): void {
   useEffect(() => {

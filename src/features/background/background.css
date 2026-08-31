@@ -17,7 +17,7 @@
 }
 
 .bg__media {
-  /* `--bg-scale` comes from settings; the origin keeps the crop centred. */
+  /* --bg-scale comes from settings. */
   transform: scale(var(--bg-scale, 1));
   transform-origin: center;
   will-change: transform, filter;
@@ -50,7 +50,6 @@
   background: #000;
 }
 
-/* Corner falloff, kept subtle so text stays the brightest thing on screen. */
 .bg__vignette {
   background: radial-gradient(ellipse at center, transparent 42%, #000 130%);
 }

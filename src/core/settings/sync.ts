@@ -2,25 +2,18 @@ import { isExtension, localStore } from '@/core/platform/browser'
 import { Settings, type Settings as SettingsType } from './schema'
 
 /**
- * Opt-in cross-device sync.
- *
- * `chrome.storage.sync` is not a drop-in replacement for `local`: it caps each
- * item at 8KB, the whole area at 100KB, and writes at 1,800 an hour. So this
- * does three things rather than mirroring the blob:
- *
- *  1. Trims what cannot travel — references to media stored on this device only.
- *  2. Chunks each section across several keys, since a tile list or a page of
- *     notes will exceed the per-item limit on its own.
- *  3. Keeps its own bookkeeping in `local`, so the sync metadata never syncs and
- *     cannot cause a write loop.
+ * Opt-in cross-device sync. `chrome.storage.sync` caps items at 8KB, the area at
+ * 100KB and writes at 1,800/hour, so the blob is trimmed of device-local media
+ * references, chunked per section, and its bookkeeping kept in `local` to avoid a
+ * write loop.
  */
 
-/** Comfortably under the 8,192-byte per-item cap, leaving room for the key. */
+// Comfortably under the 8,192-byte per-item cap, leaving room for the key.
 const CHUNK_BYTES = 7000
 const META_KEY = 's:meta'
 const BOOKKEEPING_KEY = 'syncState'
 
-/** Sections that travel. `widgets` carries notes and task text with it. */
+// Sections that travel. `widgets` carries notes and task text with it.
 const SYNCED_SECTIONS = [
   'appearance',
   'layout',
@@ -34,23 +27,18 @@ const SYNCED_SECTIONS = [
 type SyncedSection = (typeof SYNCED_SECTIONS)[number]
 
 interface SyncMeta {
-  /** Epoch ms of the push. */
+  // Epoch ms of the push.
   at: number
   version: number
-  /** Chunk count per section. */
   chunks: Partial<Record<SyncedSection, number>>
-  /** Sections skipped because they exceeded the area quota. */
+  // Skipped because they exceeded the area quota.
   skipped: SyncedSection[]
 }
 
 export interface SyncState {
   lastPushedAt: number
   lastPulledAt: number
-  /**
-   * When this device last changed something. Auto-pull refuses to adopt a remote
-   * copy older than this, so a change made while offline is not overwritten by a
-   * stale push from another device.
-   */
+  // Auto-pull refuses a remote copy older than this, so offline edits survive.
   lastLocalChangeAt: number
   lastError: string
 }
@@ -70,13 +58,7 @@ export async function noteLocalChange(): Promise<void> {
   await writeSyncState({ ...state, lastLocalChangeAt: Date.now() })
 }
 
-/* ------------------------------------------------------------------- trim */
-
-/**
- * Strips what is meaningless on another device: uploaded wallpapers and tile
- * images live in this browser's IndexedDB, so their ids would resolve to
- * nothing. Remote URLs travel fine and are left alone.
- */
+/** Strips IndexedDB blob ids, which resolve to nothing on another device. Remote URLs travel. */
 function trim(settings: SettingsType): Record<SyncedSection, unknown> {
   return {
     appearance: settings.appearance,
@@ -100,8 +82,6 @@ function trim(settings: SettingsType): Record<SyncedSection, unknown> {
     widgets: settings.widgets,
   }
 }
-
-/* ------------------------------------------------------------------- push */
 
 export async function pushSettings(settings: SettingsType): Promise<SyncState> {
   const state = await readSyncState()
@@ -134,7 +114,7 @@ export async function pushSettings(settings: SettingsType): Promise<SyncState> {
   payload[META_KEY] = meta
 
   try {
-    // Clearing first keeps stale chunks from a larger previous push out of the way.
+    // Clear first, or stale chunks from a larger previous push survive.
     await chrome.storage.sync.clear()
     await chrome.storage.sync.set(payload)
     const next: SyncState = {
@@ -158,11 +138,9 @@ const split = (text: string): string[] => {
   return parts.length > 0 ? parts : ['']
 }
 
-/* ------------------------------------------------------------------- pull */
-
 export interface PullResult {
   settings: SettingsType
-  /** When the pulled copy was pushed, for showing which side is newer. */
+  // When the pulled copy was pushed, for showing which side is newer.
   at: number
 }
 
@@ -182,8 +160,7 @@ export async function pullSettings(current: SettingsType): Promise<PullResult | 
       merged[section] = JSON.parse(text)
     }
 
-    // Anything not pushed keeps this device's value, and media references here
-    // are always the local ones.
+    // Anything not pushed keeps this device's value; media references stay local.
     const candidate: SettingsType = {
       ...current,
       ...(merged as Partial<SettingsType>),

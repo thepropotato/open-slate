@@ -12,12 +12,8 @@ import { loadFeeds, originOf, requestFeedAccess } from './api'
 import { FeedList } from './FeedList'
 import './feed.css'
 
-/**
- * A feed reader.
- *
- * Access is granted per feed origin at the moment a feed is added, so the
- * extension never holds blanket network permission for the sake of one blog.
- */
+// Feed reader. Host access is granted per feed origin when the feed is added,
+// never blanket network permission.
 
 const FeedConfig = z.object({
   urls: z.array(z.string()).default([]),
@@ -133,7 +129,7 @@ function FeedWidget({ config, setConfig }: WidgetProps<FeedConfig>) {
   )
 }
 
-/** Accepts a bare host and assumes https, the way the tile editor does. */
+// Accepts a bare host and assumes https, like the tile editor.
 function normalise(input: string): string {
   const value = input.trim()
   if (!value) return ''

@@ -13,12 +13,7 @@ import {
   PermissionGate,
 } from '@/features/widgets/shared/ListShell'
 
-/**
- * History search.
- *
- * With no query it shows the most recent visits, which answers "what was I just
- * reading" without any typing at all.
- */
+// History search; a blank query lists the most recent visits.
 
 const HistoryConfig = z.object({
   limit: z.number().min(5).max(40).default(12),
@@ -90,7 +85,6 @@ async function search(
   }
 }
 
-/** "12 min ago", "3 h ago", "Tuesday" — enough to place a visit in time. */
 function relativeTime(timestamp: number): string {
   const minutes = Math.round((Date.now() - timestamp) / 60_000)
   if (minutes < 1) return 'just now'

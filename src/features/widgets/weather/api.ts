@@ -1,17 +1,10 @@
 import { localStore, permissions } from '@/core/platform/browser'
 
-/**
- * Open-Meteo client.
- *
- * Chosen because it needs no API key and no account, which means no credential
- * to ship in the extension and nothing tying a request to a user. Responses are
- * cached in storage so opening ten tabs is one request, not ten.
- */
+// Open-Meteo client: no API key, so no credential to ship and nothing tying a
+// request to a user. Responses are cached so ten tabs make one request.
 
-/*
- * Both hosts are granted together: auto-detection is part of the first run, so
- * splitting them would mean two prompts to get one working widget.
- */
+// Granted together: auto-detection runs on first use, so splitting these would
+// mean two prompts for one working widget.
 export const WEATHER_ORIGINS = [
   'https://*.open-meteo.com/*',
   'https://get.geojs.io/*',
@@ -20,11 +13,8 @@ export const WEATHER_ORIGINS = [
 
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast'
 const GEOCODE_URL = 'https://geocoding-api.open-meteo.com/v1/search'
-/*
- * Two providers because both are free and unauthenticated, which means both are
- * allowed to rate-limit or disappear. Whichever answers first wins; the shapes
- * differ, so each gets its own reader.
- */
+// Two free providers, either of which may rate-limit or disappear; first to
+// answer wins. Response shapes differ, so each gets its own reader.
 const IP_LOOKUPS = [
   { url: 'https://get.geojs.io/v1/ip/geo.json', read: readGeojs },
   { url: 'https://ipwho.is/', read: readIpwho },
@@ -115,7 +105,7 @@ export async function fetchWeather(
     await localStore.set(CACHE_KEY, { ...cache, [cacheKey]: { at: Date.now(), value } })
     return value
   } catch {
-    // Offline, or the host permission was revoked. A stale reading beats nothing.
+    // Offline, or the host permission was revoked; a stale reading beats nothing.
     return hit?.value ?? null
   }
 }
@@ -141,26 +131,18 @@ export async function searchPlaces(query: string): Promise<Place[]> {
 }
 
 /**
- * Where the widget places itself, with no prompt and no click.
+ * Locates the widget with no prompt and no click.
  *
- * Deliberately never touches `navigator.geolocation`. The object exists on an
- * extension page and `permissions.query` can even report it as granted from the
- * browser-level setting, but the call still fails unless the manifest declares
- * `geolocation` — and Chrome refuses to make that optional, so declaring it
- * would put a "know your physical location" warning in front of every install
- * for one widget. Calling it anyway is what logs Chrome's
- * "Is the 'geolocation' permission appropriate?" warning to the console.
- *
- * So: an IP lookup, city-level, which is all a forecast needs; then the
- * browser's own timezone geocoded by its city name, which needs no host beyond
- * the one the forecast already uses. Null means both failed and the caller asks
- * for a town by hand.
+ * Never touches `navigator.geolocation`: it fails unless the manifest declares
+ * `geolocation`, which Chrome will not make optional and which adds a "know your
+ * physical location" install warning. Instead: a city-level IP lookup, then the
+ * browser timezone geocoded by city name. Null means both failed.
  */
 export async function autoLocate(): Promise<Place | null> {
   return (await locateByIp()) ?? (await locateByTimezone())
 }
 
-/** City-level, from whoever is serving the request. No prompt, no precision. */
+/** City-level, from whoever is serving the request. */
 async function locateByIp(): Promise<Place | null> {
   for (const provider of IP_LOOKUPS) {
     try {
@@ -169,7 +151,7 @@ async function locateByIp(): Promise<Place | null> {
       const place = provider.read(await response.json())
       if (place) return place
     } catch {
-      // Blocked, offline or rate-limited: try the next one.
+      // Blocked, offline or rate-limited: try the next provider.
     }
   }
   return null
@@ -226,7 +208,7 @@ function toPlace(parts: {
   timezone?: string
 }): Place | null {
   const { latitude, longitude } = parts
-  // 0,0 is in the Atlantic: a provider that could not place the IP, not a place.
+  // 0,0 means the provider could not place the IP; it is not a real result.
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null
   if (latitude === 0 && longitude === 0) return null
   return {
@@ -239,11 +221,8 @@ function toPlace(parts: {
   }
 }
 
-/**
- * Last resort: `Asia/Kolkata` → "Kolkata" → the geocoder we already talk to.
- * Lands on the zone's anchor city, which can be a long way off, but a nearby
- * city's weather beats an empty widget.
- */
+// Last resort: `Asia/Kolkata` -> "Kolkata" -> geocoder. Lands on the zone's
+// anchor city, which can be far off, but beats an empty widget.
 async function locateByTimezone(): Promise<Place | null> {
   try {
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -255,8 +234,6 @@ async function locateByTimezone(): Promise<Place | null> {
     return null
   }
 }
-
-/* ------------------------------------------------------------------ shaping */
 
 interface OpenMeteoResponse {
   current?: Record<string, number>
@@ -286,7 +263,6 @@ function shape(place: Place, units: 'metric' | 'imperial', data: OpenMeteoRespon
   const hourly: HourForecast[] = []
   if (data.hourly) {
     for (let i = 0; i < data.hourly.time.length; i += 1) {
-      // Only hours still ahead of us are useful.
       if (new Date(data.hourly.time[i]).getTime() < now - 30 * 60 * 1000) continue
       hourly.push({
         time: data.hourly.time[i],

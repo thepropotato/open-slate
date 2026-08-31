@@ -2,13 +2,8 @@ import { isExtension } from '@/core/platform/browser'
 import { Tile, type Tile as TileModel } from '@/core/settings/schema'
 import { uid } from '@/core/util/id'
 
-/**
- * First-run tiles.
- *
- * The browser's own most-visited list is the best possible starting point — it
- * is already personal. A fresh profile has none, so we fall back to a small,
- * uncontroversial set the user can delete in one click each.
- */
+// First-run tiles: the browser's most-visited list, topped up from a small
+// fallback set for fresh profiles that have none.
 
 const FALLBACK: Array<[url: string, title: string]> = [
   ['https://mail.google.com', 'Gmail'],
@@ -26,11 +21,6 @@ const MAX_SEEDED = 10
 const makeTile = (url: string, title: string): TileModel =>
   Tile.parse({ id: uid('tile'), url, title })
 
-/**
- * The browser's own most-visited list comes first, since it is already personal.
- * A fresh profile returns one or two entries at most, so the list is topped up
- * from the fallback set rather than left as a near-empty grid.
- */
 export async function seedTilesFromBrowser(): Promise<TileModel[]> {
   const sites = await readTopSites()
   const seen = new Set(sites.map(([url]) => normalise(url)))

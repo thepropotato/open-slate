@@ -5,9 +5,8 @@ import { SIZE_ORDER, WIDGET_SIZES, snapSize } from '@/core/widgets/sizes'
 type Migration = (raw: Record<string, unknown>) => Record<string, unknown>
 
 /**
- * Ordered upgrade steps, indexed by the version they upgrade *from*.
- * Adding a field never needs a migration — zod defaults cover that. Only
- * renames, moves and semantic changes belong here.
+ * Upgrade steps, indexed by the version they upgrade *from*. Adding a field needs
+ * no migration (zod defaults cover it); only renames, moves and semantic changes.
  */
 const migrations: Record<number, Migration> = {
   // 0: (raw) => ({ ...raw, appearance: { ...raw.appearance, ... } }),
@@ -16,20 +15,11 @@ const migrations: Record<number, Migration> = {
   3: toSingleLayout,
 }
 
-/* --------------------------------------------------------------- 1 -> 2 */
-
-/**
- * The widget canvas used to be a fine 24-column grid of short rows that widgets
- * could be resized to any footprint on. It is now a coarse grid of square cells
- * with a handful of standard sizes, so every stored layout has to be rescaled
- * and then snapped onto the nearest of those sizes.
- *
- * Positions are converted proportionally, which keeps an existing arrangement
- * recognisable — a widget that sat top-right stays top-right.
- */
+// 1 -> 2: a fine 24-column grid becomes square cells with standard sizes. Positions
+// scale proportionally so an arrangement stays recognisable; footprints snap.
 const OLD_COLS = 24
 const NEW_COLS = 6
-/** Pitch of one new square cell in px, at the default canvas width. */
+// Pitch of one new square cell in px, at the default canvas width.
 const NEW_CELL_PITCH = 199
 
 function toStandardWidgetSizes(raw: Record<string, unknown>): Record<string, unknown> {
@@ -62,24 +52,16 @@ function toStandardWidgetSizes(raw: Record<string, unknown>): Record<string, unk
     })
   }
 
-  // `columns` changes meaning (fine positioning steps -> widgets across) and
-  // `rowHeight` no longer exists: cells are square, derived from the width.
+  // `columns` changes meaning (positioning steps -> widgets across); `rowHeight`
+  // is gone, as cells are square and derived from the width.
   const rest = { ...widgets }
   delete rest.rowHeight
   return { ...raw, widgets: { ...rest, columns: NEW_COLS, layouts: next } }
 }
 
-/* --------------------------------------------------------------- 2 -> 3 */
-
 /**
- * Until now only the breakpoint on screen was ever checked for collisions, so
- * the narrower layouts drifted into stacks of widgets sitting on top of each
- * other — invisible until the window was resized. The canvas now guarantees
- * this on every write; existing blobs are separated once, here, so a dashboard
- * is not broken up to the moment it is first touched.
- *
- * Sizes are left alone: every standard footprint is accepted, so this only ever
- * moves a widget that was genuinely underneath another one.
+ * 2 -> 3: off-screen breakpoints were never collision-checked, so stored layouts
+ * can contain stacked widgets. Separates them once. Sizes are left alone.
  */
 function separateOverlappingWidgets(raw: Record<string, unknown>): Record<string, unknown> {
   const widgets = (raw.widgets ?? {}) as Record<string, unknown>
@@ -101,20 +83,9 @@ function separateOverlappingWidgets(raw: Record<string, unknown>): Record<string
   return { ...raw, widgets: { ...widgets, layouts: next } }
 }
 
-/* --------------------------------------------------------------- 3 -> 4 */
-
 /**
- * Three per-breakpoint layouts become the one the reader actually arranged.
- *
- * Keeping a layout per breakpoint meant three arrangements to hold correct, and
- * the narrow ones were only ever derived from the wide one anyway — nobody sat
- * down and arranged the 2-column view. Worse, the grid regenerated them on
- * every resize and they were written straight back, so dragging a window narrow
- * could overwrite the wide arrangement for good. A window too narrow to show
- * the layout is now given a vertical stack, derived and never stored.
- *
- * `lg` is what is kept: it is the widest, so it is the only one that was ever
- * arranged at full fidelity, and the narrower ones were clamped copies of it.
+ * 3 -> 4: three per-breakpoint layouts collapse to one. `lg` wins — the narrower
+ * ones were only ever clamped copies of it, regenerated and written back on resize.
  */
 function toSingleLayout(raw: Record<string, unknown>): Record<string, unknown> {
   const widgets = (raw.widgets ?? {}) as Record<string, unknown>
@@ -165,8 +136,7 @@ export function migrate(raw: unknown): SettingsType {
   const parsed = Settings.safeParse(data)
   if (parsed.success) return parsed.data
 
-  // A corrupted or partially-invalid blob should degrade to defaults for the
-  // broken sections rather than wiping everything the user configured.
+  // Degrade only the broken sections, rather than wiping everything configured.
   console.warn('[settings] falling back to defaults for invalid fields', parsed.error.issues)
   return Settings.parse(salvage(data))
 }

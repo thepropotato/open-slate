@@ -1,13 +1,7 @@
 import type { TimeParts } from '@/core/util/time'
 
-/**
- * Clock faces.
- *
- * Hand-built rather than pulled from a library: the maintained analog-clock
- * packages offer one look each, and the point here is a range of looks that all
- * read from the same theme tokens. Every face sizes itself in container units,
- * so a face fills whatever the user resizes the widget to.
- */
+// Clock faces. All read from the same theme tokens and size themselves in
+// container units, so a face fills whatever size the widget is resized to.
 
 export interface FaceProps {
   time: TimeParts
@@ -22,8 +16,6 @@ const digits = ({ time, hour12 }: FaceProps) => ({
   minutes: pad(time.minutes),
   seconds: pad(time.seconds),
 })
-
-/* ------------------------------------------------------------------ digital */
 
 export function DigitalFace(props: FaceProps) {
   const { hours, minutes, seconds } = digits(props)
@@ -45,8 +37,6 @@ export function DigitalFace(props: FaceProps) {
   )
 }
 
-/* ------------------------------------------------------------------ minimal */
-
 export function MinimalFace(props: FaceProps) {
   const { hours, minutes, seconds } = digits(props)
   return (
@@ -60,8 +50,6 @@ export function MinimalFace(props: FaceProps) {
   )
 }
 
-/* --------------------------------------------------------------------- mono */
-
 export function MonoFace(props: FaceProps) {
   const { hours, minutes, seconds } = digits(props)
   return (
@@ -74,8 +62,6 @@ export function MonoFace(props: FaceProps) {
     </div>
   )
 }
-
-/* --------------------------------------------------------------------- flip */
 
 export function FlipFace(props: FaceProps) {
   const { hours, minutes, seconds } = digits(props)
@@ -105,14 +91,11 @@ function FlipCard({ value, small = false }: { value: string; small?: boolean }) 
   )
 }
 
-/* --------------------------------------------------------------------- text */
-
 const ONES = [
   'twelve', 'one', 'two', 'three', 'four', 'five',
   'six', 'seven', 'eight', 'nine', 'ten', 'eleven',
 ]
 
-/** "It is quarter past nine" — the phrasing people actually use out loud. */
 export function TextFace({ time }: FaceProps) {
   const minute = time.minutes
   const nearest = Math.round(minute / 5) * 5
@@ -139,9 +122,7 @@ export function TextFace({ time }: FaceProps) {
   )
 }
 
-/* ------------------------------------------------------------------- binary */
-
-/** Binary-coded decimal, one column per digit — the classic hacker clock. */
+// Binary-coded decimal, one column per digit.
 export function BinaryFace(props: FaceProps) {
   const { hours, minutes, seconds } = digits(props)
   const columns = [...hours, ...minutes, ...(props.showSeconds ? [...seconds] : [])].map(Number)
@@ -170,8 +151,6 @@ function maxForColumn(index: number, showSeconds: boolean): number {
   return pattern[index] ?? 9
 }
 
-/* ------------------------------------------------------------------- analog */
-
 type AnalogVariant = 'classic' | 'minimal' | 'bauhaus'
 
 export function AnalogFace({
@@ -179,7 +158,7 @@ export function AnalogFace({
   showSeconds,
   variant,
 }: FaceProps & { variant: AnalogVariant }) {
-  // Smooth, not stepped: the hour hand should sit between marks at half past.
+  // Smooth, not stepped: the hour hand sits between marks at half past.
   const secondAngle = time.seconds * 6
   const minuteAngle = time.minutes * 6 + time.seconds * 0.1
   const hourAngle = (time.hours24 % 12) * 30 + time.minutes * 0.5
@@ -250,9 +229,7 @@ export function AnalogFace({
   )
 }
 
-/* -------------------------------------------------------------------- rings */
-
-/** Three concentric arcs filling as the hour, minute and second progress. */
+// Three concentric arcs filling as the hour, minute and second progress.
 export function RingsFace({ time, showSeconds, hour12 }: FaceProps) {
   const rings = [
     { r: 44, value: (time.hours24 % (hour12 ? 12 : 24)) / (hour12 ? 12 : 24), label: 'hour' },

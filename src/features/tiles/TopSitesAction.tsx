@@ -3,13 +3,9 @@ import { Button } from '@/core/ui'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { topSitesNotIn } from './seed'
 
-/**
- * Appends the browser's most-visited sites that are not already pinned.
- *
- * Deliberately an action rather than a live "always include top sites" toggle:
- * a speed dial that silently reorders itself as browsing habits shift is
- * disorienting, and undoing it means deleting tiles one by one.
- */
+// Appends the browser's most-visited sites that are not already pinned. An
+// action rather than a live toggle: a dial that silently reorders itself is
+// disorienting, and undoing it means deleting tiles one by one.
 export function TopSitesAction() {
   const { tiles } = useSettings()
   const { update } = useSettingsActions()

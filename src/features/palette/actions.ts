@@ -4,12 +4,8 @@ import type { Settings } from '@/core/settings/schema'
 import type { SettingsActions } from '@/core/settings/SettingsProvider'
 import type { Suggestion } from '@/features/search/providers'
 
-/**
- * Commands the palette can run.
- *
- * Declared as data so the same list feeds fuzzy matching, keyboard navigation
- * and the "no query" default view without three separate code paths.
- */
+// Commands the palette can run, as data so one list feeds matching, keyboard
+// navigation and the default view.
 
 export interface PaletteAction {
   id: string
@@ -169,7 +165,7 @@ function nextPreset(current: string): string {
   return order[(index + 1) % order.length]
 }
 
-/** Scores an action against a query, so the list can be ranked with the rest. */
+// Scored on the same scale as the providers, so both can be ranked together.
 export function matchAction(action: PaletteAction, needle: string): Suggestion | null {
   const haystack = `${action.title} ${action.keywords ?? ''}`.toLowerCase()
   if (needle && !haystack.includes(needle)) return null

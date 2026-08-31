@@ -7,23 +7,15 @@ export default defineConfig({
   resolve: {
     alias: { '@': resolve(import.meta.dirname, 'src') },
   },
-  /*
-   * Pinned because the browser-driven scripts — shots, dom-tests and
-   * canvas-tests — all default to this port. `strictPort` makes a clash fail
-   * loudly rather than sliding to the next free port, where those scripts would
-   * quietly drive a stale server or none at all.
-   */
+  // Pinned: the browser-driven scripts all default to this port, and `strictPort`
+  // makes a clash fail loudly instead of leaving them driving a stale server.
   server: { port: 5178, strictPort: true },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     target: 'chrome120',
-    /*
-     * Extension pages load their scripts in an isolated world, so Chrome
-     * refuses every `<link rel="modulepreload">` Vite emits and logs a
-     * "cross-world extension resource mismatch" for each one. The hints buy
-     * nothing here — everything is served from local disk — so don't emit them.
-     */
+    // Chrome refuses modulepreload links from an extension's isolated world and logs
+    // a "cross-world extension resource mismatch" for each; they buy nothing locally.
     modulePreload: false,
     rollupOptions: {
       input: {
@@ -34,8 +26,7 @@ export default defineConfig({
       output: {
         entryFileNames: (chunk) =>
           chunk.name === 'background' ? 'background.js' : 'assets/[name]-[hash].js',
-        // Split the vendors so the new tab's critical path is legible in the
-        // build output, and so a change to one does not invalidate the others.
+        // Split so a change to one vendor does not invalidate the others.
         manualChunks: (id) => {
           if (!id.includes('node_modules')) return undefined
           if (id.includes('react-grid-layout') || id.includes('/react-draggable/')) return 'vendor-grid'

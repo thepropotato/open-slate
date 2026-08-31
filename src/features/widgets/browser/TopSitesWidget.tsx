@@ -6,12 +6,7 @@ import type { WidgetProps } from '@/core/widgets/types'
 import { hostLabel } from '@/features/search/providers'
 import { ListEmpty, ListLoading, ListRow } from '@/features/widgets/shared/ListShell'
 
-/**
- * The browser's own most-visited list.
- *
- * Complements the tiles rather than duplicating them: tiles are what the user
- * chose to pin, this is what they actually visit, and it updates itself.
- */
+// The browser's own most-visited list, distinct from the user-pinned tiles.
 
 const TopSitesConfig = z.object({
   limit: z.number().min(4).max(30).default(10),

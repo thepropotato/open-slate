@@ -1,18 +1,11 @@
-/**
- * iCalendar (RFC 5545) reading, narrowed to what a month view needs.
- *
- * Hand-written rather than pulled from a library for the same reason the feed
- * parser is: a calendar subscription is a handful of properties, and this page's
- * whole job is to paint instantly. Nothing here is evaluated as code — every
- * value is read as text — and unknown properties are skipped rather than
- * guessed at, so an unfamiliar producer degrades to fewer fields, not a crash.
- */
+// iCalendar (RFC 5545) reading, narrowed to what a month view needs.
+// Unknown properties are skipped, so an unfamiliar producer degrades to fewer
+// fields rather than a crash.
 
 export interface CalendarEvent {
   id: string
   title: string
   location: string
-  /** Where the meeting is, if the feed says. Empty when there is nothing to open. */
   url: string
   /** Epoch ms. For an all-day event, local midnight on the starting day. */
   start: number
@@ -21,13 +14,8 @@ export interface CalendarEvent {
   allDay: boolean
 }
 
-/**
- * Undoes RFC 5545 line folding.
- *
- * A folded line continues on the next one, marked by a single leading space or
- * tab. Producers fold at 75 octets, so any long SUMMARY or RRULE arrives split
- * and has to be rejoined before it can be read at all.
- */
+// Undoes RFC 5545 line folding: a continuation is marked by a leading space or
+// tab. Producers fold at 75 octets, so long SUMMARY/RRULE values arrive split.
 function unfold(text: string): string[] {
   const out: string[] = []
   for (const raw of text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')) {
@@ -43,13 +31,8 @@ interface Property {
   value: string
 }
 
-/**
- * Splits one content line into name, parameters and value.
- *
- * The colon that ends the name-and-parameters part may also appear inside a
- * quoted parameter value (`DTSTART;TZID="GMT+01:00":...`), so quoting is tracked
- * rather than splitting on the first colon.
- */
+// Quoting is tracked rather than splitting on the first colon, since a colon can
+// sit inside a quoted parameter (`DTSTART;TZID="GMT+01:00":...`).
 function parseLine(line: string): Property | null {
   let colon = -1
   let quoted = false
@@ -83,15 +66,9 @@ const unescapeText = (value: string): string =>
     .replace(/\\;/g, ';')
     .replace(/\\\\/g, '\\')
 
-/**
- * Reads a DATE or DATE-TIME into epoch ms.
- *
- * Three forms exist. A bare `YYYYMMDD` is an all-day date. A `Z` suffix is UTC.
- * Anything else is local — or in the TZID named by the property, which is read
- * as local here, because carrying a full tz database for a month grid costs more
- * than it is worth. That is only wrong for a calendar being read from a
- * different zone than it was written in, and then only by the offset.
- */
+// DATE or DATE-TIME to epoch ms. Bare `YYYYMMDD` is all-day, `Z` is UTC, and
+// anything else is treated as local — TZID included, since carrying a tz
+// database isn't worth it for a month grid.
 function parseDate(value: string, params: Record<string, string>): { at: number; allDay: boolean } | null {
   const date = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value.trim())
   if (!date) return null
@@ -115,15 +92,9 @@ function parseDuration(value: string): number {
   return sign === '-' ? -ms : ms
 }
 
-/**
- * The first http(s) link in a block of text.
- *
- * Conference links are rarely in the URL property — Meet, Zoom and Teams all
- * write them into the description among a paragraph of joining instructions, so
- * the link has to be picked out of prose. Only http and https are accepted:
- * these values come off the network, and anything else (`javascript:` above all)
- * has no business being handed to the browser to open.
- */
+// First http(s) link in a block of text: Meet/Zoom/Teams bury join links in the
+// description. Only http(s) — these values come off the network, so no
+// `javascript:` reaches the browser.
 function firstLink(text: string): string {
   const match = /https?:\/\/[^\s<>"')\]]+/i.exec(text)
   if (!match) return ''
@@ -146,12 +117,7 @@ interface RawEvent {
   cancelled: boolean
 }
 
-/**
- * Pulls the VEVENT blocks out of an ICS document.
- *
- * VTIMEZONE and VALARM blocks also contain DTSTART, so nesting depth is tracked
- * rather than reading properties wherever they appear.
- */
+// Nesting depth is tracked because VTIMEZONE and VALARM also contain DTSTART.
 function readEvents(text: string): RawEvent[] {
   const events: RawEvent[] = []
   let current: RawEvent | null = null
@@ -206,11 +172,8 @@ function readEvents(text: string): RawEvent[] {
       case 'LOCATION':
         current.location = unescapeText(value)
         break
-      /*
-       * A URL property is the event's own link, so it wins. Otherwise the join
-       * link is usually buried in the description — Meet, Zoom and Teams all
-       * write it there — and the location field sometimes holds it too.
-       */
+      // URL wins; otherwise the join link is usually in the description, and
+      // sometimes in the location.
       case 'URL':
         if (!current.url) current.url = firstLink(value)
         break
@@ -264,18 +227,9 @@ function readEvents(text: string): RawEvent[] {
 const DAY_MS = 86_400_000
 const WEEKDAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA']
 
-/**
- * Expands an RRULE across a window.
- *
- * Covers the rules a personal calendar actually produces — daily, weekly with
- * BYDAY, monthly by date and yearly — plus COUNT and UNTIL. Anything more exotic
- * (BYSETPOS, BYWEEKNO) falls back to the single starting occurrence, which shows
- * the event once instead of dropping it silently.
- *
- * Each step is taken from the original start with calendar arithmetic rather
- * than by adding a fixed number of milliseconds, so a monthly event stays on its
- * date and a daily one stays at its clock time across a DST change.
- */
+// Expands an RRULE across a window: daily, weekly+BYDAY, monthly by date, yearly,
+// plus COUNT/UNTIL. Anything more exotic falls back to the single first
+// occurrence. Steps use calendar arithmetic, not fixed ms, to survive DST.
 function expand(event: RawEvent, length: number, from: number, to: number): number[] {
   if (!event.rrule) return event.start < to && event.start + length > from ? [event.start] : []
 
@@ -302,11 +256,7 @@ function expand(event: RawEvent, length: number, from: number, to: number): numb
   const origin = new Date(event.start)
   const skipped = new Set(event.exdates)
   const out: number[] = []
-  /*
-   * Bounded two ways: by the window, and by a hard cap. A malformed or
-   * unbounded rule must not be able to spin here on a page that has to paint
-   * immediately, and no month view needs more than a few hundred occurrences.
-   */
+  // Hard cap as well as the window, so a malformed unbounded rule can't spin.
   const LIMIT = 750
 
   for (let step = 0, made = 0; step < LIMIT && made < count; step += 1) {
@@ -357,26 +307,16 @@ function expand(event: RawEvent, length: number, from: number, to: number): numb
   return out
 }
 
-/**
- * How long an event lasts.
- *
- * DTEND and DURATION are both optional. RFC 5545 says an event with neither
- * lasts one day if it is all-day and is instantaneous otherwise; an hour is used
- * for the timed case instead, because a zero-width event is invisible in a list
- * and every real producer means "a meeting whose end was not stated".
- */
+// DTEND and DURATION are both optional. RFC 5545 makes a timed event with
+// neither instantaneous; an hour is used instead, since a zero-width event is
+// invisible in a list.
 function durationOf(event: RawEvent): number {
   if (Number.isFinite(event.end)) return Math.max(0, event.end - event.start)
   return event.allDay ? DAY_MS : 3_600_000
 }
 
-/**
- * Every occurrence overlapping `[from, to)`, ready to render.
- *
- * A VEVENT carrying RECURRENCE-ID replaces that one occurrence of its series —
- * the moved instance of a weekly meeting — so those are collected first and the
- * matching generated occurrence is dropped.
- */
+// Every occurrence overlapping `[from, to)`. A VEVENT with RECURRENCE-ID
+// replaces that one occurrence of its series, so overrides are collected first.
 export function parseCalendar(text: string, from: number, to: number): CalendarEvent[] {
   const raw = readEvents(text).filter((event) => !event.cancelled)
   const overrides = new Map<string, RawEvent>()
@@ -429,7 +369,6 @@ export function parseCalendar(text: string, from: number, to: number): CalendarE
   return out.sort((a, b) => a.start - b.start || a.title.localeCompare(b.title))
 }
 
-/** The calendar's own name, for labelling a subscription the user just added. */
 export function calendarName(text: string): string {
   for (const line of unfold(text)) {
     const property = parseLine(line)

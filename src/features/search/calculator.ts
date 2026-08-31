@@ -1,10 +1,6 @@
 /**
- * A small arithmetic evaluator for the search box.
- *
- * Hand-written recursive descent rather than `eval` or `new Function`: an
- * extension page must not execute strings, and Chrome's MV3 policy forbids it
- * outright. It also means the grammar is exactly what is documented here and
- * nothing more.
+ * Arithmetic evaluator for the search box. Hand-written recursive descent, not
+ * `eval`/`new Function`: MV3 forbids executing strings.
  *
  * Grammar:
  *   expr    = term (('+' | '-') term)*

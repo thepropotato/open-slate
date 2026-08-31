@@ -11,14 +11,8 @@ import {
   PermissionGate,
 } from '@/features/widgets/shared/ListShell'
 
-/**
- * Recently closed tabs and windows.
- *
- * Probably the entry that earns its place on a new tab page most often: the tab
- * you just closed by accident is exactly what you want back. `chrome.sessions`
- * restores it with its navigation history intact, which reopening the bare URL
- * would not.
- */
+// Recently closed tabs and windows. `chrome.sessions` restores them with their
+// navigation history intact, which reopening the bare URL would not.
 
 const ContinueConfig = z.object({
   limit: z.number().min(3).max(25).default(8),

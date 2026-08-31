@@ -3,11 +3,7 @@ import { Modal } from './Modal'
 import { Button } from './controls'
 import type { IconName } from '@/core/icons'
 
-/**
- * Gate in front of anything that destroys data. Deliberately plain: the
- * dialog states what will be lost and makes the destructive choice the one
- * the user has to reach for, not the one under the cursor.
- */
+/** Gate in front of anything that destroys data. */
 export function ConfirmDialog({
   title,
   body,

@@ -6,13 +6,8 @@ import type { AnyWidgetDefinition } from '@/core/widgets/types'
 import { permissions } from '@/core/platform/browser'
 import './WidgetPicker.css'
 
-/**
- * Widget gallery.
- *
- * Widgets that read browser data declare optional permissions, which are asked
- * for at the moment of adding rather than up front at install — so the extension
- * does not demand history and bookmarks access from someone who only wants a clock.
- */
+// Widget gallery. Optional permissions are requested when a widget is added,
+// not at install, so the extension asks only for what's actually used.
 export function WidgetPicker({
   onAdd,
   onClose,

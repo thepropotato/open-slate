@@ -4,15 +4,8 @@ import type { WidgetProps } from '@/core/widgets/types'
 import { CLAUDE } from './claude'
 import { UsagePanel } from './UsagePanel'
 
-/**
- * Claude's usage widget.
- *
- * One widget per provider rather than one widget with a row per provider: each
- * gets its own tile, asks for only its own host permission, and a user adds
- * just the ones they have accounts with. Everything but the adapter and this
- * registration is shared, so a second provider is a file beside `claude.ts` and
- * a copy of this.
- */
+// One widget per provider rather than one widget with a row each, so a tile only
+// asks for the host permission of the provider you actually use.
 
 const ClaudeUsageConfig = z.object({})
 type ClaudeUsageConfig = z.infer<typeof ClaudeUsageConfig>

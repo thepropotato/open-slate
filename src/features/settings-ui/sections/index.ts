@@ -8,10 +8,7 @@ import { searchSection } from './search'
 import { tilesSection } from './tiles'
 import { widgetsSection } from './widgets'
 
-/**
- * The settings sections, in sidebar order. Each feature contributes its own
- * file here, so adding a feature never means touching a shared form component.
- */
+// The settings sections, in sidebar order; each feature contributes its own file.
 export const sections: Section[] = [
   appearanceSection,
   backgroundSection,

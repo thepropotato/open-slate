@@ -96,7 +96,7 @@ function Face({ style, ...props }: FaceProps & { style: ClockConfig['style'] }) 
   }
 }
 
-/** Asks Intl whether this locale writes times with a meridiem. */
+// Asks Intl whether this locale writes times with a meridiem.
 function prefersTwelveHour(locale?: string): boolean {
   const formatted = new Intl.DateTimeFormat(locale, { hour: 'numeric' }).format(new Date(2020, 0, 1, 13))
   return /\d/.test(formatted) && !/13/.test(formatted)
@@ -119,7 +119,6 @@ function formatDate(
   return new Intl.DateTimeFormat(locale, { ...options, timeZone }).format(date)
 }
 
-/** "Asia/Kolkata" -> "Kolkata" */
 const zoneLabel = (zone: string): string => zone.split('/').pop()?.replace(/_/g, ' ') ?? zone
 
 registerWidget<ClockConfig>({

@@ -1,17 +1,9 @@
 import { useEffect, useState } from 'react'
 
 /**
- * Resolves an async value, keyed.
- *
- * Three properties matter here, and all three are easy to get wrong by hand:
- *  - state is only ever written from the async callback, so no render cascades;
- *  - a result whose key no longer matches is discarded, so switching inputs
- *    never shows the previous input's answer;
- *  - a `null` key means "don't load", and reads back as `null` immediately
- *    rather than after a clearing render.
- *
- * `key` is the cache identity by contract: whatever `load` closes over must be
- * reflected in it.
+ * Resolves an async value, keyed. A stale result is discarded, and a `null` key
+ * means "don't load" and reads back as `null` immediately.
+ * `key` is the request identity by contract: whatever `load` closes over must be in it.
  */
 export function useAsyncValue<T>(key: string | null, load: () => Promise<T | null>): T | null {
   const [resolved, setResolved] = useState<{ key: string; value: T | null } | null>(null)
@@ -30,8 +22,7 @@ export function useAsyncValue<T>(key: string | null, load: () => Promise<T | nul
     return () => {
       alive = false
     }
-    // `load` is deliberately excluded: `key` is the identity of the request, so
-    // including the closure would refetch on every render for no benefit.
+    // `load` excluded: `key` is the request identity, so including the closure refetches every render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key])
 

@@ -1,13 +1,8 @@
 import { localStore, permissions } from '@/core/platform/browser'
 import { parseFeed, type FeedItem } from './parse'
 
-/**
- * Feed fetching, with a cache and per-origin permissions.
- *
- * Each feed's origin is requested as an optional host permission when the feed
- * is added, so the extension never holds blanket network access. Results are
- * cached, because a new tab may open many times between two feed updates.
- */
+// Feed fetching. Each feed's origin is an optional host permission, so the
+// extension never holds blanket network access.
 
 const CACHE_KEY = 'feedCache'
 const CACHE_TTL_MS = 15 * 60 * 1000
@@ -42,7 +37,7 @@ export interface LoadedFeed {
   url: string
   title: string
   items: FeedItem[]
-  /** Set when the feed could not be read, for showing why. */
+  /** Set when the feed could not be read. */
   error?: string
 }
 

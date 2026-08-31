@@ -1,9 +1,5 @@
-/**
- * Search engines and their bang shortcuts.
- *
- * Each engine carries a home page so the UI can show its real favicon — the
- * same mechanism the tiles use — rather than inventing a glyph for it.
- */
+// Search engines and their bang shortcuts. Each carries a home page so the UI
+// can show its real favicon.
 
 export interface SearchEngine {
   id: string
@@ -11,7 +7,7 @@ export interface SearchEngine {
   /** `{q}` is replaced with the URL-encoded query. */
   template: string
   home: string
-  /** Typed as `!g`, `!yt` and so on. First entry is the canonical one. */
+  /** Typed as `!g`, `!yt`. First entry is canonical. */
   bangs: string[]
 }
 
@@ -51,16 +47,11 @@ for (const engine of searchEngines) {
 
 export interface ParsedQuery {
   engine: SearchEngine
-  /** The query with any bang removed. */
   query: string
-  /** The bang that was recognised, for showing feedback in the UI. */
   bang?: string
 }
 
-/**
- * Splits a bang prefix off the query. Both `!yt cats` and the trailing form
- * `cats !yt` are accepted, because muscle memory differs between the two.
- */
+// Both `!yt cats` and `cats !yt` are accepted.
 export function parseQuery(raw: string, fallbackId: string, bangsEnabled: boolean): ParsedQuery {
   const fallback = getEngine(fallbackId)
   const input = raw.trim()
@@ -91,11 +82,7 @@ export function parseQuery(raw: string, fallbackId: string, bangsEnabled: boolea
 export const buildSearchUrl = ({ engine, query }: ParsedQuery): string =>
   query ? engine.template.replace('{q}', encodeURIComponent(query)) : engine.home
 
-/**
- * Recognises input that is already a destination — a URL, a bare host, or a
- * localhost address — so typing "github.com/anthropics" navigates rather than
- * searching for it.
- */
+// Input that is already a destination: URL, bare host, or localhost.
 export function asDestination(input: string): string | null {
   const value = input.trim()
   if (!value || /\s/.test(value)) return null

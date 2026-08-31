@@ -2,17 +2,9 @@ import { localStore } from '@/core/platform/browser'
 import { dominantColor } from '@/core/theme/color'
 
 /**
- * Brand-logo resolution for tiles.
- *
- * Two sources, in order of quality:
- *  1. Simple Icons — a proper monochrome logo plus the brand's official colour,
- *     for the curated host list in `scripts/brand-domains.mjs`.
- *  2. The site's own favicon, tinted by sampling its dominant colour. This is
- *     the universal path: it works for every site, including the brands Simple
- *     Icons has dropped over logo licensing.
- *
- * The dataset is loaded lazily so it never sits between the user and first
- * paint — tiles render the favicon immediately and upgrade in place.
+ * Brand-logo resolution for tiles: Simple Icons for the curated host list in
+ * `scripts/brand-domains.mjs`, otherwise the site's own favicon tinted by its
+ * dominant colour. The dataset loads lazily; tiles upgrade in place.
  */
 
 export interface Brand {
@@ -71,17 +63,12 @@ export async function allBrands(): Promise<Brand[]> {
     .sort((a, b) => a.title.localeCompare(b.title))
 }
 
-/* ------------------------------------------------------- favicon tinting */
-
 const TINT_KEY = 'faviconTints'
 const memoryTints = new Map<string, string | null>()
 let storedTints: Record<string, string> | null = null
 let pendingWrite: ReturnType<typeof setTimeout> | null = null
 
-/**
- * Samples a plate colour from a site's favicon. Results are cached in storage
- * keyed by host, because the sample costs a canvas read and never changes.
- */
+// Cached by host in storage: the sample costs a canvas read and never changes.
 export async function faviconTint(host: string, faviconSrc: string): Promise<string | null> {
   if (!host || !faviconSrc) return null
   if (memoryTints.has(host)) return memoryTints.get(host) ?? null

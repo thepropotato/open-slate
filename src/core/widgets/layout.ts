@@ -1,41 +1,27 @@
 /**
- * Keeping the canvas free of stacked widgets.
- *
- * There is one stored layout, and non-overlap is an invariant of it rather than
- * a side effect of what the grid happens to be rendering. `ResponsiveGridLayout`
- * only ever compacts what is on screen, so everything that writes a layout —
- * clamping a footprint, applying a size from the config dialog, placing a newly
- * added widget — goes through `normalizeLayout` before it is stored.
- *
- * A window too narrow to show that layout legibly is given `stackVertically`
- * instead. That is derived on the way to the screen and never written back,
- * which is what makes narrowing a window non-destructive.
+ * Non-overlap is an invariant of the stored layout, so every write goes through
+ * `normalizeLayout` — `ResponsiveGridLayout` only compacts what is on screen.
  */
 
 import type { Compactor } from 'react-grid-layout/core'
 import type { GridItem } from '@/core/settings/schema'
 import { DEFAULT_SIZES, sizeOf, snapSize, type WidgetSizeName } from './sizes'
 
-/**
- * The shape the packing below actually needs. Deliberately looser than
- * `GridItem` so the same functions can pack the library's own layout items,
- * which carry drag flags this module has no business knowing about.
- */
+// Looser than `GridItem` so these functions can also pack the library's own layout items.
 interface Box {
   i: string
   x: number
   y: number
   w: number
   h: number
-  /** The library's pinned-item flag. Never set by this app, honoured anyway. */
+  // The library's pinned-item flag. Never set by this app, honoured anyway.
   static?: boolean
 }
 
-/** Do two footprints share any cell? */
 export const collides = (a: Box, b: Box): boolean =>
   a.i !== b.i && a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y
 
-/** Whether any pair in the layout overlaps. Used by the tests and nowhere else. */
+/** Used by the tests and nowhere else. */
 export function hasOverlap(items: readonly Box[]): boolean {
   for (let i = 0; i < items.length; i += 1) {
     for (let j = i + 1; j < items.length; j += 1) {
@@ -45,17 +31,13 @@ export function hasOverlap(items: readonly Box[]): boolean {
   return false
 }
 
-/** Reading order: top row first, then left to right within the row. */
+// Reading order: top row first, then left to right within the row.
 const byRowCol = (a: Box, b: Box) => a.y - b.y || a.x - b.x || (a.i < b.i ? -1 : 1)
 const byColRow = (a: Box, b: Box) => a.x - b.x || a.y - b.y || (a.i < b.i ? -1 : 1)
 
 /**
- * Packs a layout, one item at a time, in the given order.
- *
- * `slide` walks an item towards the gravity edge before it is committed; every
- * strategy then shares the same collision loop, which drops the item past
- * whatever it landed on until the cell is clear. Pinned items are committed
- * first so nothing is ever packed into the space one of them occupies.
+ * Packs a layout one item at a time. `slide` walks an item towards the gravity
+ * edge before commit. Pinned items are committed first so nothing packs into them.
  */
 function pack<T extends Box>(
   items: readonly T[],
@@ -82,18 +64,11 @@ function pack<T extends Box>(
     out.set(next.i, next)
   }
 
-  // Emit in the caller's order so React keys and stored layouts stay stable.
+  // Caller's order, so React keys and stored layouts stay stable.
   return items.map((item) => out.get(item.i) ?? item)
 }
 
-/**
- * Resolves overlaps without applying gravity.
- *
- * Items are placed in reading order and keep the position they were given; one
- * that lands on top of something already placed falls to the first row below
- * where it fits. That is what "free placement" has to mean here — a widget
- * stays where you put it, but it never sits on top of another one.
- */
+/** Resolves overlaps without gravity: an item keeps its position, or falls to the first free row below. */
 export function nudgeDown<T extends Box>(items: readonly T[], cols: number): T[] {
   const bounded = items.map((item) => ({
     ...item,
@@ -104,7 +79,7 @@ export function nudgeDown<T extends Box>(items: readonly T[], cols: number): T[]
   })
 }
 
-/** Gravity towards the top edge. Mirrors the library's own vertical compactor. */
+/** Mirrors the library's own vertical compactor. */
 function compactVertical<T extends Box>(items: readonly T[]): T[] {
   return pack(
     items,
@@ -143,16 +118,8 @@ function compactHorizontal<T extends Box>(items: readonly T[], cols: number): T[
 export type CompactMode = 'vertical' | 'horizontal' | 'none'
 
 /**
- * The layout as a single column, in reading order.
- *
- * What a window too narrow for the arrangement gets instead of a squeezed
- * version of it. Each widget keeps its height and spans the whole band, and
- * they follow each other down the page in the order they were arranged in —
- * top row first, then left to right within a row.
- *
- * Derived on the way to the screen and never stored. That is the whole reason
- * the stored layout survives a resize: narrowing the window does not write
- * anything, so widening it again has the original arrangement to come back to.
+ * The layout as a single column, for windows too narrow to render it. Derived on
+ * the way to the screen and never stored, so narrowing a window is non-destructive.
  */
 export function stackVertically<T extends Box>(items: readonly T[], cols: number): T[] {
   let y = 0
@@ -161,17 +128,13 @@ export function stackVertically<T extends Box>(items: readonly T[], cols: number
     stacked.set(item.i, { ...item, x: 0, y, w: cols })
     y += item.h
   }
-  // The caller's order, so React keys stay stable across the switch.
+  // Caller's order, so React keys stay stable across the switch.
   return items.map((item) => stacked.get(item.i) ?? item)
 }
 
 /**
- * Brings a layout into a state the canvas can render: every
- * footprint is one of the widget's standard sizes, sits inside the grid, and
- * overlaps nothing.
- *
- * `sizesFor` returns the standard sizes an instance is allowed to take; an
- * unknown instance falls back to the default set.
+ * Every footprint becomes a standard size, inside the grid, overlapping nothing.
+ * `sizesFor` returns the sizes an instance may take; unknown ids get the defaults.
  */
 export function normalizeLayout(
   items: readonly GridItem[],
@@ -195,13 +158,8 @@ export function normalizeLayout(
 }
 
 /**
- * "Free" compaction, as the library sees it.
- *
- * The library's own `noCompactor` is the identity function, which means a
- * *growing* widget is never pushed off its neighbours — collisions on resize
- * are only ever resolved through compaction. Plugging `nudgeDown` in here fixes
- * that at the source, so free mode is correct during the gesture rather than
- * only once the layout has been written back.
+ * The library's `noCompactor` is the identity function, so a growing widget never
+ * pushes off its neighbours. `nudgeDown` keeps free mode correct during the gesture.
  */
 export const freeCompactor: Compactor = {
   type: null,

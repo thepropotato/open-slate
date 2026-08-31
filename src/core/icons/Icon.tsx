@@ -3,21 +3,16 @@ import { icons, type IconName } from './registry'
 import './icon.css'
 
 /**
- * Renders a Font Awesome icon definition directly.
- *
- * The definitions are plain data — `[width, height, ligatures, unicode, path]` —
- * so drawing them takes one `<svg>` and no library. That drops
- * `fontawesome-svg-core` and `react-fontawesome` (about 90KB before gzip) from
- * a page whose whole job is to paint instantly, while keeping Font Awesome as
- * the single source of every icon in the app.
+ * Renders a Font Awesome definition (`[width, height, ligatures, unicode, path]`)
+ * as one `<svg>`, dropping ~90KB of `fontawesome-svg-core` and `react-fontawesome`.
  */
 export interface IconProps {
   name: IconName
-  /** Any CSS length. Defaults to 1em, so icons follow the surrounding text. */
+  // Any CSS length; defaults to 1em, so icons follow the surrounding text.
   size?: string
   className?: string
   spin?: boolean
-  /** Supplying a title makes the icon meaningful to assistive tech. */
+  // A title makes the icon meaningful to assistive tech.
   title?: string
   style?: CSSProperties
 }

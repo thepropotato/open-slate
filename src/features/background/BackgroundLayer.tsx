@@ -7,26 +7,21 @@ import { useBackgroundSource } from './useBackgroundSource'
 import './background.css'
 
 /**
- * Paints the wallpaper: a colour, gradient, still image, looping video or
- * slideshow, plus the adjustment layers over it.
- *
- * Two things it is careful about, because they are what make a video wallpaper
- * tolerable rather than a battery complaint: decoding stops while the tab is
- * hidden, and nothing animates when the system asks for reduced motion.
+ * Paints the wallpaper — colour, gradient, image, video or slideshow — plus its
+ * adjustment layers. Decoding stops while the tab is hidden, and nothing
+ * animates under reduced motion.
  */
 export function BackgroundLayer() {
   const { background, appearance } = useSettings()
   const palette = usePalette()
   const source = useBackgroundSource(background)
 
-  // Blurring a full-bleed layer bleeds the page colour in at the edges, so the
-  // scale is nudged up in proportion to the blur to keep the frame covered.
+  // Blur bleeds the page colour in at the edges, so scale rises with it.
   const scale = background.scale + background.blur / 220
 
   const style = {
     filter: `blur(${background.blur}px) saturate(${background.saturation}) brightness(${background.brightness})`,
-    // Passed as a variable, not as `transform`, so the Ken Burns keyframes can
-    // build on it instead of overriding it.
+    // A variable, not `transform`: the Ken Burns keyframes build on it.
     ['--bg-scale' as string]: String(scale),
   } satisfies React.CSSProperties
 
@@ -56,8 +51,8 @@ export function BackgroundLayer() {
         />
       ) : null}
 
-      {/* Dim and vignette exist to rescue text over a photo. Applying them to a
-          solid or gradient would only mute a colour the palette already chose. */}
+      {/* Dim and vignette rescue text over a photo; over a solid or gradient
+          they would only mute a colour the palette chose. */}
       {source.kind !== 'none' ? (
         <>
           <div className="bg__dim" style={{ opacity: background.dim }} />
@@ -75,9 +70,8 @@ function baseFill(
   const themed = background.followTheme
   if (background.type === 'gradient') {
     const { angle } = background.gradient
-    // A themed gradient always runs lifted -> deepened. Both ends move in the
-    // same direction in light and dark, just by different amounts: a light theme
-    // that brightened towards the edge would read as flat and washed out.
+    // Always lifted -> deepened, in both light and dark: brightening towards the
+    // edge reads as flat and washed out.
     const from = themed ? mix(palette.bg, palette.bgElevated, 0.75) : background.gradient.from
     const to = themed
       ? mix(palette.bg, '#000000', isDark(palette.bg) ? 0.5 : 0.09)
@@ -87,8 +81,6 @@ function baseFill(
   // Solid also sits behind media as the letterbox colour and the pre-load fill.
   return themed ? palette.bg : background.color
 }
-
-/* ------------------------------------------------------------------- image */
 
 function ImageLayer({
   src,
@@ -107,11 +99,8 @@ function ImageLayer({
   crossfade: boolean
   sampleAccent: boolean
 }) {
-  /**
-   * The outgoing image is held in a second layer that is written to directly
-   * rather than kept in state: it exists purely so the new image has something
-   * to fade over, and re-rendering React for it would be pointless churn.
-   */
+  // The outgoing image, written to directly rather than held in state: it only
+  // exists for the new image to fade over.
   const previousRef = useRef<HTMLDivElement>(null)
   const shownRef = useRef<string | null>(null)
 
@@ -129,8 +118,7 @@ function ImageLayer({
   useEffect(() => {
     if (!sampleAccent || !src) return
     let alive = true
-    // The user picked this wallpaper explicitly, so one cross-origin attempt is
-    // worth it — it works for hosts that send CORS headers and fails quietly otherwise.
+    // Works for hosts that send CORS headers, fails quietly otherwise.
     void dominantColor(src, true).then((colour) => {
       if (alive) accentStore.set(colour)
     })
@@ -165,10 +153,8 @@ function ImageLayer({
   )
 }
 
-/** Blob URLs never need escaping, but a pasted remote URL can contain quotes. */
+// Blob URLs never need escaping, but a pasted remote URL can contain quotes.
 const cssUrl = (src: string) => src.replace(/"/g, '%22')
-
-/* ------------------------------------------------------------------- video */
 
 function VideoLayer({
   src,

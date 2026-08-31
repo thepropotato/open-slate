@@ -1,9 +1,7 @@
 /**
- * IndexedDB store for user media — wallpapers, videos and custom tile images.
- *
- * `chrome.storage` is the wrong home for these: it serialises to JSON and its
- * quotas are tuned for settings, not for a 40MB video. IndexedDB holds Blobs
- * natively and, with the `unlimitedStorage` permission, without a size cap.
+ * IndexedDB store for user media. `chrome.storage` serialises to JSON and is
+ * quota-tuned for settings; IndexedDB holds Blobs natively and, with
+ * `unlimitedStorage`, uncapped.
  */
 
 const DB_NAME = 'newtab-media'
@@ -54,7 +52,7 @@ async function transact<T>(
   })
 }
 
-/** Object URLs are cached per id so a re-render never creates a second one. */
+// Cached per id so a re-render never creates a second object URL.
 const urlCache = new Map<string, string>()
 
 export const mediaStore = {
@@ -103,7 +101,7 @@ export const mediaStore = {
     urlCache.clear()
   },
 
-  /** Bytes used / available, when the browser will tell us. */
+  // Bytes used / available, when the browser will tell us.
   async usage(): Promise<{ used: number; quota: number } | null> {
     if (!navigator.storage?.estimate) return null
     const { usage = 0, quota = 0 } = await navigator.storage.estimate()

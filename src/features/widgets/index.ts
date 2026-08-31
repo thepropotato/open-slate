@@ -1,10 +1,5 @@
-/**
- * Widget registration.
- *
- * Importing this module is what makes widgets available. Each widget registers
- * itself as a side effect of its own import, so adding one is a single line here
- * and no changes anywhere else.
- */
+// Each widget registers itself on import; importing this module is what makes
+// them available.
 import './greeting/GreetingWidget'
 import './clock/ClockWidget'
 import './weather/WeatherWidget'

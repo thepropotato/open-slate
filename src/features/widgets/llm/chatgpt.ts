@@ -1,24 +1,11 @@
-/**
- * ChatGPT's usage adapter.
- *
- * Same shape as Claude's, with one extra step: `chatgpt.com/backend-api/*`
- * rejects cookies alone with a 401, because the app authenticates with a bearer
- * token it mints client-side. The page exposes that token at `/api/auth/session`
- * (the Next-Auth convention), so `fetchInPage` reads the session first and
- * passes the token straight into the usage call.
- *
- * The token never leaves the page: it is minted inside the tab, used in the very
- * next request from that same tab, and only the normalised numbers cross back to
- * the worker. Nothing here reads a cookie.
- *
- * `chrome.scripting` serialises `fetchInPage` to inject it, so it may not close
- * over anything in this module: it is fully self-contained, including its own
- * copy of the small search helpers.
- */
+// ChatGPT's usage adapter. Like Claude's, plus one step: `/backend-api/*` 401s on
+// cookies alone, so the token is read from `/api/auth/session` first. The token
+// never leaves the page; only the normalised numbers cross back to the worker.
+//
+// `chrome.scripting` serialises `fetchInPage`, so it must not close over anything
+// in this module — hence its own copy of the helpers.
 
 import type { PageResult, ProviderAdapter, ProviderWindow } from './types'
-
-/* ────────────────────────────────────────────────────────── ChatGPT ────── */
 
 async function fetchChatGPT(): Promise<PageResult> {
   const num = (v: unknown): number | null =>
@@ -26,7 +13,7 @@ async function fetchChatGPT(): Promise<PageResult> {
   const asObj = (v: unknown): Record<string, unknown> | null =>
     v && typeof v === 'object' ? (v as Record<string, unknown>) : null
 
-  // Depth-first search for the first value at any of `keys` matching `ok`.
+  // First value at any of `keys` matching `ok`, at any depth.
   const find = (root: unknown, keys: string[], ok: (v: unknown) => boolean): unknown => {
     const seen = new Set<unknown>()
     const stack: unknown[] = [root]
@@ -43,10 +30,10 @@ async function fetchChatGPT(): Promise<PageResult> {
     return undefined
   }
 
-  /** Epoch seconds → ISO, ignoring values that aren't plausibly a timestamp. */
+  // Epoch seconds to ISO.
   const isoFrom = (v: unknown): string | null => {
     const n = num(v)
-    // Below ~2001 in epoch seconds this is a duration, not an instant.
+    // Below ~2001 in epoch seconds it is a duration, not an instant.
     if (n === null || n < 1e9) return null
     return new Date(n * 1000).toISOString()
   }
@@ -54,7 +41,7 @@ async function fetchChatGPT(): Promise<PageResult> {
   try {
     const isJson = (r: Response) => (r.headers.get('content-type') ?? '').includes('json')
 
-    // 1. Mint the bearer token. A signed-out session returns `{}` with a 200.
+    // Mint the bearer token. A signed-out session returns `{}` with a 200.
     const sessionRes = await fetch('/api/auth/session', { credentials: 'include' })
     if (!sessionRes.ok) return { error: `Responded ${sessionRes.status}.` }
     if (!isJson(sessionRes)) return { error: 'Not signed in.' }
@@ -62,7 +49,6 @@ async function fetchChatGPT(): Promise<PageResult> {
     const token = typeof session.accessToken === 'string' ? session.accessToken : null
     if (!token) return { error: 'Not signed in.' }
 
-    // 2. Read usage with it.
     const usageRes = await fetch('/backend-api/wham/usage', {
       credentials: 'include',
       headers: { Authorization: `Bearer ${token}` },
@@ -74,11 +60,8 @@ async function fetchChatGPT(): Promise<PageResult> {
 
     const rate = asObj(data.rate_limit)
 
-    /**
-     * A window's label comes from how long it runs, because the API names the
-     * two slots by precedence (`primary`/`secondary`) rather than by duration,
-     * and which one is which varies by plan. "Weekly" is what a person reads.
-     */
+    // Labelled by duration: the API names its slots `primary`/`secondary` by
+    // precedence, and which is which varies by plan.
     const labelFor = (seconds: number | null, fallback: string): string => {
       if (seconds === null || seconds <= 0) return fallback
       const hours = Math.round(seconds / 3600)
@@ -108,8 +91,7 @@ async function fetchChatGPT(): Promise<PageResult> {
       pickWindow('secondary_window', 'Secondary'),
     ].filter((w): w is ProviderWindow => w !== null)
 
-    // If the shape drifted, deep-search for a percentage rather than showing
-    // nothing — the worker still validates whatever comes back.
+    // Fallback for shape drift; the worker still validates the result.
     if (windows.length === 0) {
       const pct = find(data, ['used_percent', 'percent_used', 'utilization'], (v) => {
         const n = num(v)
@@ -120,14 +102,13 @@ async function fetchChatGPT(): Promise<PageResult> {
     }
 
     if (windows.length === 0) return { error: 'No usage in response.' }
-    // ChatGPT meters by rate limit, not dollars; there is no spend to report.
+    // ChatGPT meters by rate limit, not dollars.
     return { usage: { windows, spend: null } }
   } catch (err) {
     return { error: err instanceof Error ? err.message : 'Failed to read usage.' }
   }
 }
 
-/** The ChatGPT adapter. */
 export const CHATGPT: ProviderAdapter = {
   id: 'chatgpt',
   label: 'ChatGPT',

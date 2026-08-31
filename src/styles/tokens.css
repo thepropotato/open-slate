@@ -1,10 +1,7 @@
 /*
- * Base tokens and reset.
- *
- * Every value here is a fallback: `ThemeProvider` overwrites the same custom
- * properties on `:root` from the user's settings. Nothing in the app should
- * hard-code a colour, radius or duration — always go through a token, because
- * that is what makes "rounded vs boxy" and theming a one-setting change.
+ * Base tokens and reset. Every value is a fallback: ThemeProvider overwrites the
+ * same custom properties on :root from the user's settings. Never hard-code a
+ * colour, radius or duration elsewhere.
  */
 
 :root {
@@ -66,11 +63,7 @@
   --z-toast: 300;
 }
 
-/*
- * Light defaults, applied before any JavaScript runs. `ThemeProvider` overwrites
- * these a moment later, but without them a light-mode user gets a dark flash on
- * every single new tab — the one thing this page cannot afford.
- */
+/* Light defaults applied before JS runs, so a light-mode user gets no dark flash. */
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
@@ -197,11 +190,7 @@ video {
   backdrop-filter: none;
 }
 
-/*
- * Per-element overrides. These carry the same specificity as the ancestor rules
- * above, so they must come after them in source order to win — which they only
- * ever need to do when `data-scope` is actually present.
- */
+/* Per-element overrides. Same specificity as the ancestor rules, so must stay after them. */
 .surface[data-scope='glass'] {
   background: var(--surface);
   border: var(--surface-border);
@@ -230,13 +219,7 @@ video {
   backdrop-filter: none;
 }
 
-/*
- * Scrolls on one axis, as the name says.
- *
- * `overflow-x` is stated rather than left alone: with one axis `auto` and the
- * other `visible`, the spec promotes `visible` to `auto`, so anything that
- * overhangs quietly gains a horizontal scrollbar as well.
- */
+/* `overflow-x` must be stated: the spec promotes a `visible` axis to `auto` beside an `auto` one. */
 .scroll-y {
   overflow-y: auto;
   overflow-x: hidden;

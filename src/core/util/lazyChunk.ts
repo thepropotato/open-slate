@@ -1,14 +1,9 @@
 import { lazy, type ComponentType } from 'react'
 
 /**
- * `React.lazy`, hardened against an extension update under an open tab.
- *
- * Chunk filenames are content-hashed, so when Chrome swaps in a new build the
- * old file names stop resolving and every chunk that had not been fetched yet
- * rejects with "Failed to fetch dynamically imported module". The tab is then
- * left with a feature that can never load, and the rejection surfaces as an
- * uncaught error. A reload picks up the new build; the session flag makes sure
- * a genuinely missing chunk cannot turn that into a reload loop.
+ * `React.lazy`, hardened against an extension update under an open tab: chunk
+ * names are content-hashed, so a new build leaves unfetched chunks unresolvable.
+ * Reload once to pick up the new build; the session flag prevents a reload loop.
  */
 const RELOAD_KEY = 'newtab:chunk-reload'
 

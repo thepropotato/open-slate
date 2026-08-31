@@ -26,11 +26,8 @@ import { setPath } from '@/core/util/path'
 import { uid } from '@/core/util/id'
 import { WidgetFrame } from './WidgetFrame'
 
-/*
- * Both dialogs are loaded on demand. The config dialog in particular reaches
- * into the settings-UI field renderer, which would otherwise drag the entire
- * settings layer into the new tab's first paint.
- */
+// Lazy: the config dialog pulls in the settings-UI field renderer, which would
+// otherwise land in the new tab's first paint.
 const WidgetPicker = lazyChunk(() => import('./WidgetPicker').then((m) => ({ default: m.WidgetPicker })))
 const WidgetConfigDialog = lazyChunk(() =>
   import('./WidgetConfigDialog').then((m) => ({ default: m.WidgetConfigDialog })),
@@ -38,56 +35,30 @@ const WidgetConfigDialog = lazyChunk(() =>
 import 'react-grid-layout/css/styles.css'
 import './widgets.css'
 
-/**
- * The smallest a cell may get before the canvas stops trying to show the
- * reader's arrangement at all.
- *
- * There is no middle ground any more — no intermediate column counts, no
- * squeezing, no centring. Either the layout fits at a legible size and is shown
- * exactly as arranged, or the window is too narrow and everything stacks into
- * one column. Two outcomes, and the width decides which.
- */
+// Below this cell size the arrangement is abandoned for a single stacked column.
+// There is no in-between: it either fits as arranged or it stacks.
 const MIN_CELL = 120
 
-/**
- * How much of a narrow band the stack takes, leaving the rest as side margin.
- *
- * A stacked widget does not need the whole window: at full bleed it runs edge
- * to edge against the browser frame and reads as a wall rather than a column of
- * cards. Holding it to most of the band keeps the cards distinct and gives the
- * eye somewhere to rest either side.
- */
+// Share of a narrow band the stack takes; the rest is side margin.
 const STACK_WIDTH = 0.86
 
-/**
- * A stacked row's height, as a share of the stack's width.
- *
- * Cells are square, so a one-column band would otherwise make every widget as
- * tall as it is wide — a full-width square per widget, and two of them fill the
- * screen. This is the aspect a stacked card is given instead: taller than the
- * unstacked cell, which is what made them letterboxes, but well short of square.
- */
+// Stacked row height as a share of stack width. Cells are square, so without
+// this a one-column band would make every widget as tall as the window is wide.
 const STACK_ROW = 0.52
 
-/** Empty rows kept below the last widget while the canvas is unlocked. */
+// Empty rows kept below the last widget while unlocked, as a drop target.
 const EDIT_ROOM_ROWS = 1
 
 const COMPACTORS = {
   vertical: verticalCompactor,
   horizontal: horizontalCompactor,
-  // Not the library's `noCompactor`: that one is the identity function, which
-  // lets a growing widget settle on top of its neighbours. See `layout.ts`.
+  // Not the library's `noCompactor`: that one lets a growing widget overlap
+  // its neighbours. See `layout.ts`.
   none: freeCompactor,
 }
 
-/**
- * The widget dashboard.
- *
- * One stored arrangement, shown as arranged whenever it fits and as a plain
- * vertical stack when the window is too narrow for it. Dragging and resizing
- * are off until the canvas is unlocked — a dashboard you can knock out of shape
- * by mis-clicking is worse than a fixed one.
- */
+// One stored arrangement, rendered as arranged when it fits and as a vertical
+// stack when the window is too narrow. Drag and resize require unlocking.
 export function WidgetCanvas() {
   const settings = useSettings()
   const { update } = useSettingsActions()
@@ -96,15 +67,9 @@ export function WidgetCanvas() {
   const [picking, setPicking] = useState(false)
   const [configuring, setConfiguring] = useState<string | null>(null)
 
-  /*
-   * The grid positions items with percentages on its very first render and
-   * switches to CSS transforms once it has mounted and measured the container.
-   * Both of those are transitioned properties, so the switch animates every
-   * widget from the grid's origin into place — the "thrown from the corner"
-   * effect. Nothing is animated until this flag clears on the frame after
-   * mount, so the first paint is simply the finished layout; drag and resize
-   * keep their motion because by then it is long since settled.
-   */
+  // Animation stays off until the frame after mount, or every widget flies in
+  // from the origin: the grid positions with percentages before mount and
+  // transforms after, and the library's stylesheet transitions both.
   const [settling, setSettling] = useState(true)
   useEffect(() => {
     const frame = requestAnimationFrame(() => setSettling(false))
@@ -115,59 +80,28 @@ export function WidgetCanvas() {
 
   const cols = widgets.columns
 
-  /*
-   * `measureBeforeMount` reports the container as unmounted until it has been
-   * measured. Without it the hook assumes a 1280px container, so the first
-   * layout is computed at the wrong scale and every widget then jumps to its
-   * real geometry once the true width arrives — the motion that read as the
-   * widgets being thrown into place. The ref goes on the stage rather than the
-   * grid, since the grid is what gets held back and the element being measured
-   * has to stay in the DOM.
-   */
+  // Without `measureBeforeMount` the hook assumes 1280px and every widget jumps
+  // once the real width arrives. The ref goes on the stage, not the grid, since
+  // the grid is what is held back and the measured element must stay mounted.
   const { width, mounted, containerRef } = useContainerWidth({ measureBeforeMount: true })
 
-  /** One cell and the n-1 gutters between them, as the grid divides the band. */
   const cellAt = (columns: number) => (width - widgets.margin * (columns - 1)) / columns
 
-  /**
-   * Whether the window is too narrow to show the arrangement.
-   *
-   * The only question the width is asked. Above this the layout renders exactly
-   * as arranged; below it, everything stacks. Arranging always uses the real
-   * grid, because a drag has to land the widget in the cell under the cursor.
-   */
+  // Arranging never stacks: a drag has to land in the cell under the cursor.
   const stacked = !editing && width > 0 && cellAt(cols) < MIN_CELL
 
-  /** Columns actually rendered: the whole band when stacked, else the layout's. */
   const activeCols = stacked ? 1 : cols
 
-  /**
-   * How wide the stack is, and how much is left over as margin.
-   *
-   * A stacked widget spanning the full band is a very wide, very short box —
-   * the row height still comes from the unstacked cell, which on a narrow
-   * window is small, so a clock ends up a letterbox. Holding the stack to a
-   * share of the band gives it back some of its proportions and puts the
-   * remainder either side as breathing room.
-   */
   const stackWidth = stacked ? Math.max(MIN_CELL, width * STACK_WIDTH) : width
   const stackInset = stacked ? (width - stackWidth) / 2 : 0
 
-  /**
-   * Row height, which is the cell size — cells are square.
-   *
-   * Stacked, the band is one column wide, so a square cell would be as tall as
-   * the stack is wide. That is far too tall for a one-cell widget, so the
-   * stacked row is a share of its width instead: still taller than the flat
-   * box the unstacked cell produced, without turning every widget into a
-   * square the height of the screen.
-   */
+  // Cells are square, so unstacked the row height is the cell size; stacked it
+  // is a share of the stack width instead of a full-width square.
   const rowHeight =
     width > 0
       ? Math.max(48, stacked ? stackWidth * STACK_ROW : cellAt(cols))
       : MIN_CELL
 
-  /** Standard sizes each instance is allowed to take, by instance id. */
   const allowed = useMemo(() => {
     const map = new Map<string, readonly WidgetSizeName[]>()
     for (const instance of widgets.instances) {
@@ -176,19 +110,13 @@ export function WidgetCanvas() {
     return map
   }, [widgets.instances])
 
-  /** Brings a layout into a state the canvas can render. */
   const normalize = useCallback(
     (items: readonly GridItem[]) =>
       normalizeLayout(items, cols, (id) => allowed.get(id), widgets.compact),
     [allowed, cols, widgets.compact],
   )
 
-  /**
-   * The stored arrangement, with any newly added widget placed into it.
-   *
-   * `place` positions a widget that has no position yet; everything else keeps
-   * exactly the geometry it was stored with.
-   */
+  // The stored arrangement; `place` only positions widgets that have no geometry.
   const layout = useMemo(() => {
     const known = new Set(widgets.instances.map((i) => i.id))
     const items = widgets.layout.filter((item) => known.has(item.i))
@@ -196,26 +124,13 @@ export function WidgetCanvas() {
     return normalize([...items, ...place(missing, items, cols)])
   }, [widgets.layout, widgets.instances, cols, normalize])
 
-  /**
-   * What the grid actually renders.
-   *
-   * Either the layout as arranged, or a single column of it. Stacking is
-   * derived here and never written back — `onLayoutChange` refuses to store
-   * anything while stacked — which is what lets widening the window bring the
-   * arrangement back exactly as it was.
-   */
+  // Stacking is derived here and never written back, so widening the window
+  // restores the arrangement exactly.
   const shown = useMemo(
     () => (stacked ? stackVertically(layout, 1) : layout),
     [layout, stacked],
   )
 
-  /**
-   * How tall the canvas is while arranging.
-   *
-   * An empty row past the last widget, so there is somewhere below to drag one
-   * to. Without it the canvas ends flush with the bottom widget and the only
-   * way to make a new row is to drop onto an existing one.
-   */
   const rows = useMemo(
     () => layout.reduce((max, item) => Math.max(max, item.y + item.h), 0),
     [layout],
@@ -223,10 +138,7 @@ export function WidgetCanvas() {
 
   const stageHeight = (rows + EDIT_ROOM_ROWS) * (rowHeight + widgets.margin) - widgets.margin
 
-  /**
-   * Resizing snaps to the widget's declared standard sizes rather than to
-   * single cells, so a drag of the handle steps between whole footprints.
-   */
+  // Resizing snaps to the widget's declared standard sizes, not single cells.
   const constraints = useMemo<LayoutConstraint[]>(
     () => [
       gridBounds,
@@ -245,20 +157,11 @@ export function WidgetCanvas() {
     [allowed],
   )
 
-  /** Stores a layout the reader has actually rearranged. */
   const onLayoutChange = useCallback(
     (next: Layout) => {
-      /*
-       * Only a real rearrangement is stored. The grid emits a layout whenever
-       * it re-measures, a window resize included, and writing that back is what
-       * used to replace the reader's arrangement with one nobody had chosen —
-       * a narrow window would flatten it to a single column, on disk, past a
-       * reload. Arranging is the only thing that changes what is stored.
-       *
-       * `stacked` is redundant today, since it implies `!editing` and so cannot
-       * be reached on its own. It is kept because it states the rule the canvas
-       * actually relies on: a derived layout is never written back.
-       */
+      // The grid re-emits a layout on every re-measure, a window resize
+      // included; storing those would persist the stacked column. A derived
+      // layout is never written back (`stacked` is redundant but states the rule).
       if (!editing || stacked) return
 
       // Store only the geometry, dropping the library's transient item flags.
@@ -297,12 +200,7 @@ export function WidgetCanvas() {
       },
     }))
 
-  /**
-   * Applies a standard size to an instance.
-   *
-   * Growing a widget is the one change that cannot be made in place: whatever
-   * used to sit beside or below it has to move, which is what `normalize` does.
-   */
+  // Growing a widget moves its neighbours, which is what `normalize` handles.
   const resizeInstance = (id: string, name: WidgetSizeName) =>
     update((current) => ({
       ...current,
@@ -356,17 +254,8 @@ export function WidgetCanvas() {
         }}
         compactor={COMPACTORS[widgets.compact]}
         constraints={constraints}
-        /*
-         * The whole widget drags, not a 22px grip — a target that small was
-         * easy to miss and easy to hit by accident. Widgets keep their own
-         * inputs usable because dragging is only on while the canvas is
-         * unlocked, and the frame's own buttons are excluded outright.
-         *
-         * `.wframe__live` marks content that may still be scrolled while
-         * arranging — a first-run card longer than its widget. It is excluded
-         * from the drag handle so the wheel reaches it; its children stay
-         * inert, so scrolling is all it gets.
-         */
+        // The whole widget is the drag handle. `.wframe__live` marks content
+        // that must stay scrollable while arranging, so it is excluded.
         dragConfig={{
           enabled: editing,
           handle: '.wframe',
@@ -463,7 +352,6 @@ export function WidgetCanvas() {
   )
 }
 
-/** Renders one instance, resolving its definition and validating its config. */
 function WidgetHost({
   instance,
   settings,
@@ -528,14 +416,8 @@ function WidgetHost({
   )
 }
 
-/**
- * The cell grid shown while arranging.
- *
- * One rounded slot per cell, tiled by an SVG pattern so it fills whatever
- * height the canvas has without anyone counting rows. The tile is the cell
- * pitch and the slot is the cell, which is exactly how the grid positions a
- * widget — so a slot is literally where the widget will land.
- */
+// Cell grid shown while arranging: an SVG pattern at the cell pitch, so it
+// fills any canvas height without counting rows.
 function GridSlots({ cell, gutter, radius }: { cell: number; gutter: number; radius: number }) {
   // `useId` includes colons, which a url(#...) reference cannot carry.
   const id = `slots${useId().replace(/:/g, '')}`
@@ -559,13 +441,8 @@ function GridSlots({ cell, gutter, radius }: { cell: number; gutter: number; rad
   )
 }
 
-/**
- * The corner grabber.
- *
- * Replaces the library's default handle, which is an invisible hitbox with a
- * background image on it — nothing tells you a widget can be resized. The ref
- * has to reach the element itself for the drag library to bind to it.
- */
+// Replaces the library's invisible default resize handle. The ref must reach
+// the element itself for the drag library to bind to it.
 const resizeGrabber = (axis: string, ref: Ref<HTMLElement>) => (
   <span
     ref={ref as Ref<HTMLSpanElement>}
@@ -584,11 +461,8 @@ const resizeGrabber = (axis: string, ref: Ref<HTMLElement>) => (
   </span>
 )
 
-/**
- * Positions for instances with no stored geometry. They flow left to right
- * below whatever is already placed, wrapping at the edge, which is how a newly
- * added widget lands next to the last one rather than alone on its own row.
- */
+// Positions for instances with no stored geometry: left to right below whatever
+// is already placed, wrapping at the edge.
 function place(
   instances: WidgetInstance[],
   existing: GridItem[],
@@ -620,7 +494,6 @@ function place(
   return out
 }
 
-/** The standard size an instance is currently at, at the widest breakpoint. */
 function sizeNameOf(
   instance: WidgetInstance | undefined,
   definition: AnyWidgetDefinition | undefined,

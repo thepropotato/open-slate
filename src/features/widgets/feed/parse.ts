@@ -1,11 +1,5 @@
-/**
- * RSS and Atom parsing.
- *
- * Uses the platform's own `DOMParser` rather than a library: the two formats
- * differ in a handful of element names, and a feed parser is not where an
- * extension should spend bundle weight. `text/xml` parsing does not execute
- * anything, and every field is read as text, never as markup.
- */
+// RSS and Atom parsing via DOMParser. `text/xml` executes nothing, and every
+// field is read as text, never as markup.
 
 export interface FeedItem {
   id: string
@@ -74,11 +68,8 @@ const date = (value: string): number => {
   return Number.isNaN(parsed) ? 0 : parsed
 }
 
-/**
- * Feed summaries are usually HTML. Rendering them is out of the question, so the
- * tags are dropped and the entities decoded through a detached document — which
- * never executes anything, unlike assigning to innerHTML on a live node.
- */
+// Summaries are usually HTML: strip tags and decode entities via a detached
+// document, which never executes anything (unlike innerHTML on a live node).
 function strip(html: string): string {
   if (!html) return ''
   const doc = new DOMParser().parseFromString(html, 'text/html')

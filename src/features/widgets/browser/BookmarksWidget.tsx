@@ -13,15 +13,11 @@ import {
   PermissionGate,
 } from '@/features/widgets/shared/ListShell'
 
-/**
- * A browsable bookmarks pane.
- *
- * Folders open in place with a breadcrumb back, rather than expanding a tree:
- * on a widget this small, one level at a time is far easier to read.
- */
+// Bookmarks pane. Folders open in place with a breadcrumb rather than expanding
+// a tree, which reads better at widget size.
 
 const BookmarksConfig = z.object({
-  /** Chrome bookmark node id. Empty means the bar. */
+  /** Chrome bookmark node id. Empty means the bookmarks bar. */
   folderId: z.string().default(''),
   limit: z.number().min(5).max(60).default(20),
   showHost: z.boolean().default(true),
@@ -103,7 +99,7 @@ async function readFolder(
 ): Promise<chrome.bookmarks.BookmarkTreeNode[]> {
   if (!isExtension() || !chrome.bookmarks?.getChildren) return []
   try {
-    // An unset folder means the bookmarks bar, which is always node "1".
+    // The bookmarks bar is always node "1".
     const id = folderId || '1'
     const children = await chrome.bookmarks.getChildren(id)
     // Folders first, so navigation is not buried under a long list of links.

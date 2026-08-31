@@ -1,10 +1,4 @@
-/**
- * Holds the accent colour sampled from the current wallpaper.
- *
- * The background layer is the only thing that knows which media is on screen,
- * and the theme layer is the only thing that knows how to paint tokens. This
- * one-value store connects them without either importing the other.
- */
+/** The accent sampled from the current wallpaper, connecting the background and theme layers without either importing the other. */
 
 let sampled: string | null = null
 const listeners = new Set<() => void>()

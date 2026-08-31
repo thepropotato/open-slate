@@ -19,10 +19,10 @@ import { seedTilesFromBrowser } from './seed'
 import { useGridArrows } from './useGridArrows'
 import './tiles.css'
 
-/** On demand: the editor carries the brand picker and the media store. */
+// Lazy: the editor carries the brand picker and the media store.
 const TileEditor = lazyChunk(() => import('./TileEditor').then((m) => ({ default: m.TileEditor })))
 
-/** On demand: the drag library is only needed once Arrange mode is entered. */
+// Lazy: the drag library is only needed in Arrange mode.
 const SortableTiles = lazyChunk(() =>
   import('./SortableTiles').then((m) => ({ default: m.SortableTiles })),
 )
@@ -30,11 +30,9 @@ const SortableTiles = lazyChunk(() =>
 const FolderView = lazyChunk(() => import('./FolderView').then((m) => ({ default: m.FolderView })))
 
 /**
- * The speed dial band.
- *
- * Reordering is opt-in via Arrange mode rather than always-on drag, so a single
- * click on a tile always navigates — the common case by far. Pages and folders
- * are both derived from the flat tile list; see `folders.ts`.
+ * The speed dial band. Reordering is opt-in via Arrange mode so a single click
+ * always navigates. Pages and folders are derived from the flat list; see
+ * `folders.ts`.
  */
 export function TileGrid() {
   const { tiles, behavior } = useSettings()
@@ -52,8 +50,8 @@ export function TileGrid() {
   const items = tiles.items
   const pages = useMemo(() => pageIds(tiles.pages), [tiles.pages])
 
-  // Derived rather than corrected in an effect: if the selected page has since
-  // been deleted, fall back to the first one without an extra render.
+  // Derived, not corrected in an effect: a deleted page falls back without a
+  // second render.
   const activePage = pages.includes(pageId) ? pageId : ROOT
 
   const visible = useMemo(
@@ -121,7 +119,7 @@ export function TileGrid() {
 
   const remove = (id: string) => write(removeTile(items, id))
 
-  /** The tiles without any drag plumbing: the normal path, and the Arrange fallback. */
+  // No drag plumbing: the normal path, and the Arrange fallback.
   const plainTiles = (arranging: boolean) =>
     visible.map((tile, index) => (
       <Tile
@@ -147,21 +145,10 @@ export function TileGrid() {
     '--tile-radius': tiles.radius === null ? 'var(--radius)' : `${tiles.radius}px`,
     '--tile-pad': `${tiles.imagePadding}px`,
     '--tile-fit': tiles.imageFit,
-    /*
-     * A column count means a row of exactly that many tiles filling the band,
-     * so the grid ends where the widget canvas above it does — the same deal
-     * the widget grid makes, where the column count is the only size control.
-     * The share is a percentage of the grid's own width, which is what keeps
-     * the fitted count at exactly `columns` as the window changes. Zero
-     * columns is "as many as fit", where the tile width sets the track.
-     *
-     * The `max` is what keeps that count from dividing the band indefinitely.
-     * Five columns across 360px is a 53px plate whose label truncates to
-     * "g...", and a speed dial you cannot read is not one you can use. Once the
-     * share drops under `--tile-min` the track holds there and `auto-fit` fits
-     * fewer per row instead — so the count is honoured wherever there is room
-     * for it, and gives way before the tiles stop being legible.
-     */
+    // A column count fills the band with exactly that many tiles, expressed as a
+    // percentage of the grid's own width so the count holds as the window
+    // changes; zero means "as many as fit". The `max` stops the count dividing
+    // the band past `--tile-min`, where `auto-fit` fits fewer per row instead.
     '--tile-track':
       tiles.columns === 0
         ? 'var(--tile-w)'
@@ -181,11 +168,8 @@ export function TileGrid() {
         style={gridStyle}
       >
         {editing ? (
-          /*
-           * The fallback is the same band of tiles, frozen: swapping in `null`
-           * while the drag chunk loads would blink the whole row away and leave
-           * the add button alone on the line for a frame or two.
-           */
+          // The same band, frozen: `null` would blink the row away while the
+          // drag chunk loads.
           <Suspense fallback={plainTiles(true)}>
             <SortableTiles
               items={visible}

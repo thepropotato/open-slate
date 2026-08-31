@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react'
 
-/**
- * A ticking clock that only wakes as often as it needs to.
- *
- * Timeouts are aligned to the next boundary rather than fired every N ms, so a
- * minute-precision widget updates exactly when the minute changes and stays
- * asleep in between. Without alignment a clock drifts and can show the wrong
- * minute for most of a second.
- */
+/** Ticking clock. Timeouts align to the next boundary rather than firing every N ms, which would drift. */
 export function useNow(precision: 'second' | 'minute' = 'minute'): Date {
   const [now, setNow] = useState(() => new Date())
 

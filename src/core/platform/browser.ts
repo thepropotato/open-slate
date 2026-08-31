@@ -1,9 +1,6 @@
 /**
- * Thin abstraction over the `chrome.*` APIs.
- *
- * Everything the app touches goes through here so that (a) the UI can run in a
- * plain `vite dev` browser tab with localStorage/in-memory fallbacks, and
- * (b) each capability has exactly one place that knows whether it is available.
+ * Thin abstraction over the `chrome.*` APIs, so the UI also runs in a plain
+ * `vite dev` tab and each capability has one place that knows if it is available.
  */
 
 type AnyRecord = Record<string, unknown>
@@ -49,11 +46,8 @@ function chromeStore(area: StorageArea): KeyValueStore {
 }
 
 /**
- * localStorage-backed stand-in used when running outside the extension.
- *
- * Nothing here touches `window` at import time: the cross-tab listener is
- * attached on first subscribe. That keeps this module importable from plain Node,
- * which is what lets the self-test exercise the pure logic that depends on it.
+ * localStorage stand-in for running outside the extension. Nothing touches
+ * `window` at import time, so this stays importable from plain Node.
  */
 function webStore(area: StorageArea): KeyValueStore {
   const prefix = `newtab:${area}:`
@@ -102,18 +96,12 @@ function webStore(area: StorageArea): KeyValueStore {
 const makeStore = (area: StorageArea) =>
   isExtension() ? chromeStore(area) : webStore(area)
 
-/** Settings live here. `local` avoids the 8KB-per-item `sync` quota. */
+// `local` avoids the 8KB-per-item `sync` quota.
 export const localStore = makeStore('local')
-/** Reserved for the opt-in cross-device sync of a trimmed settings subset. */
 export const syncStore = makeStore('sync')
 
-/* ------------------------------------------------------------------ favicons */
-
-/**
- * Chrome's `_favicon` endpoint reads the browser's own favicon cache, so it
- * needs no network request and leaks nothing. Outside the extension we fall
- * back to Google's public favicon service.
- */
+// Chrome's `_favicon` endpoint reads the local favicon cache: no network request,
+// nothing leaked. Outside the extension, Google's public service is the fallback.
 export function faviconUrl(pageUrl: string, size = 64): string {
   if (isExtension()) {
     const url = new URL(chrome.runtime.getURL('/_favicon/'))
@@ -128,8 +116,6 @@ export function faviconUrl(pageUrl: string, size = 64): string {
     return ''
   }
 }
-
-/* --------------------------------------------------------------- permissions */
 
 export type OptionalPermission =
   | 'sessions'
@@ -152,8 +138,6 @@ export const permissions = {
     return chrome.permissions.remove({ permissions: names, origins })
   },
 }
-
-/* ------------------------------------------------------------------ commands */
 
 export function openUrl(url: string, where: 'current' | 'newTab' = 'current') {
   if (where === 'newTab') {

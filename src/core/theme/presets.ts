@@ -1,11 +1,6 @@
 /**
- * Colour presets. Each preset supplies a light and a dark palette so that the
- * `auto` appearance mode can follow Chrome's light/dark setting without the
- * user losing their chosen character.
- *
- * Note: Chrome exposes no API for reading the installed browser theme's colours,
- * so `auto` can only track light vs. dark. Matching an installed Chrome theme
- * more closely is what `accentSource: 'wallpaper'` is for.
+ * Colour presets, each with a light and a dark palette for `auto` mode. Chrome
+ * exposes no API for the installed theme's colours, so `auto` tracks only light vs dark.
  */
 
 export interface Palette {
@@ -17,13 +12,10 @@ export interface Palette {
   accent: string
   accentFg: string
   line: string
-  /** `r g b` triplet for translucent panel fills. */
+  // `r g b` triplet for translucent panel fills.
   surfaceBase: string
-  /**
-   * `r g b` triplet for subtle overlays drawn *on top of* content — hover
-   * washes, slider tracks, input fills. It has to invert between light and dark
-   * or those fills disappear into the background.
-   */
+  // `r g b` for overlays drawn on top of content. Inverts between light and dark,
+  // or those fills disappear into the background.
   surfaceTint: string
 }
 

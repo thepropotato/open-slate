@@ -6,10 +6,7 @@ import { SIZE_LABELS, orderSizes, type WidgetSizeName } from '@/core/widgets/siz
 import type { AnyWidgetDefinition } from '@/core/widgets/types'
 import type { WidgetInstance } from '@/core/settings/schema'
 
-/**
- * Per-instance options, rendered from the widget's own declared fields — the
- * same descriptors the global settings UI uses, just scoped to this instance.
- */
+// Per-instance options, rendered from the widget's declared field descriptors.
 export function WidgetConfigDialog({
   definition,
   instance,

@@ -1,9 +1,4 @@
-/*
- * Clock faces.
- *
- * Every face sizes itself from container query units, so resizing the widget
- * scales the face instead of clipping it. `--face` is the shared base size.
- */
+/* Clock faces. Every face sizes from container query units; `--face` is the base size. */
 
 .clock {
   container-type: size;
@@ -41,7 +36,7 @@
   letter-spacing: 0.1em;
 }
 
-/* --- digital --- */
+/* Digital */
 
 .face--digital .face__time {
   font-size: clamp(20px, min(46cqh, 22cqw), 200px);
@@ -73,7 +68,7 @@
   color: var(--fg-muted);
 }
 
-/* --- minimal --- */
+/* Minimal */
 
 .face--minimal .face__time {
   font-size: clamp(18px, min(38cqh, 18cqw), 150px);
@@ -86,7 +81,7 @@
   opacity: 0.4;
 }
 
-/* --- mono --- */
+/* Mono */
 
 .face--mono .face__time {
   font-family: var(--font-mono);
@@ -99,7 +94,7 @@
   padding-left: 0.3em;
 }
 
-/* --- flip --- */
+/* Flip */
 
 .face--flip {
   gap: 0.1em;
@@ -146,7 +141,7 @@
   }
 }
 
-/* --- text --- */
+/* Text */
 
 .face--text .face__phrase {
   font-size: clamp(13px, min(20cqh, 9cqw), 64px);
@@ -156,7 +151,7 @@
   text-wrap: balance;
 }
 
-/* --- binary --- */
+/* Binary */
 
 .face--binary {
   gap: min(1.6cqw, 8px);
@@ -186,7 +181,7 @@
   opacity: 0.12;
 }
 
-/* --- analog --- */
+/* Analog */
 
 .face--analog {
   width: 100%;
@@ -273,7 +268,7 @@
   stroke-width: 4;
 }
 
-/* --- rings --- */
+/* Rings */
 
 .face--rings {
   width: 100%;

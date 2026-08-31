@@ -19,12 +19,8 @@ import { CSS } from '@dnd-kit/utilities'
 import type { Tile as TileModel, Tiles as TilesSettings } from '@/core/settings/schema'
 import { Tile } from './Tile'
 
-/**
- * Drag-to-reorder, loaded only when the user enters Arrange mode.
- *
- * The drag library is a meaningful share of the new tab's bundle and is needed
- * for a rare, deliberate action — so it stays out of the default path entirely.
- */
+// Drag-to-reorder, loaded only in Arrange mode: the drag library is a
+// meaningful share of the new tab's bundle.
 export function SortableTiles({
   items,
   settings,
@@ -60,8 +56,8 @@ export function SortableTiles({
     const activeId = String(active.id)
     const overId = String(over.id)
 
-    // Dropping onto a folder files the tile away instead of reordering. Folders
-    // do not nest, so a folder dropped on a folder still just reorders.
+    // Dropping onto a folder files the tile away. Folders do not nest, so a
+    // folder dropped on a folder still just reorders.
     const target = items.find((tile) => tile.id === overId)
     const dragged = items.find((tile) => tile.id === activeId)
     if (onMoveToFolder && target?.kind === 'folder' && dragged?.kind !== 'folder') {

@@ -13,12 +13,9 @@ export interface BackgroundSource {
 const CURSOR_KEY = 'slideshowCursor'
 
 /**
- * Resolves which media the background should show right now.
- *
- * Slideshow position lives in storage and is advanced by the service worker's
- * alarm, not by a timer in the page: that way every open tab agrees on the
- * current wallpaper and rotation continues while no tab is open. Outside the
- * extension there is no worker, so the page rotates on its own instead.
+ * Which media the background shows right now. Slideshow position lives in
+ * storage and is advanced by the service worker's alarm, not a page timer, so
+ * every tab agrees and rotation continues with no tab open.
  */
 export function useBackgroundSource(background: Background): BackgroundSource {
   const cursor = useSlideshowCursor(background)

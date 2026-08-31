@@ -10,11 +10,8 @@ import { faviconTint, hostOf, monogram, resolveBrand } from './brand'
 export type TileArt =
   | { kind: 'brand'; path: string; colour: string }
   | { kind: 'image'; src: string }
-  /*
-   * A site icon standing in for artwork. Kept separate from `image` because a
-   * favicon is a tiny source bitmap: it is drawn near its own size and never
-   * cropped, where a real image fills the plate however the user asked.
-   */
+  // Separate from `image`: a favicon is a tiny bitmap drawn near its own size
+  // and never cropped.
   | { kind: 'favicon'; src: string }
   | { kind: 'monogram'; text: string; colour: string }
   /** A folder shows a small grid of the favicons it contains. */
@@ -31,10 +28,8 @@ export interface TileVisual {
 }
 
 /**
- * Turns a tile plus the global tile settings into everything needed to paint it.
- *
- * The favicon is available synchronously, so a tile is never blank: brand logos,
- * uploaded images and sampled plate colours all arrive later and swap in.
+ * Everything needed to paint a tile. The favicon resolves synchronously so a
+ * tile is never blank; brand logos, images and sampled colours swap in later.
  */
 export function useTileVisual(
   tile: Tile,
@@ -45,8 +40,7 @@ export function useTileVisual(
   const palette = usePalette()
   const host = hostOf(tile.url)
   const faviconSrc = useMemo(() => faviconUrl(tile.url, 64), [tile.url])
-  // The artwork copy asks for the largest icon the cache might hold, so the
-  // slightly bigger on-plate rendering still has real pixels behind it.
+  // Largest icon the cache might hold, so the on-plate rendering has real pixels.
   const faviconArt = useMemo(() => faviconUrl(tile.url, 128), [tile.url])
 
   const isFolder = tile.kind === 'folder'
@@ -70,8 +64,7 @@ export function useTileVisual(
     faviconTint(host, faviconSrc),
   )
 
-  // A stable key for the child list, so the memo below is not defeated by a new
-  // array arriving on every render.
+  // Stable key so the memo below survives a new array on every render.
   const childKey = childUrls.join('|')
 
   return useMemo(() => {
