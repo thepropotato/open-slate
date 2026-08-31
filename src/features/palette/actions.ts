@@ -16,7 +16,12 @@ export interface PaletteAction {
   run: () => void | Promise<void>
 }
 
-export function buildActions(settings: Settings, actions: SettingsActions): PaletteAction[] {
+export function buildActions(
+  settings: Settings,
+  actions: SettingsActions,
+  /** Opens settings in place; falls back to the options page when absent. */
+  onOpenSettings?: () => void,
+): PaletteAction[] {
   const { update, set, reset } = actions
 
   const toggle = (path: string, current: boolean, title: string, icon: IconName): PaletteAction => ({
@@ -34,7 +39,7 @@ export function buildActions(settings: Settings, actions: SettingsActions): Pale
       title: 'Open settings',
       icon: 'settings',
       keywords: 'preferences options configure',
-      run: () => openOptions(),
+      run: () => (onOpenSettings ? onOpenSettings() : openOptions()),
     },
     {
       id: 'theme:cycle',

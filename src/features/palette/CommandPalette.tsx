@@ -12,7 +12,14 @@ import './CommandPalette.css'
  * One box for tabs, tiles, bookmarks, history, settings commands and a web
  * search fallback. Ranking is shared with the search bar's provider scoring.
  */
-export function CommandPalette({ onClose }: { onClose: () => void }) {
+export function CommandPalette({
+  onClose,
+  onOpenSettings,
+}: {
+  onClose: () => void
+  /** Opens settings in place; falls back to the options page when absent. */
+  onOpenSettings?: () => void
+}) {
   const settings = useSettings()
   const actions = useSettingsActions()
   const [query, setQuery] = useState('')
@@ -22,7 +29,10 @@ export function CommandPalette({ onClose }: { onClose: () => void }) {
 
   const needle = query.trim().toLowerCase()
 
-  const commands = useMemo(() => buildActions(settings, actions), [settings, actions])
+  const commands = useMemo(
+    () => buildActions(settings, actions, onOpenSettings),
+    [settings, actions, onOpenSettings],
+  )
 
   const local = useAsyncValue(needle.length > 0 ? `palette:${needle}` : null, () =>
     queryLocal(query, { tiles: settings.tiles.items, limit: 12 }),

@@ -22,7 +22,7 @@
   gap: var(--space);
   padding: var(--space);
   border-bottom: 1px solid var(--line);
-  background: var(--bg);
+  background: rgb(var(--surface-tint) / 6%);
 }
 
 .settings__apptitle {
@@ -79,7 +79,8 @@
   gap: var(--space-sm);
   padding: var(--space);
   border-right: 1px solid var(--line);
-  background: rgb(var(--surface-tint) / 3%);
+  /* The nav sits *under* the content: recessed, so the fields read as the page. */
+  background: rgb(var(--surface-tint) / 6%);
   overflow-y: auto;
   /* No width of its own: the track sets it. A min-width here overflows narrow windows. */
   min-width: 0;
@@ -172,7 +173,17 @@
 }
 
 .settings__group + .settings__group {
-  margin-top: var(--space-lg);
+  margin-top: var(--space);
+}
+
+/* Each group is a card: the rows inside share one surface, so the eye groups
+   them without needing a rule between every option. */
+.settings__group > .settings__fields {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 0 var(--space-sm);
+  box-shadow: var(--shadow);
 }
 
 .settings__grouptitle {
@@ -181,7 +192,8 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-subtle);
-  margin-bottom: var(--space-xs);
+  margin-bottom: var(--space-sm);
+  margin-left: 2px;
 }
 
 .settings__grouphelp {
@@ -192,7 +204,12 @@
 }
 
 .settings__fields > .ctl-row + .ctl-row {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid rgb(var(--surface-tint) / 8%);
+}
+
+/* `bare` custom controls render without a row, so the card pads them itself. */
+.settings__fields > :not(.ctl-row):not(:empty) {
+  padding: var(--space-sm) 0;
 }
 
 .settings__empty {
@@ -210,5 +227,18 @@
   .settings__nav {
     border-right: 0;
     border-bottom: 1px solid var(--line);
+  }
+}
+
+/* Softens arrival from the new tab, which is a document navigation, not a mount.
+   Collapses to nothing when --motion is 0. */
+.settings-shell {
+  animation: settings-in var(--dur) var(--ease);
+}
+
+@keyframes settings-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
 }

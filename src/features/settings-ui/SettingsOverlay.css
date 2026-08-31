@@ -1,0 +1,26 @@
+/*
+ * Full-bleed popover over the page. Sized in viewport units rather than left to
+ * the content, so the panel's container queries see a stable width and keep the
+ * same three-column layout the standalone page has.
+ */
+.settings-overlay {
+  /* The reset zeroes margins, killing <dialog>'s auto-centring. */
+  margin: auto;
+  width: calc(100vw - 2 * var(--space-lg));
+  height: calc(100vh - 2 * var(--space-lg));
+  max-width: none;
+  max-height: none;
+  padding: 0;
+  border: var(--surface-border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 32px 80px rgb(0 0 0 / 55%);
+  overflow: hidden;
+  animation: settings-in var(--dur) var(--ease);
+}
+
+.settings-overlay::backdrop {
+  background: rgb(0 0 0 / 52%);
+  backdrop-filter: blur(3px);
+}

@@ -1,13 +1,15 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { lazyChunk } from '@/core/util/lazyChunk'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
-import { openOptions } from '@/core/platform/browser'
 import { useSettingsSync } from '@/core/settings/useSettingsSync'
 import { Icon } from '@/core/icons'
 import type { Pane } from '@/core/settings/schema'
 
 const CommandPalette = lazyChunk(() =>
   import('@/features/palette/CommandPalette').then((m) => ({ default: m.CommandPalette })),
+)
+const SettingsOverlay = lazyChunk(() =>
+  import('@/features/settings-ui/SettingsOverlay').then((m) => ({ default: m.SettingsOverlay })),
 )
 import { derivePanes, PageShell } from './PageShell'
 import './App.css'
@@ -23,6 +25,7 @@ export function App() {
   const { update } = useSettingsActions()
   useSettingsSync()
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const contentRef = useRef<HTMLElement>(null)
 
   // Gates the pane entrance animation on a real switch. A timer cannot work: panes
@@ -73,7 +76,7 @@ export function App() {
       if (!modifier) return
       if (event.key === ',') {
         event.preventDefault()
-        openOptions()
+        setSettingsOpen(true)
       }
       if (paletteEnabled && event.key.toLowerCase() === 'k') {
         event.preventDefault()
@@ -101,8 +104,8 @@ export function App() {
     >
       <button
         type="button"
-        className="page__settings"
-        onClick={openOptions}
+        className="page__settings is-icon-btn"
+        onClick={() => setSettingsOpen(true)}
         title="Settings"
         aria-label="Settings"
         data-zen={appearance.zenMode}
@@ -113,7 +116,17 @@ export function App() {
       {/* Mounted only while open, so its state starts fresh every time. */}
       {paletteEnabled && paletteOpen ? (
         <Suspense fallback={null}>
-          <CommandPalette onClose={() => setPaletteOpen(false)} />
+          <CommandPalette
+            onClose={() => setPaletteOpen(false)}
+            onOpenSettings={() => setSettingsOpen(true)}
+          />
+        </Suspense>
+      ) : null}
+
+      {/* Mounted only while open, so the draft starts clean every time. */}
+      {settingsOpen ? (
+        <Suspense fallback={null}>
+          <SettingsOverlay onClose={() => setSettingsOpen(false)} />
         </Suspense>
       ) : null}
     </PageShell>
