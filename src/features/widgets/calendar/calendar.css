@@ -4,27 +4,12 @@
   gap: var(--space-xs);
   height: 100%;
   min-height: 0;
-  /*
-   * Queried on both axes, not just inline: the grid below caps itself against
-   * the widget's height, and `cqh` needs a size container to resolve against.
-   */
+  /* Both axes: the grid caps against the widget height, and `cqh` needs a size container. */
   container-type: size;
   container-name: cal;
 }
 
-/*
- * The header rides the grid's own columns.
- *
- * Each control centres over the day column beneath it — the back arrow over the
- * first weekday, the forward arrow over the last — so the header reads as part
- * of the same seven-column rhythm rather than as a bar laid over it.
- *
- * The month name is the exception: it spans the full width and centres on the
- * card, because centring it in the gap between the controls puts it visibly off
- * to one side (only the right-hand end carries a second button). It shares the
- * row with the arrows rather than displacing them, so it is sized to its own
- * text and the arrows stay clickable either side of it.
- */
+/* The header rides the grid's own seven columns; the month name spans them all. */
 .cal__head {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -46,13 +31,7 @@
   grid-column: 7;
 }
 
-/* Refresh, or connect-a-calendar: the column before the forward arrow. */
-/*
- * The two extra controls take a side each rather than stacking up beside the
- * next-month chevron: refresh inboard of `‹` on the left, connect inboard of
- * `›` on the right. Three buttons crowded on one side read as a toolbar that
- * had run out of room, with the month title pushed off centre between them.
- */
+/* Refresh and connect take a side each, inboard of their chevron. */
 .cal__aux {
   grid-column: 2;
 }
@@ -62,10 +41,7 @@
 }
 
 .cal__head button:not(.cal__title) {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
+  --icon-btn: 22px;
   justify-self: center;
   border-radius: var(--radius-sm);
   color: var(--fg-subtle);
@@ -96,18 +72,10 @@
 }
 
 /*
- * Square days, whatever shape the widget is.
- *
- * A cell cannot simply declare `aspect-ratio: 1`: in a wide widget the column
- * width would set a row height the widget has no room for, and the last weeks
- * would fall out of the bottom. So the grid is given the month's proportions as
- * a whole and centred in the space it is offered.
- *
- * `width` is the definite input and `aspect-ratio` derives the height from it,
- * which is the one direction CSS resolves without ambiguity. `max-width` is
- * then what keeps a wide widget honest: capped in proportion to the height
- * available, so the box shrinks from the side rather than growing past the
- * bottom. Both limits preserve the ratio, so the `1fr` tracks stay square.
+ * Square days at any widget shape. A cell cannot use `aspect-ratio: 1` — a wide
+ * widget would then set a row height it has no room for and drop the last weeks.
+ * The whole grid carries the month's proportions instead: width is the definite
+ * input, aspect-ratio derives the height, and the max-* caps preserve the ratio.
  */
 /* Stacked by default; the wide-card query below turns this into a row. */
 .cal__body {
@@ -129,22 +97,12 @@
 }
 
 .cal__grid {
-/*
-   * Six square week rows plus a weekday header worth a fraction of one.
-   *
-   * The header's share appears twice on purpose — once in `aspect-ratio`, which
-   * sizes the whole box, and once in `grid-template-rows`, which divides it.
-   * They must be the same number or the day tracks come out oblong, so it lives
-   * in a variable rather than being written out twice.
-   */
+  /* The header's share is used by both `aspect-ratio` and `grid-template-rows`;
+     they must match or the day tracks come out oblong. */
   --cal-headrow: 0.44;
   --cal-rows: calc(6 + var(--cal-headrow));
   --cal-cols: 7;
-  /*
-   * The month header and the margin under it — the height the grid does *not*
-   * get. Kept in step with `.cal__head` above; under-reserve it and the last
-   * week is clipped off the bottom.
-   */
+  /* Height the grid does not get. Keep in step with `.cal__head` or the last week clips. */
   --cal-chrome: 26px;
   /* The widget height left for the grid, less again when an agenda shares it. */
   --cal-room: calc(100cqh - var(--cal-chrome));
@@ -152,32 +110,20 @@
   display: grid;
   grid-template-columns: repeat(var(--cal-cols), 1fr);
   grid-template-rows: calc(var(--cal-headrow) * (100% - 6 * var(--cal-gap)) / var(--cal-rows)) repeat(6, 1fr);
-  /*
-   * Whole pixels: fractional column tracks round independently of the fixed
-   * row gap, and the seam between columns then reads wider than between rows.
-   */
+  /* Whole pixels: fractional column tracks round independently of the fixed row gap. */
   --cal-gap: 2px;
   column-gap: 2px;
   gap: var(--cal-gap);
   aspect-ratio: var(--cal-cols) / var(--cal-rows);
   width: 100%;
-  /*
-   * Two caps, because either dimension can be the tighter one. `max-width`
-   * keeps a wide card in proportion; `max-height` is what stops a card whose
-   * width would imply a taller grid than it has — without it the six week rows
-   * are computed from the full width and the last one falls off the bottom.
-   * Both preserve the ratio, so the day tracks stay square either way.
-   */
+  /* Two caps: either dimension can be the tighter one. Both preserve the ratio. */
   max-width: calc(var(--cal-room) * var(--cal-cols) / var(--cal-rows));
   max-height: 100%;
   min-width: 0;
   margin-inline: auto;
 }
 
-/*
- * The week-number column is content-width, so it sits outside the square
- * tracks; the ratio widens by roughly that column to keep the days square.
- */
+/* The week-number column is content-width, so the ratio widens by it to keep days square. */
 .cal__grid[data-weeks='true'] {
   --cal-cols: 7.6;
   grid-template-columns: auto repeat(7, 1fr);
@@ -194,7 +140,6 @@
   color: var(--fg-subtle);
 }
 
-/* Apple leans on the weekend being quieter, not on a colour. */
 .cal__dayname[data-weekend='true'] {
   opacity: 0.55;
 }
@@ -206,10 +151,9 @@
 }
 
 
-/* -------------------------------------------------------------------- days */
+/* Days */
 
 .cal__cell {
-  /* Square comes from the grid track above, which knows the widget's height. */
   position: relative;
   --cal-disc: min(72%, 2.2em);
   --cal-pad: 22%;
@@ -224,23 +168,11 @@
   min-width: 0;
   background: none;
   border: none;
-  /*
-   * Lifts the disc just clear of the dot band. Kept small and in step with
-   * `.cal__dots` below: too much and the dots stop reading as belonging to the
-   * number above them and start looking marooned between the two rows.
-   */
+  /* Lifts the disc clear of the dot band; keep in step with `.cal__dots`. */
   padding: 0 0 var(--cal-pad);
 }
 
-/*
- * The number sits in its own circle rather than the cell being filled.
- *
- * That is the Apple Calendar shape, and it is also what lets today and the
- * selected day differ visibly: a square cell tinted two ways reads as one
- * state, where a filled disc and a ring plainly do not. The disc is sized from
- * the cell so it stays a circle as the widget resizes, and capped so it never
- * swells into its neighbours on a large card.
- */
+/* A disc, not a filled cell: it lets today and the selected day read differently. */
 .cal__num {
   display: grid;
   place-items: center;
@@ -269,12 +201,8 @@
 }
 
 /*
- * Three states that must never be mistaken for one another:
- *
- *  - selected  — a ring, the lightest mark, because it follows the pointer;
- *  - today     — a filled disc in the accent, the page's strongest signal;
- *  - both      — the accent disc keeps a ring outside it, so selecting today
- *                still visibly registers instead of looking unchanged.
+ * selected = ring; today = filled accent disc; both = disc plus an outer ring,
+ * so selecting today still registers.
  */
 .cal__cell[data-selected='true'] .cal__num {
   box-shadow: inset 0 0 0 1.5px var(--accent);
@@ -290,7 +218,6 @@
 }
 
 .cal__cell[data-today='true'][data-selected='true'] .cal__num {
-  /* Filled, plus a detached ring, for when the user selects today again. */
   background: var(--accent);
   color: var(--accent-fg);
   box-shadow:
@@ -299,38 +226,20 @@
 }
 
 .cal__cell[data-today='true'] .cal__dot {
-  /*
-   * The dots sit below the disc, on the card — so they take the accent, which
-   * reads against the card in both themes. Taking the disc's own foreground
-   * would put a light dot on a light card in the light theme.
-   */
+  /* Accent, not the disc's foreground: the dots sit on the card, not on the disc. */
   background: var(--accent) !important;
 }
 
-/* -------------------------------------------------------------------- dots */
+/* Dots */
 
 /*
- * Positioned rather than stacked, so the dots never add to a cell's height —
- * the square tracks are already exact, and a row of dots that took part in
- * layout would push the last week past the bottom of a short card.
- */
-/*
- * Tucked directly under the disc rather than pinned to the bottom of the cell.
- *
- * The cell is square and the disc is centred in the space above the padding, so
- * measuring the dots from the cell's floor left them drifting halfway to the
- * next row. Anchoring to the disc's own centre instead keeps the gap constant.
- *
- * The gap is in `em`, not pixels: it has to scale with the number it belongs
- * to. A fixed 3px read as touching the digits on a large widget, and a fixed
- * larger value would have swamped a small one.
+ * Positioned, so the dots add nothing to a cell's height — the square tracks are
+ * exact. Anchored to the disc's centre, not the cell floor, so the gap is
+ * constant; the gap is in `em` so it scales with the number it belongs to.
  */
 .cal__dots {
   position: absolute;
-  /*
-   * The disc is centred in the cell *minus* the bottom padding, so its centre
-   * sits at half of what is left — not at the cell's own midpoint.
-   */
+  /* The disc centres in the cell minus its bottom padding, not at the cell midpoint. */
   top: calc((100% - var(--cal-pad)) / 2);
   left: 50%;
   transform: translate(-50%, calc(var(--cal-disc) / 2 + 0.55em));
@@ -347,11 +256,7 @@
   flex: none;
 }
 
-/*
- * A dot on a leading or trailing day belongs to a month the user is not
- * looking at. The number is already faded to 45%; a full-strength dot beneath
- * it drew the eye straight to the row that matters least.
- */
+/* Leading/trailing days are faded, so their dots fade with them. */
 .cal__cell[data-outside='true'] .cal__dot {
   opacity: 0.55;
 }
@@ -363,17 +268,9 @@
   }
 }
 
-/* ---------------------------------------------------------------- day view */
+/* Day view */
 
-/*
- * The day view is the whole card, not a strip under a grid, and it draws an
- * hour axis rather than a list.
- *
- * A list said what was on; a timeline says what the day is shaped like — a free
- * afternoon looks free and a stacked morning looks stacked, which is what a
- * glance is actually asking. Splitting a small widget between a grid and a list
- * gave neither enough room, so each view now takes the whole card.
- */
+/* Each view takes the whole card; a split gave neither enough room. */
 .cal__day {
   display: flex;
   flex-direction: column;
@@ -390,16 +287,9 @@
   flex: none;
 }
 
-/*
- * The same 22px control the month header uses, so the two views' bars line up
- * and a button does not change size just because the view did.
- */
+/* Same 22px control as the month header, so the two views' bars line up. */
 .cal__daynav {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  flex: none;
+  --icon-btn: 22px;
   border: none;
   border-radius: var(--radius-sm);
   background: none;
@@ -416,11 +306,7 @@
   background: rgb(var(--surface-tint) / 10%);
 }
 
-/*
- * The heading is a target too, so the whole thing goes back, but the chevron
- * beside it is what advertises that. It is out of the tab order because it
- * duplicates the chevron's action — one stop, not two, for the same place.
- */
+/* Out of the tab order: it duplicates the chevron's action. */
 .cal__daytitle {
   display: flex;
   align-items: baseline;
@@ -456,7 +342,7 @@
   text-overflow: ellipsis;
 }
 
-/* All-day events have no hour, so they sit above the axis rather than on it. */
+/* All-day events have no hour, so they sit above the axis. */
 .cal__allday {
   display: flex;
   flex-direction: column;
@@ -491,10 +377,6 @@
   white-space: nowrap;
 }
 
-/*
- * Centred in the room the track would have filled, so a clear day reads as a
- * clear day rather than as a widget that failed to load.
- */
 .cal__dayempty {
   display: flex;
   align-items: center;
@@ -506,46 +388,33 @@
   color: var(--fg-subtle);
 }
 
-/* -------------------------------------------------------------- hour track */
+/* Hour track */
 
 .cal__track {
   flex: 1;
   min-height: 0;
 }
 
-/*
- * Everything on the track is positioned as a percentage of this box, so the
- * hour lines and the events cannot drift apart — they are measured against the
- * same span. A minimum height keeps a five-hour range legible on a short card.
- */
+/* Hour lines and events are both percentages of this box, so they cannot drift apart. */
 .cal__hours {
   position: relative;
   /*
-   * Half a line of room at each end. The hour labels are centred on their own
-   * lines, so the first and last overhang the track by half their height —
-   * without this they are clipped at the ends of the scroll.
-   *
-   * The height itself is set inline, from the number of hours drawn: the axis
-   * runs at a fixed scale and scrolls rather than compressing to fit, so that a
-   * block's height means its actual duration.
+   * Half a line at each end: hour labels centre on their lines, so the first and
+   * last overhang and would otherwise clip. The height is set inline from the
+   * hour count — the axis scrolls rather than compressing, so block height means duration.
    */
   margin-block: 0.6em;
-  /*
-   * The label column is reserved here, once, so the percentage offsets and
-   * widths of the blocks below resolve against the room actually left to them.
-   * Margining each block instead pushed it past the right edge by this width.
-   */
+  /* Reserved once here so the blocks' percentage offsets resolve against the room left. */
   --cal-gutter: calc(2.2em + 6px);
 }
 
 .cal__hour {
   position: absolute;
-  /* The full width: the label is part of the row, not inside the event area. */
+  /* Full width: the label is part of the row, not inside the event area. */
   inset-inline: 0;
   display: flex;
   align-items: center;
   gap: 6px;
-  /* Centred on its line, so the label reads as marking that hour exactly. */
   transform: translateY(-50%);
   pointer-events: none;
 }
@@ -566,26 +435,13 @@
   background: rgb(var(--surface-tint) / 10%);
 }
 
-/*
- * An event block, indented past the hour labels so the axis stays readable
- * down the left edge whatever is on.
- */
 .cal__slot {
   position: absolute;
   padding: 2px 7px;
   border-radius: var(--radius-sm);
-  /*
-   * Tinted, not filled. A solid block in the calendar's colour would set the
-   * title on an arbitrary hue in both themes; a wash keeps the card's own
-   * contrast and lets the bar carry the colour.
-   */
+  /* Tinted, not filled: a solid calendar colour would set the title on an arbitrary hue. */
   background: color-mix(in srgb, var(--slot) 18%, rgb(var(--surface-base)));
   overflow: hidden;
-  /*
-   * The title leads, with the times after it — the title is what you scan for,
-   * the times confirm it. On a block with only one line they share that line;
-   * given more, they stack.
-   */
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -599,10 +455,7 @@
     background var(--dur-fast) var(--ease);
 }
 
-/*
- * A one-line block puts the times on the same line as the title and drops the
- * location; it has no second line to put either on.
- */
+/* One-line block: times share the title's line, location is dropped. */
 .cal__slot[data-lines='one'] .cal__slotwhere {
   display: none;
 }
@@ -621,10 +474,7 @@
   flex-basis: 100%;
 }
 
-/*
- * Only an event with somewhere to go is a control. The rest are drawn, not
- * clickable — a pointer over a block that does nothing is a promise broken.
- */
+/* Only an event with a link is clickable. */
 .cal__slot:disabled {
   cursor: default;
 }
@@ -638,36 +488,16 @@
   background: color-mix(in srgb, var(--slot) 26%, rgb(var(--surface-base)));
 }
 
-/*
- * A flat strip down the block's leading edge, full height.
- *
- * It must not be inset to dodge the block's rounded corners: on a short block
- * an inset is most of the available height, and the strip collapses to a
- * floating stub. The block does not clip it either — see `overflow` there — so
- * the strip keeps its square ends and the block keeps its round ones.
- */
-/*
- * A dot, not a strip down the edge.
- *
- * An edge marker inside a rounded, clipped block could be square-ended or
- * full-height but never both — the corner radius shaved it either into a curve
- * or, when inset to dodge that, into a floating stub. A dot has no edge to
- * clip, so the block's shape stops mattering, and it is the same mark the month
- * grid already uses for the same thing: this calendar, this event.
- */
+/* A dot, not an edge strip: an edge marker cannot be both square-ended and full-height
+ * inside a rounded clipped block. Same mark the month grid uses. */
 .cal__slotdot {
   flex: none;
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: var(--slot);
-  /*
-   * Baseline-aligned like the text beside it, then lifted by half an x-height
-   * so its centre lands on the title's optical centre rather than sitting on
-   * the baseline. `align-self: center` would centre it in the whole block
-   * instead — on a block taller than its first line that drops the dot below
-   * the title it marks.
-   */
+  /* Baseline-aligned, lifted half an x-height. `align-self: center` would centre it
+   * in the whole block, dropping it below the title on a multi-line block. */
   align-self: baseline;
   position: relative;
   top: -0.25em;
@@ -679,12 +509,11 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  /* Takes the room left beside the dot, and gives way before the times do. */
   min-width: 0;
   flex: 1;
 }
 
-/* Follows the title, and keeps its width — the title gives way instead. */
+/* Keeps its width; the title gives way instead. */
 .cal__slotwhen {
   flex: none;
   color: var(--fg-muted);
@@ -702,10 +531,7 @@
   min-width: 0;
 }
 
-/*
- * Where the day has got to. The one live thing on the card, so it takes the
- * accent and runs the full width — a line, not a marker to hunt for.
- */
+/* The now line. */
 .cal__now {
   position: absolute;
   inset-inline: 0;
@@ -728,17 +554,9 @@
   transform: translateY(-50%);
 }
 
-/* ------------------------------------------------------- setup and warnings */
+/* Setup and warnings */
 
-/*
- * Scrolls rather than centring: the full instructions are longer than a small
- * card, and a step the user cannot reach is worse than one they must scroll to.
- *
- * The size container is dropped here. Nothing in the setup card measures the
- * widget's height — only the month grid does — and a `container-type: size`
- * element establishes its own containment, which is what stopped this from
- * scrolling at all.
- */
+/* container-type must go back to normal: size containment stopped this scrolling. */
 .cal--setup {
   container-type: normal;
   gap: var(--space-sm);
@@ -748,7 +566,6 @@
   padding-right: 2px;
 }
 
-/* Text blocks must keep their full height rather than being squeezed by flex. */
 .cal--setup > * {
   flex: none;
 }
@@ -760,11 +577,7 @@
   color: var(--fg);
 }
 
-/*
- * Left as a real list rather than a flex column: `display: flex` on an `ol`
- * takes the markers with it, and the steps are worth numbering — the order they
- * are done in is the whole instruction.
- */
+/* Not a flex column: `display: flex` on an `ol` drops the numbering. */
 .cal__steps {
   margin: 0;
   padding-inline-start: 1.3em;
@@ -790,7 +603,6 @@
   font-weight: 620;
 }
 
-/* The security note is advice, not a step, so it sits apart from the list. */
 .cal__note {
   display: block;
   margin: 0;
@@ -869,7 +681,7 @@
   white-space: nowrap;
 }
 
-/* ------------------------------------------- subscription list, in settings */
+/* Subscription list, in settings */
 
 .callist {
   display: flex;
@@ -893,8 +705,8 @@
 }
 
 .callist__row button {
+  --icon-btn: 22px;
   color: var(--fg-subtle);
-  padding: 2px 4px;
   border-radius: var(--radius-sm);
 }
 

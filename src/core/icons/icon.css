@@ -1,7 +1,4 @@
-/*
- * Matches Font Awesome's own sizing behaviour: an icon is one em tall, keeps its
- * own aspect ratio, and sits on the text baseline rather than below it.
- */
+/* Font Awesome sizing: 1em tall, own aspect ratio, on the text baseline. */
 .icon {
   display: inline-block;
   height: 1em;
@@ -27,4 +24,21 @@
   .icon--spin {
     animation-duration: 2.4s;
   }
+}
+
+/*
+ * Square icon buttons: glyph widths differ, so padding alone gives ragged hit
+ * targets. Lives here, not in controls.css, so every entry point gets it.
+ * --icon-btn default must match .ctl-btn--icon.
+ */
+.is-icon-btn,
+.ctl-btn--icon {
+  --icon-btn: 32px;
+  display: grid;
+  place-items: center;
+  width: var(--icon-btn);
+  height: var(--icon-btn);
+  aspect-ratio: 1;
+  flex: none;
+  padding: 0;
 }

@@ -27,11 +27,7 @@
 }
 
 .pages__remove {
-  display: grid;
-  place-items: center;
-  width: 26px;
-  height: 26px;
-  flex: none;
+  --icon-btn: 26px;
   border-radius: var(--radius-sm);
   color: var(--fg-subtle);
   font-size: 11px;

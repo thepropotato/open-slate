@@ -1,24 +1,10 @@
-/*
- * Tile grid.
- *
- * Sizing is driven entirely by custom properties set from settings, so the
- * layout responds to a slider without any JS measuring. `--tile-radius`
- * defaults to the global `--radius`, which is what makes the rounded/boxy
- * switch reach tiles too.
- */
+/* Tile grid. Sizing comes entirely from custom properties set by settings. */
 
 .tiles {
   --tile-w: 190px;
-  /*
-   * One grid track. The tile width by default, which is what "as many as fit"
-   * means; the grid overrides it with an equal share of the band when a column
-   * count fixes how many tiles a row holds.
-   */
+  /* One grid track. Overridden with an equal share of the band when columns are fixed. */
   --tile-track: var(--tile-w);
-  /*
-   * The narrowest a tile may get before the row wraps instead. Sized so a
-   * short label ("GitHub", "Reddit") still fits on one line.
-   */
+  /* Narrowest a tile may get before the row wraps; a short label still fits one line. */
   --tile-min: 96px;
   --tile-aspect: 1.75;
   --tile-gap: 18px;
@@ -26,12 +12,7 @@
   --tile-pad: 14px;
 
   display: grid;
-  /*
-   * `auto-fit`, not a fixed track count and not `auto-fill`: both of those keep
-   * empty tracks, which pushes a short grid off-centre. `auto-fit` collapses the
-   * unused ones so `justify-content` can centre what is actually there, while
-   * the track width decides how many can appear at all.
-   */
+  /* `auto-fit`, not `auto-fill`: empty tracks would push a short grid off-centre. */
   grid-template-columns: repeat(auto-fit, minmax(0, var(--tile-track)));
   justify-content: center;
   gap: var(--tile-gap);
@@ -53,7 +34,6 @@
   display: grid;
   place-items: center;
   aspect-ratio: var(--tile-aspect);
-  /* So the monogram can size off the plate itself, which now stretches. */
   container-type: inline-size;
   border-radius: var(--tile-radius);
   overflow: hidden;
@@ -67,30 +47,36 @@
   box-shadow: none;
 }
 
-/* --- artwork --- */
+/* Artwork */
 
+/*
+ * Padding runs to 40px a side, which on a short wide plate would collapse the
+ * mark to a dot. The floor is the artwork: it keeps at least 30% of the plate's
+ * shorter axis and `--tile-pad-eff` is whatever padding fits around that.
+ */
 .tile__mark {
+  --tile-plate-short: min(100cqi, calc(100cqi / var(--tile-aspect)));
+  --tile-pad-eff: min(var(--tile-pad), calc(var(--tile-plate-short) * 0.35));
+
   width: 100%;
   height: 100%;
-  padding: var(--tile-pad);
+  padding: var(--tile-pad-eff);
   object-fit: var(--tile-fit, contain);
   object-position: center;
 }
 
 /*
- * A favicon standing in for artwork. Source icons are 32-128px, so filling the
- * plate with one only makes it blurry: it is drawn a little larger than life,
- * centred, and capped at the pixels we actually fetched. `contain` is hard-coded
- * rather than following `--tile-fit`, because `cover` on a square icon in a wide
- * plate crops it into an unrecognisable close-up.
+ * Favicon fallback. Source icons are 32-128px, so it is capped at the pixels we
+ * fetched. `contain` is hard-coded, not `--tile-fit`: `cover` crops a square
+ * icon in a wide plate into an unrecognisable close-up.
  */
 .tile__mark--favicon {
   --tile-favicon-art: min(40cqi, 96px);
 
   width: var(--tile-favicon-art);
   height: var(--tile-favicon-art);
-  max-width: calc(100% - 2 * var(--tile-pad));
-  max-height: calc(100% - 2 * var(--tile-pad));
+  max-width: calc(100% - 2 * var(--tile-pad-eff));
+  max-height: calc(100% - 2 * var(--tile-pad-eff));
   padding: 0;
   object-fit: contain;
 }
@@ -108,7 +94,7 @@
   user-select: none;
 }
 
-/* --- labels --- */
+/* Labels */
 
 .tile__label {
   font-size: var(--text-sm);
@@ -156,27 +142,18 @@
   display: none;
 }
 
-/*
- * An inert plate is not a control: no pointer cursor, and none of the hover
- * effects below. In Arrange mode the tile answers to dragging, and a plate that
- * still lifted or glowed under the pointer would go on promising a click that
- * no longer happens.
- */
+/* Inert in Arrange mode: the tile answers to dragging, not clicking. */
 .tile__plate[data-inert='true'] {
   cursor: inherit;
 }
 
-/*
- * Specific enough to beat every `.tiles[data-hover='…'] .tile:hover .tile__plate`
- * rule below, which is why the hover attribute is named here rather than
- * relying on source order.
- */
+/* Names the hover attribute so it outranks the `[data-hover]` rules below. */
 .tiles[data-hover] .tile:hover .tile__plate[data-inert='true'] {
   transform: none;
   box-shadow: var(--shadow);
 }
 
-/* --- hover effects --- */
+/* Hover effects */
 
 .tiles[data-hover='lift'] .tile:hover .tile__plate {
   transform: translateY(-4px);
@@ -195,7 +172,7 @@
   transform: perspective(600px) rotateX(6deg) translateY(-3px);
 }
 
-/* --- per-tile actions --- */
+/* Per-tile actions */
 
 .tile__actions {
   position: absolute;
@@ -214,10 +191,7 @@
 }
 
 .tile__action {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
+  --icon-btn: 22px;
   border-radius: calc(var(--tile-radius) * 0.3 + 2px);
   font-size: 10px;
   color: #fff;
@@ -229,7 +203,7 @@
   background: rgb(0 0 0 / 78%);
 }
 
-/* --- add button --- */
+/* Add button */
 
 .tile-add {
   display: grid;
@@ -249,7 +223,7 @@
   background: rgb(var(--surface-tint) / 6%);
 }
 
-/* --- keyboard hints --- */
+/* Keyboard hints */
 
 .tile__hint {
   position: absolute;
@@ -275,7 +249,7 @@
   opacity: 1;
 }
 
-/* --- dragging --- */
+/* Dragging */
 
 .tile[data-dragging='true'] {
   z-index: 5;
@@ -286,7 +260,7 @@
   transform: scale(1.03);
 }
 
-/* --- band chrome --- */
+/* Band chrome */
 
 .tiles-band {
   position: relative;
@@ -331,7 +305,7 @@
   color: var(--accent-fg);
 }
 
-/* --- folders --- */
+/* Folders */
 
 .tile__folder {
   display: grid;
@@ -351,7 +325,6 @@
   border-radius: 22%;
 }
 
-/* A folder holding a single item should not draw it in a quarter of the plate. */
 .tile__folder:has(> img:only-child) {
   grid-template-columns: 1fr;
 }
@@ -371,7 +344,7 @@
   transform: scale(1.04);
 }
 
-/* --- folder dialog --- */
+/* Folder dialog */
 
 .folder__empty {
   display: flex;
@@ -422,7 +395,7 @@
   background: rgb(var(--surface-tint) / 10%);
 }
 
-/* --- page switcher --- */
+/* Page switcher */
 
 .tiles-pages {
   display: flex;
@@ -453,7 +426,6 @@
   background: var(--accent);
 }
 
-/* Dots hide the label and show a target instead. */
 .tiles-pages[data-style='dots'] .tiles-pages__item {
   width: 20px;
   height: 20px;

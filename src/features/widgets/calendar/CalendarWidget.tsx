@@ -22,19 +22,9 @@ import type { CalendarEvent } from './ics'
 import { CalendarList } from './CalendarList'
 import './calendar.css'
 
-/**
- * A month grid that shows what is actually on.
- *
- * Subscriptions are plain iCalendar feeds — see `api.ts` for why that is the
- * connection rather than OAuth. A day carries a dot per calendar with something
- * on it, and the numbers alone were a wall calendar nobody had written on.
- *
- * Once a calendar is connected the widget is two views rather than one card
- * split in half: it opens on today's events, and the month is where you go to
- * pick a different day. Splitting a small card between a grid and a list gave
- * neither enough room — the grid squeezed to a few rows, the list to one line.
- * Whole-card views mean whichever you are looking at gets all of it.
- */
+// Month grid over iCalendar subscriptions (see `api.ts`). Connected, the widget
+// is two whole-card views — a day and a month — rather than one card split in
+// half, which gave neither view enough room.
 
 const CalendarSourceSchema = z.object({
   url: z.string().default(''),
@@ -48,12 +38,8 @@ const CalendarConfig = z.object({
   showWeekNumbers: z.boolean().default(false),
   showAdjacentMonths: z.boolean().default(true),
   highlightWeekend: z.boolean().default(true),
-  /** Subscribed calendars. Empty means the widget is still just a month grid. */
   sources: z.array(CalendarSourceSchema).default([]),
-  /*
-   * Whether the day view exists at all. Off, the widget is only ever the month
-   * grid — dates stop opening a day, and a connected widget opens on the month.
-   */
+  // Off, the widget is only ever the month grid and dates stop opening a day.
   showAgenda: z.boolean().default(true),
   maxDots: z.number().min(1).max(5).default(3),
 })
@@ -64,27 +50,21 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
   const { behavior } = useSettings()
   const locale = resolveLocale(behavior.locale)
   const today = useNow('minute')
-  /** Months away from the current one, so "today" stays correct over midnight. */
+  /** Months away from the current one, so "today" survives midnight. */
   const [offset, setOffset] = useState(0)
   /** Epoch ms of local midnight on the selected day; null means today. */
   const [selected, setSelected] = useState<number | null>(null)
-  /*
-   * Which of the two views is up. Connected widgets open on `day` — the point
-   * of connecting is to see what is on, and a grid of dots makes you click
-   * before it tells you anything.
-   */
+  // Connected widgets open on `day`: a grid of dots tells you nothing until clicked.
   const [pane, setPane] = useState<'month' | 'day'>('day')
-  /** Bumped to re-fetch past the cache when the user asks for it. */
+  /** Bumped to re-fetch past the cache. */
   const [revision, setRevision] = useState(0)
-  /** Reopens the setup card over an already-configured widget. */
   const [setup, setSetup] = useState(false)
 
   const view = new Date(today.getFullYear(), today.getMonth() + offset, 1)
   const weekStart = resolveWeekStart(config.weekStart, locale)
   const cells = monthCells(view, weekStart)
 
-  // The whole visible grid, not just the month, so events on the leading and
-  // trailing days are fetched too.
+  // The whole visible grid, so leading and trailing days are fetched too.
   const from = cells[0][0].getTime()
   const to = cells[5][6].getTime() + 86_400_000
 
@@ -99,20 +79,13 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
   const dayNames = weekdayNames(locale, weekStart)
   const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()
   const selectedDay = selected ?? startOfToday
-  /*
-   * Today is already the strongest mark on the grid, so it does not also wear a
-   * selection ring just for being the default. The ring appears once the user
-   * has actually chosen a day.
-   */
+  // Today is already marked, so the selection ring only appears once a day is
+  // actually chosen.
   const showSelection = selected !== null && selected !== startOfToday
   const needsPermission = (calendars ?? []).filter((cal) => cal.error === 'needs-permission')
 
-  /*
-   * The month grid is the widget's face, always — a new tab should show the
-   * dates, not a form. Connecting a calendar is an upgrade the `+` in the
-   * header offers to anyone looking for it, never something the widget opens
-   * with unasked.
-   */
+  // The grid is always the face; setup is offered by the header `+`, never opened
+  // unasked.
   if (setup) {
     return (
       <CalendarSetup
@@ -128,11 +101,7 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
 
   const agenda = byDay.get(selectedDay) ?? []
 
-  /*
-   * The day pane needs a calendar to have something to show, and the agenda
-   * setting still turns it off. Without either, the widget is the month grid it
-   * has always been.
-   */
+  // The day pane needs both a calendar and the agenda setting on.
   const dayPane = pane === 'day' && config.showAgenda && sources.length > 0
 
   if (dayPane) {
@@ -168,6 +137,7 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
       <header className="cal__head">
         <button
           type="button"
+          className="is-icon-btn"
           onClick={() => setOffset((n) => n - 1)}
           aria-label="Previous month"
           title="Previous month"
@@ -187,19 +157,11 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
           {new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(view)}
         </button>
 
-        {/*
-         * Connecting stays offered after the first calendar. Subscribing to one
-         * is rarely subscribing to all of them — work, then a shared family
-         * calendar — and hiding `+` the moment one existed left the second
-         * findable only through the widget's options dialog.
-         *
-         * Refresh joins it rather than replacing it, so neither action has to
-         * wait for the other to go away.
-         */}
+        {/* `+` stays after the first calendar, since a second is common. */}
         {sources.length > 0 ? (
           <button
             type="button"
-            className="cal__aux"
+            className="cal__aux is-icon-btn"
             onClick={() => setRevision((n) => n + 1)}
             aria-label="Check for changes"
             title="Check for changes"
@@ -213,7 +175,7 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
 
         <button
           type="button"
-          className="cal__add"
+          className="cal__add is-icon-btn"
           onClick={() => setSetup(true)}
           aria-label="Connect a calendar"
           title="Connect a calendar"
@@ -223,6 +185,7 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
 
         <button
           type="button"
+          className="is-icon-btn"
           onClick={() => setOffset((n) => n + 1)}
           aria-label="Next month"
           title="Next month"
@@ -271,7 +234,6 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
                 byDay={byDay}
                 onSelect={(day) => {
                   setSelected(day)
-                  // Picking a date is asking what is on it, so go and show it.
                   if (config.showAgenda && sources.length > 0) setPane('day')
                 }}
                 interactive={sources.length > 0}
@@ -315,8 +277,7 @@ function Week({
         const day = date.getTime()
         const weekend = date.getDay() === 0 || date.getDay() === 6
         const events = byDay.get(day) ?? []
-        // One dot per calendar, not per event: five meetings on one Tuesday is
-        // one busy day, and five identical dots said nothing extra.
+        // One dot per calendar, not per event.
         const colors = [...new Set(events.map((event) => event.color))].slice(0, config.maxDots)
 
         return (
@@ -329,8 +290,7 @@ function Week({
             data-selected={interactive && day === selectedDay}
             data-weekend={config.highlightWeekend && weekend}
             onClick={() => onSelect(day)}
-            // Nothing to select when there are no calendars, so the grid stays
-            // a plain read rather than pretending to be interactive.
+            // Nothing to select without calendars, so the grid is not interactive.
             tabIndex={interactive ? 0 : -1}
             aria-label={
               events.length > 0
@@ -353,18 +313,9 @@ function Week({
   )
 }
 
-/**
- * The whole card, for one day, drawn against an hour axis.
- *
- * A list said what was on; a timeline says what the day is shaped like — a free
- * afternoon looks free, and a stacked morning looks stacked. That is the thing
- * a glance at a new tab is actually asking.
- *
- * There are deliberately no chevrons here. In a view that replaces the month, a
- * `‹` cannot say whether it steps back a day or back to the grid, and a control
- * that could mean either is worse than one fewer control. Tapping the date is
- * the way back, and it says so.
- */
+// One day drawn against an hour axis, so the shape of the day is visible.
+// No day-stepping chevrons: in a view that replaces the month, `‹` would be
+// ambiguous between "previous day" and "back to the grid".
 function DayView({
   day,
   events,
@@ -394,13 +345,8 @@ function DayView({
   const timed = events.filter((event) => !event.allDay)
   const { start, end } = hourRange(events, day, now)
   const span = (end - start) * HOUR
-  /*
-   * The axis is zoomed to a fixed height per hour rather than squeezed into the
-   * card, so a block's height is legible on its own terms — a 20-minute meeting
-   * is a fifth of an hour's worth of room, and a 5-minute one is visibly
-   * smaller still. The track scrolls when the day does not fit, which is the
-   * trade: an honest scale over a whole day at a glance.
-   */
+  // Fixed height per hour rather than squeezing the day into the card, so block
+  // heights stay honest; the track scrolls when the day does not fit.
   const trackHeight = `${(end - start) * 3.4}em`
   const axis = []
   for (let hour = start; hour <= end; hour += 1) axis.push(hour)
@@ -409,11 +355,8 @@ function DayView({
   const offset = (at: number) => ((at - (day + start * HOUR)) / span) * 100
   const nowAt = isToday && now >= day + start * HOUR && now <= day + end * HOUR ? offset(now) : null
 
-  /*
-   * Opens looking at the part of the day that matters — now, if the day is
-   * today, and otherwise the first thing on it. Without this a zoomed axis
-   * opens at midnight, which is never what is being asked.
-   */
+  // A zoomed axis would otherwise open at midnight; scroll to now, else the
+  // first event.
   const trackRef = useRef<HTMLDivElement>(null)
   const focus = nowAt ?? (timed.length > 0 ? offset(Math.min(...timed.map((e) => e.start))) : null)
   useEffect(() => {
@@ -421,20 +364,15 @@ function DayView({
     if (!track || focus === null) return
     const target = (focus / 100) * track.scrollHeight - track.clientHeight / 2
     track.scrollTop = Math.max(0, target)
-    // Re-runs when the day changes; `focus` moves with it.
   }, [focus, day])
 
   return (
     <div className="cal__day">
-      {/*
-       * A chevron, not just a tappable date. The date alone was the way back
-       * and nothing said so — a heading does not look like a control, so the
-       * way out of the view went unfound.
-       */}
+      {/* A chevron, since a heading alone does not read as the way back. */}
       <header className="cal__dayhead">
         <button
           type="button"
-          className="cal__daynav"
+          className="cal__daynav is-icon-btn"
           onClick={onBack}
           aria-label="Back to the month"
           title="Back to the month"
@@ -442,7 +380,6 @@ function DayView({
           <Icon name="chevronLeft" />
         </button>
 
-        {/* Still a target itself, so the whole heading works as the way back. */}
         <button
           type="button"
           className="cal__daytitle"
@@ -458,7 +395,7 @@ function DayView({
 
         <button
           type="button"
-          className="cal__daynav"
+          className="cal__daynav is-icon-btn"
           onClick={onRefresh}
           aria-label="Check for changes"
           title="Check for changes"
@@ -467,7 +404,6 @@ function DayView({
         </button>
       </header>
 
-      {/* All-day events have no place on an hour axis, so they sit above it. */}
       {allDay.length > 0 ? (
         <ul className="cal__allday">
           {allDay.map((event) => (
@@ -502,15 +438,11 @@ function DayView({
             ))}
 
             {layout(timed).map(({ event, column, columns }) => {
-              // Clamped to the drawn range so an event running over midnight
-              // stays inside the track instead of overflowing it.
+              // Clamped so an event running over midnight stays inside the track.
               const top = Math.max(0, offset(event.start))
               const bottom = Math.min(100, offset(event.end))
-              /*
-               * How many lines the block can hold, from the share of the axis
-               * it covers — the widget's own height says nothing about it,
-               * since a half-hour meeting is short on any size of card.
-               */
+              // Lines the block can hold, from its share of the axis rather than
+              // the widget's height.
               const hours = ((bottom - top) / 100) * (end - start)
               return (
                 <button
@@ -518,30 +450,20 @@ function DayView({
                   key={event.id}
                   className="cal__slot"
                   data-lines={hours < 0.75 ? 'one' : hours < 1.5 ? 'two' : 'many'}
-                  // Only a linked event is a control; the rest are just drawn.
                   data-link={event.url ? true : undefined}
                   disabled={!event.url}
                   onClick={() => event.url && openUrl(event.url)}
                   title={event.url ? `Open ${event.title}` : undefined}
                   style={{
                     top: `${top}%`,
-                    /*
-                     * The block is exactly as tall as the event is long. There
-                     * is no minimum: a floor made a 20-minute meeting draw down
-                     * past 13:00, so the block stopped meaning what its position
-                     * said. The axis is zoomed instead — see `hourRange`.
-                     */
+                    // No minimum height: a floor would make a block overrun its
+                    // own end time. The axis is zoomed instead — see `hourRange`.
                     height: `${bottom - top}%`,
-                    /*
-                     * Offset and width are shares of the room left of the hour
-                     * labels, so a block can never overhang the track — the
-                     * gutter is added once here rather than as a margin, which
-                     * would push the block out by its own width.
-                     */
+                    // Shares of the room left of the hour labels; the gutter is
+                    // added here rather than as a margin, which would overhang.
                     insetInlineStart: `calc(var(--cal-gutter) + (100% - var(--cal-gutter)) * ${column / columns})`,
                     width: `calc((100% - var(--cal-gutter)) / ${columns} - 3px)`,
-                    // Tints the block with its calendar rather than filling it,
-                    // so the title stays readable in either theme.
+                    // Tinted, not filled, so the title stays readable in both themes.
                     ['--slot' as string]: colorOf(event.color),
                   }}
                 >
@@ -559,7 +481,6 @@ function DayView({
               )
             })}
 
-            {/* Where the day has got to — the one live thing on the card. */}
             {nowAt !== null ? (
               <div className="cal__now" style={{ top: `${nowAt}%` }} aria-hidden="true" />
             ) : null}
@@ -570,7 +491,6 @@ function DayView({
   )
 }
 
-/** Shown in either pane: a feed cannot be read until the user allows its host. */
 function GrantNotice({
   calendars,
   onGrant,
@@ -587,13 +507,8 @@ function GrantNotice({
   )
 }
 
-/**
- * First-run flow, shown in place of the grid until a calendar is added.
- *
- * Deliberately explains where the address comes from: the secret iCal URL is
- * not something anyone finds by guessing, and the widget is worth far less
- * without one.
- */
+// First-run flow. It spells out where the secret iCal address comes from, since
+// nobody finds it by guessing.
 function CalendarSetup({
   existing,
   onAdd,
@@ -630,10 +545,7 @@ function CalendarSetup({
       setError('Could not read a calendar there. Check the address.')
       return
     }
-    /*
-     * The next colour along, so a second calendar is told apart from the first
-     * at a glance. `colorOf` wraps, so this stays in range however many are on.
-     */
+    // Next colour along; `colorOf` wraps, so this stays in range.
     onAdd({ url, name: probed.name, color: existing.length })
   }
 
@@ -703,61 +615,38 @@ function CalendarSetup({
   )
 }
 
-/* ---------------------------------------------------------------- timeline */
-
 const HOUR = 3_600_000
 
-/**
- * The hours the timeline draws, fitted to what is actually on.
- *
- * A fixed 24-hour axis spends most of a card on hours nobody has anything in —
- * a day with one 11:30 meeting would be a sliver of event above and below a
- * screenful of empty night. So the range is the day's own span, padded by an
- * hour each way to give the first and last events somewhere to sit, and floored
- * at a few hours so a single short meeting does not fill the card end to end.
- */
+// The day's own span rather than a fixed 24 hours, padded an hour each way and
+// floored at a few hours.
 function hourRange(events: DayEvent[], day: number, now: number): { start: number; end: number } {
   const timed = events.filter((event) => !event.allDay)
-  // Nothing timed: show the working part of the day rather than an empty axis.
   if (timed.length === 0) return { start: 9, end: 17 }
 
   let first = 24
   let last = 0
   for (const event of timed) {
-    // Clamped to the day: a multi-day event runs past both of its edges.
     first = Math.min(first, Math.max(0, (event.start - day) / HOUR))
     last = Math.max(last, Math.min(24, (event.end - day) / HOUR))
   }
 
-  // The "now" line only reads as a position if its hour is on the axis.
   const nowHour = now >= day && now < day + 24 * HOUR ? (now - day) / HOUR : null
   if (nowHour !== null) {
     first = Math.min(first, nowHour)
     last = Math.max(last, nowHour)
   }
 
-  /*
-   * Padded generously and never narrower than a working day. The axis is drawn
-   * at a fixed scale and scrolls, so extra hours cost nothing but a little
-   * scrolling — where too few would clip an event added later in the day.
-   */
+  // Extra hours only cost scrolling; too few would clip an event added later.
   const start = Math.max(0, Math.min(Math.floor(first) - 1, 8))
   const end = Math.min(24, Math.max(Math.ceil(last) + 1, 19))
   return { start, end }
 }
 
-/**
- * Lays overlapping events out side by side.
- *
- * Two meetings at the same hour drawn on top of each other hide one of them, so
- * a run of events that overlap splits the width between them. Columns are
- * assigned greedily over events sorted by start, which is enough for the handful
- * a day holds and keeps the order left-to-right by start time.
- */
+// Overlapping events split the width. Columns are assigned greedily over events
+// sorted by start.
 function layout(events: DayEvent[]): { event: DayEvent; column: number; columns: number }[] {
   const sorted = [...events].sort((a, b) => a.start - b.start || a.end - b.end)
   const placed: { event: DayEvent; column: number; columns: number }[] = []
-  /* Events that overlap each other, laid out together so they share a width. */
   let cluster: typeof placed = []
   let clusterEnd = -Infinity
   const ends: number[] = []
@@ -787,20 +676,13 @@ function layout(events: DayEvent[]): { event: DayEvent; column: number; columns:
   return placed
 }
 
-/* ------------------------------------------------------------------ events */
-
 interface DayEvent extends CalendarEvent {
   /** Which calendar it came from, for its colour. */
   color: number
 }
 
-/**
- * Buckets every event into the local days it covers.
- *
- * A multi-day event appears on each of its days, so a week away is a run across
- * the grid rather than a mark on the Monday. The end is exclusive, which is what
- * keeps an all-day event ending at midnight off the following day.
- */
+// Buckets each event into every local day it covers. The end is exclusive, so an
+// all-day event ending at midnight stays off the following day.
 function groupByDay(calendars: LoadedCalendar[], from: number, to: number): Map<number, DayEvent[]> {
   const byDay = new Map<number, DayEvent[]>()
 
@@ -809,7 +691,6 @@ function groupByDay(calendars: LoadedCalendar[], from: number, to: number): Map<
       const first = new Date(event.start)
       first.setHours(0, 0, 0, 0)
       const cursor = new Date(first)
-      // Bounded by the grid: a year-long event must not walk 365 iterations.
       for (let guard = 0; guard < 40; guard += 1) {
         const day = cursor.getTime()
         if (day >= to || day >= event.end) break
@@ -824,13 +705,10 @@ function groupByDay(calendars: LoadedCalendar[], from: number, to: number): Map<
   }
 
   for (const list of byDay.values()) {
-    // All-day items first, then by clock time, so a day reads top to bottom.
     list.sort((a, b) => Number(b.allDay) - Number(a.allDay) || a.start - b.start)
   }
   return byDay
 }
-
-/* ------------------------------------------------------------------- dates */
 
 function resolveWeekStart(setting: CalendarConfig['weekStart'], locale?: string): number {
   if (setting === 'monday') return 1
@@ -842,11 +720,11 @@ function resolveWeekStart(setting: CalendarConfig['weekStart'], locale?: string)
     getWeekInfo?: () => { firstDay: number }
   }
   const firstDay = info.getWeekInfo?.().firstDay ?? info.weekInfo?.firstDay
-  // Intl reports 1..7 with Monday as 1 and Sunday as 7; JS wants 0..6, Sunday 0.
+  // Intl reports 1..7 (Monday 1); JS wants 0..6 (Sunday 0).
   return firstDay ? firstDay % 7 : 1
 }
 
-/** Six rows always, so the widget does not change height between months. */
+/** Always six rows, so the widget's height does not change between months. */
 function monthCells(view: Date, weekStart: number): Date[][] {
   const first = new Date(view.getFullYear(), view.getMonth(), 1)
   const lead = (first.getDay() - weekStart + 7) % 7
@@ -864,7 +742,7 @@ function monthCells(view: Date, weekStart: number): Date[][] {
 function weekdayNames(locale: string | undefined, weekStart: number): string[] {
   const format = new Intl.DateTimeFormat(locale, { weekday: 'narrow' })
   return Array.from({ length: 7 }, (_, i) => {
-    // 2024-01-07 was a Sunday, giving a stable anchor for weekday names.
+    // 2024-01-07 was a Sunday: a stable anchor for weekday names.
     const date = new Date(2024, 0, 7 + ((weekStart + i) % 7))
     return format.format(date)
   })
@@ -884,13 +762,8 @@ registerWidget<CalendarConfig>({
   description: 'This month at a glance. Connect a calendar to see your meetings on it.',
   icon: 'calendar',
   configSchema: CalendarConfig,
-  /*
-   * Large and up only. A month is six rows of seven squares whatever else it
-   * shows, and at one cell tall that left days about as tall as their own
-   * numbers — the dots had to be dropped and the agenda hidden to make it fit
-   * at all. A size that can only be shown by removing what the widget is for
-   * is not a size worth offering.
-   */
+  // Large and up only: a month is always six rows of seven, which does not fit
+  // smaller without dropping the dots and the agenda.
   sizes: ['large', 'xlarge'],
   defaultSize: 'large',
   Component: CalendarWidget,

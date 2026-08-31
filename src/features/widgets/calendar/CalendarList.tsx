@@ -12,12 +12,8 @@ import {
   type CalendarSource,
 } from './api'
 
-/**
- * Subscription management inside the widget's own options dialog.
- *
- * Reads and writes through the field scope, the same way the feed list does, so
- * the settings layer never has to know what a calendar is.
- */
+// Subscription management, reading and writing through the field scope so the
+// settings layer never has to know what a calendar is.
 export function CalendarList({ scope }: { scope?: FieldScope }) {
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
@@ -44,9 +40,8 @@ export function CalendarList({ scope }: { scope?: FieldScope }) {
       setError(`Reading ${urlLabel(url)} needs permission for that site.`)
       return
     }
-    // Named from the feed itself, so the list shows "Work" rather than a
-    // hundred-character secret URL. A failed probe is not fatal: the URL may
-    // still be right and simply unreachable this second.
+    // Named from the feed itself. A failed probe is not fatal — the URL may be
+    // right and merely unreachable.
     const probed = await probeCalendar(url)
     setBusy(false)
     if (!probed) {
@@ -71,6 +66,7 @@ export function CalendarList({ scope }: { scope?: FieldScope }) {
           <span title={source.url}>{source.name || urlLabel(source.url)}</span>
           <button
             type="button"
+            className="is-icon-btn"
             onClick={() => remove(source.url)}
             title={`Remove ${source.name}`}
             aria-label={`Remove ${source.name}`}
@@ -111,7 +107,7 @@ export function CalendarList({ scope }: { scope?: FieldScope }) {
   )
 }
 
-/** The first unused colour, so two calendars added in a row look different. */
+// First unused colour, so two calendars added in a row differ.
 function nextColor(sources: CalendarSource[]): number {
   const taken = new Set(sources.map((source) => source.color))
   for (let index = 0; index < 8; index += 1) if (!taken.has(index)) return index

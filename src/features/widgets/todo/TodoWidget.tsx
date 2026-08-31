@@ -29,17 +29,8 @@ import {
 } from './parse'
 import './todo.css'
 
-/**
- * A task list that grows up only when asked to.
- *
- * Priorities and due dates are both off by default, and with them off this is
- * the same list it has always been: a line of text and a checkbox. Turning them
- * on must not turn adding a task into filling in a form, so the cost of setting
- * one is kept to typing — `!` for priority, `@ friday` for a date, read out of
- * the line as it is typed (see `parse.ts`) and echoed back as chips under the
- * field so nothing is set invisibly. The per-row controls exist for tasks
- * already on the list, and appear on hover rather than taking permanent space.
- */
+// Task list. Priority and due dates are set by typing shorthand (see parse.ts)
+// rather than a form; per-row controls appear on hover.
 
 const TodoItem = z.object({
   id: z.string(),
@@ -49,28 +40,19 @@ const TodoItem = z.object({
   priority: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)]).default(0),
   /** Epoch ms of local midnight, or 0 for no date. */
   due: z.number().default(0),
-  /** Epoch ms the task was completed, for the "clear done" sweep. */
+  /** Epoch ms of completion, for the "clear done" sweep. */
   doneAt: z.number().default(0),
 })
 
 const TodoConfig = z.object({
   items: z.array(TodoItem).default([]),
-  /** Completed items drop to the bottom rather than vanishing. */
   hideDone: z.boolean().default(false),
   showCount: z.boolean().default(true),
   strikeDone: z.boolean().default(true),
 
-  /*
-   * Priorities and due dates are the widget, not an upsell — a task list that
-   * hides them behind a settings tab is one nobody discovers. They are still
-   * toggles so a list that only wants checkboxes can say so, but they default
-   * on, and cost nothing until a task actually carries one.
-   */
   priorities: z.boolean().default(true),
   dueDates: z.boolean().default(true),
-  /** `manual` keeps the order tasks were added in. */
   sortBy: z.enum(['manual', 'priority', 'due']).default('manual'),
-  /** Overdue and due-today tasks carry a colour of their own. */
   flagOverdue: z.boolean().default(true),
 })
 
@@ -81,25 +63,18 @@ const PRIORITIES: Priority[] = [1, 2, 3]
 
 const STATUSES: Status[] = ['active', 'done']
 const BUCKETS: DueBucket[] = ['overdue', 'today', 'week', 'later', 'none']
-/** 0 last: "no priority" is the absence of the other three, so it reads after them. */
+// 0 last: "no priority" reads after the real priorities.
 const PRIORITY_FACETS: Priority[] = [1, 2, 3, 0]
 
 function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   const { behavior } = useSettings()
   const locale = resolveLocale(behavior.locale)
-  // Minute precision: a date row that says "Today" has to stop saying it at
-  // midnight, and overdue styling has to arrive on its own.
+  // Minute precision so "Today" and overdue styling flip at midnight on their own.
   const today = startOfDay(useNow('minute'))
   const [draft, setDraft] = useState('')
-  /** Which row has its detail controls pinned open, if any. */
   const [editing, setEditing] = useState<string | null>(null)
-  /*
-   * Which view is up. Kept in component state rather than config on purpose: a
-   * filter is what you are looking at now, not a preference. Persisting it
-   * means reopening the browser to a list that silently hides most of itself.
-   */
+  // Deliberately not persisted: reopening to a silently filtered list is worse.
   const [filter, setFilter] = useState<TaskFilter>(EMPTY_FILTER)
-  /** Whether the filter panel is open. */
   const [panel, setPanel] = useState(false)
 
   const rich = config.priorities || config.dueDates
@@ -107,7 +82,6 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   const patch = (id: string, changes: Partial<TodoItem>) =>
     write(config.items.map((item) => (item.id === id ? { ...item, ...changes } : item)))
 
-  // Parsed live so the field can show what it is about to record.
   const preview = useMemo(
     () =>
       parseDraft(draft, today, { priorities: config.priorities, dueDates: config.dueDates }),
@@ -146,27 +120,16 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
     () => ordered.filter((item) => matchesFilter(item, filter, today)),
     [ordered, filter, today],
   )
-  /*
-   * `hideDone` is the standing preference; asking for completed tasks in the
-   * filter is an explicit request that overrides it, otherwise the panel would
-   * offer a checkbox that silently does nothing.
-   */
+  // An explicit "done" filter overrides the standing `hideDone` preference.
   const visible =
     config.hideDone && !filter.status.includes('done')
       ? matching.filter((item) => !item.done)
       : matching
   const remaining = config.items.filter((item) => !item.done).length
-  // A one-row widget has no room for a second line under a task.
   const compact = size.h < 2
 
   return (
     <div className="todo" data-rich={rich}>
-      {/*
-        The filter button sits in the add bar, beside the field it narrows —
-        a row of chips of its own spends a line of a small widget whether or
-        not anything is filtered. It carries a dot while a facet is set, so a
-        shortened list always has a visible cause.
-      */}
       <div className="todo__bar">
         <form
           className="todo__add"
@@ -190,7 +153,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
         {rich && config.items.length > 0 ? (
           <button
             type="button"
-            className="todo__filter-btn"
+            className="todo__filter-btn is-icon-btn"
             data-on={!isFilterEmpty(filter)}
             onClick={() => setPanel((open) => !open)}
             aria-expanded={panel}
@@ -206,12 +169,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
         ) : null}
       </div>
 
-      {/*
-        The panel and the list share one scroll area, so opening the filters
-        pushes the tasks down and you scroll through the whole thing as one
-        surface. Giving the panel its own scroller made two nested scrollbars
-        on a card that is barely tall enough for one.
-      */}
+      {/* Panel and list share one scroll area; a nested scroller is unusable here. */}
       <div className="todo__scroll scroll-y">
         {panel ? (
           <FilterPanel
@@ -225,11 +183,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
           />
         ) : null}
 
-      {/*
-        What the shorthand caught, shown only once it has caught something. It is
-        the acknowledgement that makes typing `!` trustworthy — you can see the
-        priority land before you press Enter.
-      */}
+      {/* Echoes what the shorthand caught, so nothing is set invisibly. */}
       {draft.trim() && (preview.priority > 0 || preview.due > 0) ? (
         <p className="todo__preview">
           {preview.priority > 0 ? (
@@ -252,15 +206,10 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
             const open = editing === item.id
             return (
               <li key={item.id} data-done={item.done} data-open={open}>
-                {/*
-                  The checkbox belongs to the title, so the two sit on one line and
-                  the metadata hangs below it — a box vertically centred against a
-                  two-line block reads as belonging to neither line.
-                */}
                 <div className="todo__row">
                   <button
                     type="button"
-                    className="todo__check"
+                    className="todo__check is-icon-btn"
                     onClick={() => toggle(item.id)}
                     aria-pressed={item.done}
                     aria-label={
@@ -303,7 +252,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
                   {rich ? (
                     <button
                       type="button"
-                      className="todo__icon todo__more"
+                      className="todo__icon todo__more is-icon-btn"
                       onClick={() => setEditing(open ? null : item.id)}
                       aria-expanded={open}
                       aria-label={`Edit details for ${item.text}`}
@@ -314,7 +263,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
 
                   <button
                     type="button"
-                    className="todo__icon todo__remove"
+                    className="todo__icon todo__remove is-icon-btn"
                     onClick={() => remove(item.id)}
                     title="Remove"
                     aria-label={`Remove ${item.text}`}
@@ -323,10 +272,6 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
                   </button>
                 </div>
 
-                {/*
-                  Only ever drawn for the one row being edited, so the list stays a
-                  list. Everything here is reachable by typing instead.
-                */}
                 {open ? (
                   <div className="todo__detail">
                     {config.priorities ? (
@@ -385,7 +330,7 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
                         {item.due > 0 ? (
                           <button
                             type="button"
-                            className="todo__btn todo__btn--icon"
+                            className="todo__btn todo__btn--icon is-icon-btn"
                             onClick={() => patch(item.id, { due: 0 })}
                             title="Clear due date"
                             aria-label={`Clear due date for ${item.text}`}
@@ -421,18 +366,8 @@ function TodoWidget({ config, setConfig, size }: WidgetProps<TodoConfig>) {
   )
 }
 
-/**
- * The filter panel.
- *
- * Every facet is a set of independent checkboxes rather than a single choice,
- * because the questions people ask overlap: "P1 and P2, overdue or due today"
- * is one question, not three views. Nothing here is a preset — the presets a
- * list needs are whatever its owner happens to be looking for.
- *
- * An empty facet means "no opinion", so the panel opens showing everything and
- * each box only ever narrows. That keeps the mental model to one rule: ticking
- * more boxes in a facet widens it, ticking boxes in more facets narrows.
- */
+// Independent checkboxes per facet: more boxes in one facet widens, boxes in
+// more facets narrows.
 function FilterPanel({
   filter,
   setFilter,
@@ -468,7 +403,7 @@ function FilterPanel({
         />
         <button
           type="button"
-          className="todo__btn todo__btn--icon"
+          className="todo__btn todo__btn--icon is-icon-btn"
           onClick={onClose}
           title="Close filters"
           aria-label="Close filters"
@@ -523,7 +458,6 @@ function FilterPanel({
 
       <div className="todo__panel-foot">
         <span>
-          {/* States the consequence, so a filter that hides most of the list says so. */}
           {shown === total ? `${total} tasks` : `${shown} of ${total} shown`}
         </span>
         {!isFilterEmpty(filter) ? (
@@ -536,7 +470,7 @@ function FilterPanel({
   )
 }
 
-/** `<input type="date">` speaks ISO in local terms; both helpers stay local. */
+// `<input type="date">` speaks ISO in local terms; both helpers stay local.
 const isoDate = (ms: number): string => {
   const date = new Date(ms)
   const pad = (value: number) => String(value).padStart(2, '0')

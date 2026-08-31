@@ -44,9 +44,8 @@
   flex: none;
 }
 
-/* ---------------------------------------------------------------- filters */
+/* Filters */
 
-/* The add field and the filter button share one line, and one height. */
 .todo__bar {
   display: flex;
   align-items: stretch;
@@ -59,19 +58,14 @@
   min-width: 0;
 }
 
-/*
- * A square the same height as the field beside it, so the bar reads as one
- * control rather than a field with something stuck on the end. Always visible,
- * unlike the per-row affordances: it is the only clue that a shortened list is
- * shortened, so it cannot wait for a hover.
- */
+/* Always visible, unlike the per-row affordances: it is the only clue a list is filtered. */
 .todo__filter-btn {
   position: relative;
-  display: grid;
-  place-items: center;
+  /* Stretches to the input's height; the square follows from that, not from a number. */
   align-self: stretch;
+  width: auto;
+  height: auto;
   aspect-ratio: 1;
-  flex: none;
   border-radius: var(--radius-sm);
   background: rgb(var(--surface-tint) / 7%);
   color: var(--fg-subtle);
@@ -83,7 +77,6 @@
   background: rgb(var(--surface-tint) / 10%);
 }
 
-/* The dot that says a facet is set. */
 .todo__filter-btn[data-on='true'] {
   color: var(--accent);
 }
@@ -99,12 +92,7 @@
   background: var(--accent);
 }
 
-/*
- * One scroll area for the panel and the list together, so opening the filters
- * pushes the tasks down and the whole thing scrolls as a single surface. A
- * panel with its own scroller put two nested scrollbars on a card barely tall
- * enough for one.
- */
+/* One scroll area for panel and list: a panel scroller nested two scrollbars on a short card. */
 .todo__scroll {
   display: flex;
   flex-direction: column;
@@ -146,10 +134,6 @@
   color: var(--fg-subtle);
 }
 
-/*
- * A label above its row rather than beside it: the value rows are what the eye
- * scans, and an inline label pushes them into a narrower, ragged column.
- */
 .todo__facet {
   display: flex;
   flex-direction: column;
@@ -198,11 +182,7 @@
   padding: 1px 0;
 }
 
-/*
- * `align-items: flex-start` plus a line-height-matched box is what puts the
- * checkbox on the title line: centring it against a row that has grown a
- * metadata line underneath leaves it floating between the two.
- */
+/* flex-start plus a line-height-matched box keeps the checkbox on the title line. */
 .todo__row {
   display: flex;
   align-items: flex-start;
@@ -212,11 +192,7 @@
 }
 
 .todo__check {
-  display: grid;
-  place-items: center;
-  width: 17px;
-  height: 17px;
-  flex: none;
+  --icon-btn: 17px;
   /* Centres the box against the title's cap height, not the row. */
   margin-block-start: calc((var(--todo-line) - 17px) / 2);
   border-radius: 5px;
@@ -252,15 +228,8 @@
   color: var(--fg-subtle);
 }
 
-/* Row affordances: identical squares, so the pair reads as one control group. */
 .todo__icon {
-  display: grid;
-  place-items: center;
-  width: var(--todo-line);
-  height: var(--todo-line);
-  aspect-ratio: 1;
-  flex: none;
-  padding: 0;
+  --icon-btn: var(--todo-line);
   border-radius: var(--radius-sm);
   opacity: 0;
   color: var(--fg-subtle);
@@ -289,13 +258,9 @@
   margin: auto;
 }
 
-/* ----------------------------------------------------- priorities and dates */
+/* Priorities and dates */
 
-/*
- * Priority shows in the chip and nowhere else. The checkbox stays one control
- * with one look: it means "done or not", and tinting it by priority made it
- * read as two pieces of information at once.
- */
+/* Priority shows in the chip only; the checkbox means done-or-not and nothing else. */
 
 .todo__meta {
   display: flex;
@@ -361,14 +326,13 @@
   flex: none;
 }
 
-/* ---------------------------------------------------------- row detail pane */
+/* Row detail pane */
 
 .todo__detail {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
   flex-wrap: wrap;
-  /* Indented under the title, clear of the checkbox column. */
   padding: 0 2px 6px calc(17px + 9px + 2px);
 }
 
@@ -378,11 +342,7 @@
   gap: 3px;
 }
 
-/*
- * One button, one height. Every control in the pane — priority, the two date
- * shortcuts, the picker and the clear — is this, so nothing in the row is a
- * different size from anything beside it.
- */
+/* One height for every control in the pane. */
 .todo__btn {
   display: inline-flex;
   align-items: center;
@@ -404,11 +364,8 @@
   background: rgb(var(--surface-tint) / 12%);
 }
 
-/* Icon-only buttons are square: equal padding either side of a single glyph. */
 .todo__btn--icon {
-  width: var(--todo-ctl);
-  aspect-ratio: 1;
-  padding-inline: 0;
+  --icon-btn: var(--todo-ctl);
   font-size: 10px;
 }
 
@@ -432,15 +389,11 @@
   color: var(--accent-fg);
 }
 
-/* An unticked facet reads as available, not as disabled. */
 .todo__facet .todo__btn[aria-pressed='false'] {
   background: rgb(var(--surface-tint) / 10%);
 }
 
-/*
- * The date picker wears the same button as its neighbours: the native control
- * is stripped back to its text so it cannot bring its own height or chrome.
- */
+/* The native date control is stripped to its text so it brings no height or chrome. */
 .todo__date {
   cursor: pointer;
 }

@@ -1,5 +1,5 @@
 .modal {
-  /* The reset zeroes every margin, which also removes <dialog>'s auto-centring. */
+  /* The reset zeroes margins, killing <dialog>'s auto-centring. */
   margin: auto;
   max-width: calc(100vw - 32px);
   max-height: min(84vh, 760px);
@@ -34,8 +34,8 @@
 }
 
 .modal__close {
+  --icon-btn: 26px;
   color: var(--fg-subtle);
-  padding: 4px;
   border-radius: var(--radius-sm);
 }
 

@@ -9,11 +9,7 @@
 .search {
   position: relative;
   width: 100%;
-  /*
-   * The row's glass `backdrop-filter` makes it a stacking context, which would
-   * otherwise trap both dropdowns' z-index inside it and let the tiles below
-   * paint over them. Lifting the whole search box fixes both at once.
-   */
+  /* The row's `backdrop-filter` makes a stacking context that would trap the dropdowns' z-index. */
   z-index: var(--z-overlay);
 }
 
@@ -46,13 +42,9 @@
 }
 
 .search__clear {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
+  --icon-btn: 24px;
   border-radius: var(--radius-sm);
   color: var(--fg-subtle);
-  flex: none;
 }
 
 .search__clear:hover {
@@ -74,7 +66,7 @@
   flex: none;
 }
 
-/* --- engine picker --- */
+/* Engine picker */
 
 .search__engine {
   position: relative;
@@ -148,12 +140,9 @@
   color: var(--fg-subtle);
 }
 
-/* --- results --- */
+/* Results */
 
-/*
- * An absolute dropdown, not part of the flow: growing the box on every keystroke
- * would shove the tiles down the page as the user types.
- */
+/* Absolute, not in flow: growing the box would shove the tiles down on every keystroke. */
 .search__results {
   position: absolute;
   top: calc(100% + 6px);
@@ -224,12 +213,9 @@
   flex: none;
 }
 
-/* --- hint --- */
+/* Hint */
 
-/*
- * Lives inside the search row instead of below it: the old block-level hint
- * reserved a line of layout space under the bar even while faded out.
- */
+/* Inside the search row: a block-level hint reserved a line even while faded out. */
 .search__hint {
   display: inline-flex;
   align-items: center;
@@ -254,4 +240,10 @@
   border-radius: 4px;
   border: 1px solid var(--line);
   background: rgb(var(--surface-tint) / 8%);
+}
+
+/* Copy confirmation: the copy leaves nothing else behind to notice. */
+.search__result[data-copied='true'] .search__resultsub {
+  color: var(--accent);
+  font-weight: 600;
 }

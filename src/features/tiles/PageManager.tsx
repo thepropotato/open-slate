@@ -5,13 +5,8 @@ import { uid } from '@/core/util/id'
 import { ROOT } from './folders'
 import './PageManager.css'
 
-/**
- * Add, rename and remove tile pages.
- *
- * The first page is implicit and cannot be removed — there is always somewhere
- * for a tile to live. Deleting a later page moves its tiles to the first one
- * rather than deleting them.
- */
+// Add, rename and remove tile pages. The first page is implicit and cannot be
+// removed; deleting a later one moves its tiles there.
 export function PageManager() {
   const { tiles } = useSettings()
   const { update } = useSettingsActions()
@@ -40,7 +35,6 @@ export function PageManager() {
       tiles: {
         ...current.tiles,
         pages: current.tiles.pages.filter((page) => page.id !== id),
-        // Tiles are never deleted with a page; they fall back to the first one.
         items: current.tiles.items.map((tile) =>
           tile.pageId === id ? { ...tile, pageId: ROOT } : tile,
         ),
@@ -67,7 +61,7 @@ export function PageManager() {
           <span className="pages__count">{countOn(page.id)} tiles</span>
           <button
             type="button"
-            className="pages__remove"
+            className="pages__remove is-icon-btn"
             onClick={() => removePage(page.id)}
             title="Remove this page, moving its tiles to Main"
             aria-label={`Remove page ${page.name || index + 2}`}

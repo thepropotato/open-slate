@@ -2,10 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon } from '@/core/icons'
 import './Modal.css'
 
-/**
- * Centred dialog. Uses the native `<dialog>` element so focus trapping, the
- * top layer and Escape handling come from the platform rather than from us.
- */
+/** Native `<dialog>`, so focus trapping, the top layer and Escape come from the platform. */
 export function Modal({
   title,
   children,
@@ -48,7 +45,7 @@ export function Modal({
     >
       <header className="modal__head">
         <h2 className="modal__title">{title}</h2>
-        <button type="button" className="modal__close" onClick={onClose} aria-label="Close">
+        <button type="button" className="modal__close is-icon-btn" onClick={onClose} aria-label="Close">
           <Icon name="close" />
         </button>
       </header>

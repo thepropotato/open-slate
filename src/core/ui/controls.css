@@ -1,4 +1,4 @@
-/* Generic form primitives. Every one reads its shape and colour from tokens. */
+/* Generic form primitives. */
 
 .ctl-row {
   display: grid;
@@ -13,7 +13,6 @@
   grid-template-columns: 1fr;
 }
 
-/* Stacked rows put the control on its own line, so it takes the full width. */
 .ctl-row--stacked .ctl-row__control {
   justify-self: stretch;
   width: 100%;
@@ -44,7 +43,7 @@
   justify-self: end;
 }
 
-/* --- toggle --- */
+/* Toggle */
 .ctl-toggle {
   --h: 22px;
   position: relative;
@@ -77,7 +76,7 @@
   background: var(--accent-fg);
 }
 
-/* --- slider --- */
+/* Slider */
 .ctl-slider {
   display: flex;
   align-items: center;
@@ -113,7 +112,7 @@
   text-align: right;
 }
 
-/* --- segmented --- */
+/* Segmented */
 .ctl-seg {
   display: inline-flex;
   padding: 2px;
@@ -148,7 +147,7 @@
   color: var(--accent-fg);
 }
 
-/* --- inputs --- */
+/* Inputs */
 .ctl-input,
 .ctl-select {
   background: rgb(var(--surface-tint) / 8%);
@@ -200,7 +199,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* --- colour --- */
+/* Colour */
 .ctl-color {
   display: inline-flex;
   align-items: center;
@@ -235,7 +234,7 @@
   text-transform: lowercase;
 }
 
-/* --- buttons --- */
+/* Buttons */
 .ctl-btn {
   display: inline-flex;
   align-items: center;
@@ -264,8 +263,6 @@
   filter: brightness(1.08);
 }
 
-/* Destructive buttons carry their own colour rather than the neutral surface,
-   so a delete never looks like the button next to it. */
 .ctl-btn--danger {
   color: #ff9a9a;
   background: rgb(255 90 90 / 10%);
@@ -285,12 +282,6 @@
 
 .ctl-btn--ghost:hover {
   background: rgb(var(--surface-tint) / 10%);
-}
-
-.ctl-btn--icon {
-  padding: 7px;
-  width: 32px;
-  height: 32px;
 }
 
 .ctl-btn[disabled] {

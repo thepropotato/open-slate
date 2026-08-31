@@ -5,13 +5,8 @@ import { hostLabel } from '@/features/search/providers'
 import type { FieldScope } from '@/features/settings-ui/FieldRenderer'
 import { originOf, requestFeedAccess } from './api'
 
-/**
- * Feed list management inside the widget's own options dialog.
- *
- * Reads and writes through the field scope, which is how a widget contributes a
- * bespoke control over its own config without the settings layer knowing
- * anything about feeds.
- */
+// Feed list editor for the widget's options dialog. Reads and writes through the
+// field scope, so the settings layer needs to know nothing about feeds.
 export function FeedList({ scope }: { scope?: FieldScope }) {
   const [draft, setDraft] = useState('')
   const [error, setError] = useState('')
@@ -46,6 +41,7 @@ export function FeedList({ scope }: { scope?: FieldScope }) {
           <span title={url}>{hostLabel(url)}</span>
           <button
             type="button"
+            className="is-icon-btn"
             onClick={() => write(urls.filter((candidate) => candidate !== url))}
             title={`Remove ${hostLabel(url)}`}
             aria-label={`Remove ${hostLabel(url)}`}

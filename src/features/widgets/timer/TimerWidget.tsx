@@ -6,14 +6,9 @@ import type { WidgetProps } from '@/core/widgets/types'
 import { playChime } from './chime'
 import './timer.css'
 
-/**
- * Pomodoro, countdown and stopwatch.
- *
- * State is stored as absolute timestamps, not as a countdown decremented by a
- * tick. That is what makes it survive the new tab page being replaced the moment
- * the user navigates: reopen a tab twenty minutes later and the timer is where it
- * should be, and every open tab agrees.
- */
+// Pomodoro, countdown and stopwatch. State is absolute timestamps, not a
+// decremented countdown, so it survives the page closing and stays consistent
+// across open tabs.
 
 const TimerConfig = z.object({
   mode: z.enum(['pomodoro', 'countdown', 'stopwatch']).default('pomodoro'),
@@ -25,11 +20,11 @@ const TimerConfig = z.object({
   chime: z.boolean().default(true),
   showRounds: z.boolean().default(true),
 
-  /* Runtime state, persisted so the timer outlives the page. */
+  // Runtime state, persisted so the timer outlives the page.
   running: z.boolean().default(false),
   /** Epoch ms at which the current phase ends. Zero when not running. */
   endsAt: z.number().default(0),
-  /** Milliseconds left, kept while paused. */
+  /** Milliseconds left while paused. */
   pausedMs: z.number().default(0),
   /** Epoch ms the stopwatch started; zero when stopped. */
   startedAt: z.number().default(0),
@@ -43,14 +38,13 @@ type TimerConfig = z.infer<typeof TimerConfig>
 
 function TimerWidget({ config, setConfig }: WidgetProps<TimerConfig>) {
   const [now, setNow] = useState(() => Date.now())
-  /** Guards against firing the phase change twice across re-renders. */
+  // Guards against firing the phase change twice across re-renders.
   const firedFor = useRef(0)
 
   const isStopwatch = config.mode === 'stopwatch'
   const ticking = config.running
 
-  // A 250ms tick keeps the seconds digit honest without being wasteful; the
-  // displayed value is always derived from timestamps, never accumulated.
+  // Displayed value is always derived from timestamps, never accumulated.
   useEffect(() => {
     if (!ticking) return
     const id = setInterval(() => setNow(Date.now()), 250)
@@ -65,7 +59,6 @@ function TimerWidget({ config, setConfig }: WidgetProps<TimerConfig>) {
     ? config.elapsedMs + Math.max(0, now - config.startedAt)
     : config.elapsedMs
 
-  // Phase completion.
   useEffect(() => {
     if (isStopwatch || !config.running || config.endsAt === 0) return
     if (now < config.endsAt) return
@@ -170,7 +163,7 @@ function TimerWidget({ config, setConfig }: WidgetProps<TimerConfig>) {
       <div className="timer__controls">
         <button
           type="button"
-          className="timer__btn timer__btn--primary"
+          className="timer__btn timer__btn--primary is-icon-btn"
           onClick={config.running ? pause : start}
           title={config.running ? 'Pause' : 'Start'}
           aria-label={config.running ? 'Pause' : 'Start'}
@@ -178,19 +171,17 @@ function TimerWidget({ config, setConfig }: WidgetProps<TimerConfig>) {
           <Icon name={config.running ? 'pause' : 'play'} />
         </button>
         {config.mode === 'pomodoro' ? (
-          <button type="button" className="timer__btn" onClick={skip} title="Skip this phase" aria-label="Skip this phase">
+          <button type="button" className="timer__btn is-icon-btn" onClick={skip} title="Skip this phase" aria-label="Skip this phase">
             <Icon name="chevronRight" />
           </button>
         ) : null}
-        <button type="button" className="timer__btn" onClick={reset} title="Reset" aria-label="Reset">
+        <button type="button" className="timer__btn is-icon-btn" onClick={reset} title="Reset" aria-label="Reset">
           <Icon name="reset" />
         </button>
       </div>
     </div>
   )
 }
-
-/* -------------------------------------------------------------------- maths */
 
 const phaseLength = (config: TimerConfig): number =>
   (config.mode === 'countdown'
@@ -203,7 +194,7 @@ const phaseLength = (config: TimerConfig): number =>
 
 function nextPhase(config: TimerConfig): { phase: TimerConfig['phase']; round: number; minutes: number } {
   if (config.phase !== 'work') {
-    // A long break closes the set, so the next work block starts a new round one.
+    // A long break closes the set, so the next work block starts round one.
     const round = config.phase === 'longBreak' ? 1 : config.round + 1
     return { phase: 'work', round, minutes: config.workMinutes }
   }

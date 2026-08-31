@@ -5,15 +5,9 @@ import { Button } from '@/core/ui'
 import { permissions, type OptionalPermission } from '@/core/platform/browser'
 import './list.css'
 
-/**
- * Shared scaffolding for widgets that read browser data.
- *
- * All of them need the same three states — permission not granted, loading, and
- * empty — and the same row shape. Keeping that here means each widget file is
- * just its query and its row contents.
- */
+// Shared permission/loading/empty states and row shape for widgets that read
+// browser data.
 
-/** Wraps content that needs optional permissions, offering to request them. */
 export function PermissionGate({
   needs,
   reason,
@@ -35,8 +29,7 @@ export function PermissionGate({
           icon="check"
           onClick={() =>
             void permissions.request(needs).then((ok) => {
-              // The widget's queries all sit behind this gate, so a reload is
-              // the simplest way to let every one of them re-run.
+              // Every query sits behind this gate; a reload re-runs them all.
               if (ok) window.location.reload()
             })
           }
@@ -122,7 +115,7 @@ export function ListRow({
       {action && onAction ? (
         <button
           type="button"
-          className="blist__rowaction"
+          className="blist__rowaction is-icon-btn"
           onClick={onAction}
           title={actionLabel}
           aria-label={actionLabel}
@@ -134,7 +127,6 @@ export function ListRow({
   )
 }
 
-/** A small inline filter box, used by the history and tabs widgets. */
 export function ListSearch({
   value,
   onChange,

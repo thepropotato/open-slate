@@ -7,7 +7,6 @@
   --wframe-bar: 26px;
 }
 
-/* Holds the grid and the slot overlay, and grows past the grid while editing. */
 .canvas__stage {
   position: relative;
   width: 100%;
@@ -19,14 +18,7 @@
   width: 100%;
 }
 
-/*
- * The cell grid, shown only while arranging.
- *
- * `--cell` and `--gutter` are set from the canvas's measured row height and
- * margin, so the slots line up exactly with where a widget will land. Drawn as
- * one rounded rect per cell rather than ruled lines: it reads as "here are the
- * places a widget goes", which is the actual question while dragging.
- */
+/* Slot overlay. `--cell`/`--gutter` come from the canvas's measured row height and margin. */
 .canvas__slots {
   position: absolute;
   inset: 0;
@@ -42,8 +34,7 @@
   opacity: 1;
 }
 
-/* Only the tile inside the pattern — the rect that paints it must keep its
- * `url(#…)` fill, and a CSS `fill` here would win over the attribute. */
+/* Only the tile inside the pattern: a CSS `fill` on the rect would beat its `url(#…)` attribute. */
 .canvas__slot {
   fill: rgb(var(--surface-tint) / 5%);
   stroke: var(--line);
@@ -56,16 +47,9 @@
 }
 
 /*
- * The library's stylesheet hardcodes its durations, so the grid would keep
- * animating with animations turned off or reduced motion requested. Restating
- * them against `--dur` puts the grid under the same motion token as everything
- * else, which zeroes it in both cases.
- *
- * Only `transform` is animated, unlike the library's default. A widget's size
- * is derived from the measured container, so it settles over the first frames
- * after load; transitioning `width` turns that settling into a visible drift
- * outwards, while sliding a neighbour aside during a drag — which is what the
- * motion is actually for — is pure `transform`.
+ * The library hardcodes its durations, so restate them against `--dur` or the
+ * grid keeps animating with motion off. Only `transform`: transitioning `width`
+ * turns the post-load size settling into a visible outward drift.
  */
 .canvas .react-grid-item {
   transition: transform var(--dur) var(--ease);
@@ -82,21 +66,16 @@
 }
 
 /*
- * The first layout arrives already in place, rather than sliding in.
- *
- * The grid places items with percentages on its first render and swaps to
- * transforms once mounted, and both are transitioned by the library's own
- * stylesheet — so without this every widget animates from the grid's origin on
- * every page load, and the container animates up from zero height underneath
- * them. The flag is cleared a frame after mount, which leaves drag, resize and
- * reflow animating as before.
+ * The first layout arrives in place. The library transitions its percentage-to-
+ * transform swap, so without this every widget animates from the grid origin on
+ * load. The flag is cleared a frame after mount.
  */
 .canvas[data-settling='true'] .react-grid-item,
 .canvas[data-settling='true'] .react-grid-layout {
   transition: none;
 }
 
-/* --- frame --- */
+/* Frame */
 
 .wframe {
   position: relative;
@@ -123,14 +102,8 @@
 }
 
 /*
- * Room for the bar, and only while it is there — nothing shifts in normal use.
- * A one-cell widget is short enough that overlaying the bar would cover its
- * content, so the body moves down rather than hiding underneath.
- *
- * The body also goes inert: now that the whole widget is the drag target, a
- * text box inside one would otherwise swallow the gesture that was meant to
- * move it. Arranging and using a widget are separate modes, as they are on a
- * phone — the bar's own buttons sit outside the body and keep working.
+ * Room for the edit bar, only while it is there. The body also goes inert: the
+ * whole widget is the drag target, so a text box inside would swallow the gesture.
  */
 .wframe[data-editing='true'] .wframe__body {
   padding-top: calc(var(--wframe-bar) + var(--space-xs));
@@ -139,14 +112,9 @@
 }
 
 /*
- * ...except that a widget marking its content live may still be *read* while
- * arranging. A first-run card can be longer than the widget, and instructions
- * whose end cannot be reached are no instructions at all.
- *
- * Scrolling only. The element takes pointer events so the wheel reaches it,
- * and hands them straight back on every child, so nothing inside is clickable
- * or typable — arranging and using a widget stay separate modes, and a drag
- * begun over the card still moves the widget.
+ * Except content marked live, which stays scrollable while arranging: it takes
+ * pointer events so the wheel reaches it, and hands them back on every child so
+ * nothing inside is clickable and a drag begun there still moves the widget.
  */
 .wframe[data-editing='true'] .wframe__live {
   pointer-events: auto;
@@ -164,13 +132,9 @@
   text-align: center;
 }
 
-/* --- edit bar --- */
+/* Edit bar */
 
-/*
- * Inside the widget, not above it. Anchored to the widget's own top edge and
- * clipped to its radius, so the bar you reach for always belongs to the widget
- * under the pointer — and the top row's bars are not cut off by the viewport.
- */
+/* Inside the widget, not above it, so the top row's bars are not clipped by the viewport. */
 .wframe__bar {
   position: absolute;
   inset-inline: 0;
@@ -183,12 +147,7 @@
   padding-inline: 6px;
   border-radius: var(--radius) var(--radius) 0 0;
   border-bottom: 1px solid rgb(var(--surface-tint) / 14%);
-  /*
-   * Lifted off the widget rather than tinted with the page behind it. The
-   * surface under the bar is already near the page's own colour, so a wash of
-   * `--surface-base` left the bar invisible — the tint reads as a raised strip
-   * against any surface, in either theme.
-   */
+  /* Tint, not `--surface-base`: the surface under the bar is already near the page colour. */
   background: linear-gradient(
       rgb(var(--surface-tint) / 12%),
       rgb(var(--surface-tint) / 12%)
@@ -239,17 +198,9 @@
 }
 
 .wframe__tool {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
+  --icon-btn: 22px;
   border-radius: var(--radius-sm);
   color: var(--fg-muted);
-  /*
-   * Bare icons. The bar is already a raised strip, so a filled chip on top of
-   * it reads as a second surface rather than a control — the background waits
-   * for the pointer, which is the only time it says anything.
-   */
   background: none;
 }
 
@@ -258,13 +209,13 @@
   background: rgb(var(--surface-tint) / 14%);
 }
 
-/* An unlocked widget shows its own outline so empty ones are still findable. */
+/* An unlocked widget shows its outline so empty ones are still findable. */
 .canvas[data-editing='true'] .wframe__surface {
   outline: 1px dashed var(--line);
   outline-offset: -1px;
 }
 
-/* --- toolbar --- */
+/* Toolbar */
 
 .canvas__toolbar {
   display: flex;
@@ -312,7 +263,7 @@
   padding: var(--space-lg) var(--space);
 }
 
-/* --- library overrides --- */
+/* Library overrides */
 
 .react-grid-item.react-grid-placeholder {
   background: var(--accent);
@@ -320,11 +271,7 @@
   opacity: 0.22;
 }
 
-/*
- * The library's default handle is a bare hitbox with a background image. This
- * one is a visible corner grabber, on theme, and only while the canvas is
- * unlocked — there is nothing to grab when the layout is locked.
- */
+/* Replaces the library's bare hitbox handle; shown only while the canvas is unlocked. */
 .react-resizable-handle {
   opacity: 0;
   background: none;

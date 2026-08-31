@@ -1,12 +1,4 @@
-/**
- * Claude usage panel.
- *
- * The widget has one job: show at a glance how much of a limit is gone. So the
- * headline figure is the largest thing in the tile and everything else — the
- * provider name, the denominator, the reset time — is deliberately quieter. The
- * bar supports the number rather than replacing it, because a figure answers
- * "how much is left" faster than a length does.
- */
+/* Claude usage panel: the headline figure leads, everything else is quieter. */
 
 .usage {
   display: flex;
@@ -16,7 +8,7 @@
   gap: var(--space-xs);
 }
 
-/* ─────────────────────────────────────────────────────────── header ────── */
+/* Header */
 
 .usage__head {
   display: flex;
@@ -46,14 +38,11 @@
   height: 16px;
   border-radius: 5px;
   color: #fff;
-  /* A brand tint can land on top of a same-toned tile — OpenAI's black on a
-     dark surface vanishes entirely. A hairline keeps the badge's edge readable
-     whatever the tint and whatever the theme. */
+  /* A brand tint can match the tile (OpenAI black on dark); the hairline keeps its edge. */
   box-shadow: inset 0 0 0 1px rgb(var(--surface-tint) / 0.18);
 }
 
-/* The marks are drawn on a 24x24 grid with no built-in padding, so they get
-   their inset here rather than each path being redrawn to match. */
+/* The marks are drawn on a 24x24 grid with no built-in padding. */
 .usage__mark {
   width: 11px;
   height: 11px;
@@ -67,11 +56,7 @@
 }
 
 .usage__refresh {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
+  --icon-btn: 22px;
   margin-left: auto;
   margin-right: -4px;
   border: none;
@@ -79,9 +64,7 @@
   background: transparent;
   color: var(--fg-subtle);
   cursor: pointer;
-  /* Held back until the tile is hovered: a control needed once a day should not
-     compete with the number it sits beside. Focus and the busy state reveal it
-     too, so it stays reachable from the keyboard and visible while it spins. */
+  /* Hidden until hover; focus and the busy state reveal it too. */
   opacity: 0;
   transition:
     opacity 0.15s ease,
@@ -105,7 +88,7 @@
   color: var(--fg-subtle);
 }
 
-/* ───────────────────────────────────────────────────────────── body ────── */
+/* Body */
 
 .usage__body {
   display: flex;
@@ -114,9 +97,7 @@
   justify-content: center;
   min-height: 0;
   gap: var(--space-xs);
-  /* Two meters can outgrow a one-cell-tall tile. Without this they paint over
-     the header instead of being clipped, because a centred flex child
-     overflows both ways. */
+  /* A centred flex child overflows both ways, so two meters would paint over the header. */
   overflow: hidden;
 }
 
@@ -125,7 +106,7 @@
   color: var(--fg-subtle);
 }
 
-/* ──────────────────────────────────────────────────────────── meter ────── */
+/* Meter */
 
 .usage__meter {
   display: flex;
@@ -152,30 +133,16 @@
   white-space: nowrap;
 }
 
-/* The unit attached to the figure: "$" or "%".
-
-   A unit is a modifier, not a digit. Set at the full headline size it carries
-   the same weight as the number it qualifies, which flattens the figure into an
-   undifferentiated block — "$414" reads as four equal glyphs instead of a
-   quantity with a currency. Stepping it down and lightening it keeps the digits
-   as the thing the eye lands on, while the unit stays plainly legible.
-
-   `em` rather than a token, so it tracks whatever size the figure takes across
-   the footprints. */
+/* The unit "$" or "%". `em`, not a token, so it tracks the figure across footprints. */
 .usage__unit {
   font-size: 0.66em;
   font-weight: 600;
   color: var(--fg-muted);
-  /* Nudges the symbol off the digits it abuts without changing the box. */
   margin: 0 0.06em;
-  /* A smaller glyph sharing the digits' baseline sits visually low against
-     them, as if it were dropping off the number. Lifting it toward the cap
-     height is how a currency symbol is set, and it applies just as well to the
-     percent sign. `vertical-align` moves the glyph without affecting layout. */
+  /* Lifted toward cap height, as a currency symbol is set; no effect on layout. */
   vertical-align: 0.22em;
 }
 
-/* The denominator, or the window's name — subordinate to the figure. */
 .usage__of {
   overflow: hidden;
   min-width: 0;
@@ -190,8 +157,7 @@
   position: relative;
   height: 6px;
   border-radius: var(--radius-pill);
-  /* An empty bar still has to read as a bar, so the track carries its own
-     visible fill and a hairline edge rather than relying on the fill. */
+  /* An empty bar still has to read as a bar, hence the track's own fill and edge. */
   background: rgb(var(--surface-tint) / 0.12);
   box-shadow: inset 0 0 0 1px var(--line);
   overflow: hidden;
@@ -199,16 +165,14 @@
 
 .usage__fill {
   height: 100%;
-  /* A real 0% still shows a sliver, so "connected and idle" reads differently
-     from a track we simply could not fill. */
+  /* A real 0% shows a sliver, distinguishing idle from a track we could not fill. */
   min-width: 3px;
   border-radius: var(--radius-pill);
   background: var(--accent);
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Severity climbs with usage. Both tones hold their contrast on the light and
-   dark surfaces alike. */
+/* Severity climbs with usage; both tones hold contrast in either theme. */
 .usage__fill[data-level='mid'] {
   background: #e0a52b;
 }
@@ -236,11 +200,10 @@
 
 .usage__stamp {
   margin-left: auto;
-  /* Staleness is reference material, not something to read on every glance. */
   opacity: 0.75;
 }
 
-/* ─────────────────────────────────────────────────────────── states ────── */
+/* States */
 
 .usage__connect {
   display: inline-flex;
@@ -286,12 +249,9 @@
   color: #e35d58;
 }
 
-/* ─────────────────────────────────────────────── small-tile density ────── */
+/* Small-tile density */
 
-/*
- * A 1×1 tile cannot hold the figure at full size beside a label and a bar, so
- * it keeps the number — the one thing worth glancing at — and sheds the rest.
- */
+/* A 1x1 tile keeps the number and sheds the rest. */
 .usage[data-size='small'] {
   gap: 2px;
 }
@@ -314,28 +274,16 @@
   display: none;
 }
 
-/* ─────────────────────────────────────────── stacked-meter density ────── */
+/* Stacked-meter density */
 
-/*
- * A taller tile can stack meters, but each one has less room than it would
- * alone, so the type steps down and the staleness marker gives way.
- */
+/* Stacked meters have less room each, so the type steps down. */
 .usage__body[data-count='2'] {
-  /* A stack reads as a list and belongs at the top; only a lone meter earns
-     being centred in the tile's height. */
   justify-content: flex-start;
   gap: var(--space-sm);
 }
 
-/* A 2x2 tile has roughly twice the height its content needs. Spreading the
-   meters through that slack just isolates them, and leaving them top-aligned
-   strands the bottom half — so the extra room goes into the meters themselves:
-   a bigger figure, a heavier bar, and breathing space between them. The tile
-   earns its footprint by being more legible across the room, not emptier.
-
-   The body is centred in the space *below* the header, which leaves a larger
-   gap under the meters than above them. Padding the bottom back off re-centres
-   the group against the tile as a whole, which is what the eye measures. */
+/* The body centres below the header, so the bottom padding re-centres the group
+   against the whole tile. */
 .usage[data-size='large'] .usage__body {
   justify-content: center;
   gap: var(--space-lg);
@@ -344,8 +292,6 @@
 
 .usage[data-size='large'] .usage__figure,
 .usage[data-size='large'] .usage__body[data-count='2'] .usage__figure {
-  /* Derived from the top of the scale rather than adding a global token for a
-     single widget — this size exists only on this footprint. */
   font-size: calc(var(--text-xl) * 1.3);
 }
 
@@ -379,7 +325,6 @@
   height: 5px;
 }
 
-/* Marks that a reading is out of view rather than hiding it silently. */
 .usage__more {
   flex: none;
   padding: 1px 5px;

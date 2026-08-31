@@ -1,8 +1,4 @@
-/*
- * Shared list chrome for the widgets that show browser data — recently closed,
- * top sites, bookmarks, downloads, tabs and history. They differ in what they
- * put in a row, not in how a row looks.
- */
+/* Shared list chrome for the browser-data widgets (tabs, history, bookmarks...). */
 
 .blist {
   display: flex;
@@ -85,8 +81,6 @@
   opacity: 1;
 }
 
-/* --- optional header --- */
-
 .blist__head {
   display: flex;
   align-items: center;
@@ -150,7 +144,7 @@
   color: var(--fg);
 }
 
-/* Tile-style grid used by the top-sites widget. */
+/* Tile grid used by the top-sites widget. */
 .bgrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(var(--bgrid-min, 64px), 1fr));
@@ -195,8 +189,6 @@
   white-space: nowrap;
 }
 
-/* --- row with a trailing action button --- */
-
 .blist__rowwrap {
   position: relative;
   display: flex;
@@ -211,10 +203,7 @@
 .blist__rowaction {
   position: absolute;
   right: 4px;
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
+  --icon-btn: 22px;
   border-radius: var(--radius-sm);
   color: var(--fg-subtle);
   font-size: 10px;

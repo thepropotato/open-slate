@@ -5,11 +5,9 @@ import type { Tile as TileModel, Tiles as TilesSettings } from '@/core/settings/
 import { useTileVisual, type TileArt } from './useTileVisual'
 
 /**
- * One speed-dial tile.
- *
- * Presentational only: it knows nothing about dragging. The sortable wrapper
- * passes drag plumbing in through `drag`, which keeps the drag library off the
- * page entirely until the user actually enters Arrange mode.
+ * One speed-dial tile. Presentational only: the sortable wrapper passes drag
+ * plumbing in through `drag`, keeping the drag library off the page until
+ * Arrange mode.
  */
 export interface TileDrag {
   ref: Ref<HTMLDivElement>
@@ -57,19 +55,14 @@ export function Tile({
       data-drop-target={drag?.dropTarget}
       {...(drag?.handleProps ?? {})}
     >
-      {/*
-        A site tile is an anchor so middle-click, cmd-click and "copy link
-        address" behave as expected. A folder has no address, so it is a button.
-      */}
+      {/* An anchor, so middle-click and "copy link address" work; a folder has
+          no address, so it is a button. */}
       <Plate
         isFolder={isFolder}
         url={tile.url}
         title={visual.title}
-        /*
-          In Arrange mode a tile is something you move, not something you follow:
-          the plate stops navigating so a drag that ends short of the threshold
-          cannot fire off to the site instead of putting the tile back down.
-        */
+        // In Arrange mode the plate stops navigating, so a drag ending short of
+        // the threshold cannot fire off to the site.
         inert={editing}
         style={{ background: visual.plate ?? 'transparent', color: visual.ink }}
         onActivate={() => (isFolder ? onOpenFolder?.(tile.id) : openUrl(tile.url, settings.openIn))}
@@ -92,7 +85,7 @@ export function Tile({
         <div className="tile__actions">
           <button
             type="button"
-            className="tile__action"
+            className="tile__action is-icon-btn"
             title="Edit tile"
             aria-label={`Edit ${visual.title}`}
             onClick={() => onEdit(tile.id)}
@@ -101,7 +94,7 @@ export function Tile({
           </button>
           <button
             type="button"
-            className="tile__action"
+            className="tile__action is-icon-btn"
             title="Remove tile"
             aria-label={`Remove ${visual.title}`}
             onClick={() => onRemove(tile.id)}
@@ -136,17 +129,8 @@ function Plate({
   onActivate: () => void
   children: ReactNode
 }) {
-  /*
-   * Arrange mode takes the plate out of the page's interactive surface
-   * altogether, rather than only suppressing its click.
-   *
-   * Dropping the handler alone left a control that still took focus, still lit
-   * up under the pointer and still fired on Enter — a tile that looked and felt
-   * clickable while doing nothing, which reads as a broken tile rather than a
-   * deliberate mode. `data-inert` drives the styling; `tabIndex` and the
-   * missing href take it out of the tab order and out of the browser's own
-   * link handling.
-   */
+  // Inert takes the plate out of the interactive surface entirely, not just its
+  // click: otherwise it still takes focus, hovers and fires on Enter.
   if (isFolder) {
     return (
       <button
@@ -175,7 +159,6 @@ function Plate({
       data-inert={inert}
       tabIndex={inert ? -1 : undefined}
       aria-hidden={inert || undefined}
-      // Keeps the click from focusing a plate that no longer does anything.
       onMouseDown={inert ? (event) => event.preventDefault() : undefined}
       onClick={(event) => {
         if (inert) {

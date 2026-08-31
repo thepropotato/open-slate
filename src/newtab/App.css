@@ -1,14 +1,4 @@
-/*
- * The page is the scroller, not the content column inside it.
- *
- * `.page__content` is centred and capped at `--max-width`, so on a wide window
- * there is dead space either side of it, and on any window there is the padding
- * gutter. When the scroller was the column itself, all of that belonged to an
- * `overflow: hidden` parent — putting the pointer in the margin beside the last
- * widget, which is exactly where a reader reaching for the edge puts it, meant
- * the wheel had nothing to scroll. Scrolling the whole page instead makes every
- * pixel of it a valid place to scroll from.
- */
+/* The page is the scroller, not the capped content column, so the gutters scroll too. */
 .page {
   position: relative;
   display: flex;
@@ -16,26 +6,14 @@
   height: 100%;
   overflow-y: auto;
   scrollbar-width: none;
-  /*
-   * Scroll anchoring works against this page. A band that grows after paint —
-   * a widget finishing its load — would have the browser scroll to hold the
-   * content below it still, carrying the reader off the band they were on.
-   */
+  /* Anchoring would scroll the reader off their band when a widget finishes loading. */
   overflow-anchor: none;
 }
 
 /*
- * Alignment is done with auto margins, not `justify-content`.
- *
- * The page is the scroller, and centring a flex container's overflowing content
- * puts the overflow past *both* edges — but there is no scrollable area above
- * the origin, so whatever spills off the top can never be reached. A stacked
- * portrait dashboard is taller than the window by design, which is exactly when
- * this bites: the clock and the first widget were simply cut off.
- *
- * An auto margin only takes the space that is actually free. It centres a short
- * dashboard exactly as before, and collapses to nothing once the content is
- * taller than the window, so the top stays reachable.
+ * Auto margins, not `justify-content`: centring overflowing flex content spills
+ * past the top edge, which is unreachable in a scroller. Auto margins collapse
+ * to nothing once the content outgrows the window.
  */
 .page[data-align='top'] .page__content {
   margin-block-end: auto;
@@ -56,20 +34,9 @@
   flex-direction: column;
   width: 100%;
   margin-inline: auto;
-  /*
-   * The gutter gives way before the content does. At a comfortable width it is
-   * the full `--space-xl` on each side; on a narrow window those 60px are a
-   * seventh of everything available, which is width the widgets need more than
-   * the margins do. `min()` scales it with the viewport instead of stepping at
-   * a breakpoint, so there is no width where the frame visibly jumps.
-   */
+  /* The gutter gives way before the content does, without a breakpoint jump. */
   padding-inline: min(var(--space-xl), 4vw);
-  /*
-   * Never grows, never shrinks: the auto margins above do the aligning, and
-   * they only have space to work with while the column stays its natural
-   * height. Shrinking is what would squash a tall dashboard into the window
-   * instead of letting the page scroll it.
-   */
+  /* Never shrink: the auto margins need the column at its natural height. */
   flex: 0 0 auto;
 }
 
@@ -78,11 +45,7 @@
   flex-direction: column;
 }
 
-/*
- * One switchable band. Kept in the DOM when it is not the active tab — a
- * running timer, a half-typed note and an open folder all live in component
- * state, and none of them should be lost to a glance at the bookmarks.
- */
+/* Kept mounted when inactive: timers, drafts and open folders live in component state. */
 .pane {
   display: flex;
   flex-direction: column;
@@ -93,12 +56,7 @@
   display: none;
 }
 
-/*
- * Tabs cross-fade; there is nowhere to scroll, so the switch needs to read.
- * Only once the page has entered, though: on the first paint there is no
- * previous pane to read against, and the slide just looks like the content
- * being thrown into position as it fades up.
- */
+/* Cross-fade only after the page has entered; on first paint there is nothing to read against. */
 .page[data-switched='true'][data-view='tabs'] .pane[data-active='true'] {
   animation: pane-in var(--dur) var(--ease);
 }
@@ -110,11 +68,7 @@
   }
 }
 
-/*
- * One flick lands on the next band instead of dragging through the widgets.
- * On the page, which is the scroller — snapping is a property of whatever
- * actually scrolls, so this is inert anywhere else.
- */
+/* Must sit on .page: snapping is a property of the scroller itself. */
 .page[data-view='scroll'] {
   scroll-snap-type: y proximity;
 }
@@ -123,11 +77,7 @@
   scroll-snap-align: start;
 }
 
-/*
- * The topmost band is not a snap target: the anchor below already covers the
- * top of the page, and two snap points a padding's width apart would make
- * scrolling near the top ambiguous.
- */
+/* The topmost band is not a snap target: two points a padding apart read as ambiguous. */
 .page[data-view='scroll'] .pane[data-first='true'] {
   scroll-snap-align: none;
 }
@@ -143,7 +93,7 @@
   scroll-snap-align: start;
 }
 
-/* --- pane switch --- */
+/* Pane switch */
 
 .page__switch {
   display: flex;
@@ -188,10 +138,7 @@
   right: 16px;
   bottom: 16px;
   z-index: var(--z-overlay);
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
+  --icon-btn: 38px;
   border-radius: var(--radius-sm);
   color: var(--fg-muted);
   background: rgb(var(--surface-base) / 45%);
@@ -201,10 +148,7 @@
   transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
-/*
- * The cog turns, the button does not: rotating the button would take its
- * border and its blurred plate round with it.
- */
+/* Rotate the cog, not the button — the button carries the border and blur plate. */
 .page__settings .icon {
   transition: transform var(--dur) var(--ease);
 }
@@ -218,7 +162,7 @@
   transform: rotate(30deg);
 }
 
-/* Zen mode hides the chrome until the pointer moves anywhere on the page. */
+/* Zen mode hides the chrome until the pointer moves. */
 [data-zen='true'] .page__settings,
 .page__settings[data-zen='true'] {
   opacity: 0;

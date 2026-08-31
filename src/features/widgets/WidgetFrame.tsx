@@ -1,18 +1,9 @@
 import type { ReactNode } from 'react'
 import { Icon, type IconName } from '@/core/icons'
 
-/**
- * Chrome around a widget: the surface, and the controls that only appear while
- * the canvas is unlocked.
- *
- * The bar lives *inside* the widget. It used to float in the gutter above,
- * which put it on top of whatever was in the row above it and clipped it off
- * the page entirely for the top row — so the control you reached for often
- * belonged to a different widget than the one under the pointer.
- *
- * Dragging is the whole widget rather than the grip alone (see the canvas's
- * `dragConfig`); the grip stays as the affordance that says so.
- */
+// Chrome around a widget: surface plus the controls shown while unlocked.
+// The bar sits inside the widget so it can't overlap the row above or clip off
+// the top of the page. The grip is only an affordance; the whole widget drags.
 export function WidgetFrame({
   title,
   icon,
@@ -48,7 +39,7 @@ export function WidgetFrame({
             {hasConfig ? (
               <button
                 type="button"
-                className="wframe__tool"
+                className="wframe__tool is-icon-btn"
                 onClick={onConfigure}
                 title={`${title} options`}
                 aria-label={`${title} options`}
@@ -58,7 +49,7 @@ export function WidgetFrame({
             ) : null}
             <button
               type="button"
-              className="wframe__tool"
+              className="wframe__tool is-icon-btn"
               onClick={onRemove}
               title={`Remove ${title}`}
               aria-label={`Remove ${title}`}

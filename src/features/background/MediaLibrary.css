@@ -42,12 +42,7 @@
   background: rgb(var(--surface-tint) / 4%);
 }
 
-/*
- * A 1px accent border was the only marker, which disappears whenever the preset
- * accent lands near the card's own border colour — grey accents made the active
- * wallpaper indistinguishable. The ring is doubled and the state is also said
- * in words on the thumbnail, so it does not rest on hue alone.
- */
+/* Doubled ring plus a worded label: a grey accent is indistinguishable from the card border. */
 .media[data-active='true'] {
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent);
@@ -122,10 +117,9 @@
   gap: 3px;
 }
 
-.media__row > .ctl-btn {
+.media__row > .ctl-btn:not(.ctl-btn--icon) {
   padding-inline: 8px;
   font-size: var(--text-xs);
-  /* The cards are narrow and sit in an auto-fill grid, so a label that wraps
-     would stretch the whole row taller than its neighbours. */
+  /* A wrapped label would stretch the whole auto-fill row taller than its neighbours. */
   white-space: nowrap;
 }

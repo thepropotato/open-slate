@@ -15,12 +15,8 @@ import {
 } from './api'
 import './llm.css'
 
-/**
- * The body of a provider's usage widget: connect prompt, meters, refresh.
- *
- * Every provider renders the same way once its reading is normalised, so this
- * is shared and a provider widget is only its adapter plus a registration.
- */
+// The body of a provider's usage widget: connect prompt, meters, refresh. Shared,
+// since every provider renders the same way once normalised.
 
 type Phase = 'checking' | 'needs-access' | 'ready'
 
@@ -83,7 +79,7 @@ export function UsagePanel({
         </span>
         {phase === 'ready' ? (
           <button
-            className="usage__refresh"
+            className="usage__refresh is-icon-btn"
             onClick={() => void refresh()}
             disabled={busy}
             title={`Refresh ${provider.label}`}
@@ -170,24 +166,19 @@ function PanelBody({
     )
   }
 
-  // A small tile has room for one meter; show the headline and drop the rest
-  // rather than cramming two illegible ones in.
   const meters = [
     ...(cache.usage.spend ? [{ kind: 'spend' as const, spend: cache.usage.spend }] : []),
     ...cache.usage.windows.map((w) => ({ kind: 'window' as const, window: w })),
   ]
   const compact = sizeName === 'small'
 
-  // Height is what limits how many meters fit, and `small` and `medium` are
-  // both one cell tall — only a taller footprint can stack two at a legible
-  // size. Rather than clip the second, a one-cell tile shows the meter that
-  // matters most and names the rest in its footer.
+  // Height limits how many meters fit, and `small` and `medium` are both one
+  // cell tall; a one-cell tile shows one meter and counts the rest in the footer.
   const oneCellTall = sizeName === 'small' || sizeName === 'medium'
   const shown = oneCellTall ? meters.slice(0, 1) : meters
   const hidden = meters.length - shown.length
 
-  // The closest to its limit is the one worth showing: a 94% weekly window
-  // needs attention that a 12% five-hour one does not.
+  // The closest to its limit is the one worth showing.
   if (oneCellTall && meters.length > 1) {
     const severity = (m: (typeof meters)[number]) =>
       m.kind === 'spend' ? (m.spend.limit > 0 ? (m.spend.used / m.spend.limit) * 100 : 0) : m.window.percent
@@ -219,11 +210,8 @@ function PanelBody({
   )
 }
 
-/**
- * Whether this engine accepts `currencyDisplay: 'narrowSymbol'`. Older ones
- * throw a RangeError for it, and a formatter that throws would take the whole
- * tile down, so support is probed once here rather than guarded at every call.
- */
+// Older engines throw a RangeError for `currencyDisplay: 'narrowSymbol'`, which
+// would take the whole tile down; probed once rather than guarded per call.
 const NARROW_SYMBOL = (() => {
   try {
     new Intl.NumberFormat(undefined, {
@@ -241,10 +229,7 @@ function levelFor(pct: number): string {
   return pct >= 90 ? 'high' : pct >= 70 ? 'mid' : 'low'
 }
 
-/**
- * A balance: dollars spent is the headline, since that is the figure a person
- * is actually tracking, with the percentage carried by the bar instead.
- */
+// Dollars are the headline; the percentage is carried by the bar.
 function SpendMeter({
   spend,
   stamp,
@@ -260,10 +245,8 @@ function SpendMeter({
     new Intl.NumberFormat(undefined, {
       style: 'currency',
       currency: spend.currency,
-      // Plain "$", not "US$". Outside an en-US locale the default currency
-      // display disambiguates USD from other dollars, which costs the headline
-      // two glyphs to answer a question the tile never raises: the provider is
-      // named above and the currency is repeated in the denominator.
+      // Plain "$", not "US$": outside en-US the default disambiguates USD, which
+      // the tile does not need — the currency is repeated in the denominator.
       ...(NARROW_SYMBOL ? { currencyDisplay: 'narrowSymbol' as const } : {}),
       minimumFractionDigits: cents ? 2 : 0,
       maximumFractionDigits: cents ? 2 : 0,
@@ -272,20 +255,13 @@ function SpendMeter({
   const pct =
     spend.limit > 0 ? Math.min(100, Math.max(0, Math.round((spend.used / spend.limit) * 100))) : 0
 
-  // Round *down* to whole dollars past $100, where cents are noise: rounding
-  // $403.66 up to "$404" would both overstate the spend and read as an HTTP
-  // status. Below that the cents matter, so they stay.
+  // Rounded down past $100 so the spend is never overstated; below that the
+  // cents stay.
   const big = spend.used >= 100
   const used = big ? money(Math.floor(spend.used), false) : money(spend.used, spend.used % 1 !== 0)
 
-  /**
-   * Splits the currency symbol out of the formatted figure so it can be set
-   * smaller than the digits: "$" is a modifier, not a digit, and at headline
-   * size it competes with the number it qualifies.
-   *
-   * Built from `formatToParts` rather than by slicing the string, because the
-   * symbol does not always lead — de-DE formats USD as "414 $".
-   */
+  // Splits the symbol out so it can be set smaller than the digits. Uses
+  // `formatToParts`, since the symbol does not always lead (de-DE: "414 $").
   const parts = new Intl.NumberFormat(undefined, {
     style: 'currency',
     currency: spend.currency,
@@ -324,7 +300,6 @@ function SpendMeter({
   )
 }
 
-/** A rolling window: the percentage is the figure, the label names it. */
 function Meter({
   window: w,
   stamp,
@@ -354,14 +329,8 @@ function Meter({
   )
 }
 
-/**
- * The line under the bar: what the figure means on the left, how fresh it is
- * on the right.
- *
- * `lead` is the percentage for a spend meter, whose headline is in dollars —
- * it is the one number the bar's length alone leaves imprecise. A window meter
- * already shows its percentage as the headline and passes none.
- */
+// `lead` is the percentage for a spend meter, whose headline is in dollars; a
+// window meter already leads with its percentage and passes none.
 function Foot({
   resetsAt,
   stamp,
@@ -376,18 +345,14 @@ function Foot({
   more: number
 }) {
   const reset = resetsAt ? `Resets ${resetLabel(resetsAt)}` : null
-  // A 1x1 tile fits one of these before it ellipsises into uselessness, so it
-  // keeps whichever says more: the percentage where the headline is dollars,
-  // the reset time where the headline is already a percentage.
+  // A 1x1 tile fits only one, so keep whichever the headline doesn't already say.
   const parts = compact ? [lead ?? reset] : [lead, reset]
   const left = parts.filter(Boolean).join(' \u00b7 ')
 
   return (
     <div className="usage__foot">
       <span className="usage__reset">{left}</span>
-      {/* Says a reading was withheld rather than silently hiding it, so a tile
-          that is too short to show everything does not look like the whole
-          picture. Resizing the widget reveals the rest. */}
+      {/* A short tile says what it withheld rather than looking complete. */}
       {more > 0 ? <span className="usage__more">+{more} more</span> : null}
       <span className="usage__stamp">{stamp}</span>
     </div>

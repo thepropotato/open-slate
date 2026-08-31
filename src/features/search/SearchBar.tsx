@@ -9,12 +9,8 @@ import { queryLocal, type Suggestion } from './providers'
 import './SearchBar.css'
 
 /**
- * The search band.
- *
- * One box handles four things, in this order of precedence: an arithmetic
- * expression, something that is already an address, a bang-prefixed query, and
- * finally a plain search. Suggestions come from the user's own tabs, tiles,
- * bookmarks and history — never from a remote suggestion service.
+ * The search band. One box, in precedence order: arithmetic expression, an
+ * address, a bang-prefixed query, then a plain search.
  */
 export function SearchBar() {
   const { search, tiles, behavior } = useSettings()
@@ -35,11 +31,22 @@ export function SearchBar() {
       queryLocal(value, { tiles: tiles.items, limit: 6 }),
     ) ?? []
 
+  // The value, not a boolean: editing the expression then drops the
+  // confirmation on its own.
+  const [copied, setCopied] = useState<string | null>(null)
+  const justCopied = copied !== null && copied === maths
+
+  useEffect(() => {
+    if (!justCopied) return
+    const timer = setTimeout(() => setCopied(null), 1600)
+    return () => clearTimeout(timer)
+  }, [justCopied, copied])
+
   useEffect(() => {
     if (search.autofocus) inputRef.current?.focus()
   }, [search.autofocus])
 
-  // "/" focuses the box from anywhere on the page, as it does in most web apps.
+  // "/" focuses the box from anywhere on the page.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return
@@ -62,7 +69,11 @@ export function SearchBar() {
       return
     }
     if (maths && !destination) {
-      void navigator.clipboard?.writeText(maths).catch(() => undefined)
+      // Only on a write that landed: the clipboard is denied in some contexts.
+      void navigator.clipboard
+        ?.writeText(maths)
+        .then(() => setCopied(maths))
+        .catch(() => undefined)
       return
     }
     if (destination) {
@@ -124,8 +135,7 @@ export function SearchBar() {
                         aria-pressed={option.id === search.engineId}
                         onClick={() => {
                           setEngineOpen(false)
-                          // A one-off engine choice: written into the query as a
-                          // bang so the persisted default is left alone.
+                          // A bang in the query, so the saved default is untouched.
                           setValue((current) => `!${option.bangs[0]} ${stripBang(current)}`)
                           inputRef.current?.focus()
                         }}
@@ -180,7 +190,7 @@ export function SearchBar() {
           {value ? (
             <button
               type="button"
-              className="search__clear"
+              className="search__clear is-icon-btn"
               onClick={() => {
                 setValue('')
                 inputRef.current?.focus()
@@ -197,13 +207,20 @@ export function SearchBar() {
           <ul className="search__results surface">
             {maths ? (
               <li>
-                <button type="button" className="search__result" onClick={submit}>
+                <button
+                  type="button"
+                  className="search__result"
+                  onClick={submit}
+                  data-copied={justCopied}
+                >
                   <span className="search__resulticon">
-                    <Icon name="calculator" />
+                    <Icon name={justCopied ? 'check' : 'calculator'} />
                   </span>
                   <span className="search__resulttext">
                     <span className="search__resulttitle">= {maths}</span>
-                    <span className="search__resultsub">Enter copies the result</span>
+                    <span className="search__resultsub" role="status">
+                      {justCopied ? 'Copied to the clipboard' : 'Enter copies the result'}
+                    </span>
                   </span>
                 </button>
               </li>

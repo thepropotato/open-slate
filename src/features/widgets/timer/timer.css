@@ -83,10 +83,7 @@
 }
 
 .timer__btn {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
+  --icon-btn: 28px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--line);
   color: var(--fg-muted);
