@@ -5,7 +5,7 @@ Notable changes to Open Slate, newest first. Versions follow
 GitHub release, the website and the store listing's "What's new" all read from,
 so it is written for the people who use the extension rather than for the diff.
 
-## [Unreleased]
+## [1.2.0]
 
 ### Added
 
@@ -63,6 +63,7 @@ First public release.
   prices, and your own browser data.
 - Settings sync, and an export and import of everything stored.
 
-[Unreleased]: https://github.com/thepropotato/open-slate/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/thepropotato/open-slate/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/thepropotato/open-slate/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/thepropotato/open-slate/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/thepropotato/open-slate/releases/tag/v1.0.0
