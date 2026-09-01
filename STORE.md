@@ -126,9 +126,13 @@ What matters is that it is **optional and never requested wholesale**:
   that site exactly as loading the page normally would — and nothing else).
   No request carries an identifier of ours, and responses are cached locally to
   keep the request count low.
-- The search box sends nothing anywhere as you type: suggestions come from local
-  tabs, bookmarks, history and tiles. Submitting a search navigates to the chosen
-  engine, exactly as the address bar would.
+- The search box draws suggestions from local tabs, bookmarks, history and tiles,
+  and also asks the chosen engine for its own completions. That second source
+  sends the typed query to that engine's public suggestions endpoint, and only
+  when the query is neither arithmetic nor an address. It can be turned off under
+  Search, and every engine but Google needs its endpoint permission granted
+  first. Submitting a search navigates to the chosen engine, exactly as the
+  address bar would.
 
 ## Assets
 

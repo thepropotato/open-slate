@@ -57,7 +57,8 @@ SEARCH AND A COMMAND PALETTE
 23 search engines with bang shortcuts (!yt cats), address detection so typing a
 host navigates, and an inline calculator. Cmd/Ctrl+K searches your tabs, tiles,
 bookmarks, history and every settings command at once. Suggestions come from
-your own data — nothing is sent anywhere as you type.
+your own data, with the engine's own completions alongside them — turn those off
+and the box sends nothing anywhere as you type.
 
 MAKE IT YOURS
 Eight palettes, automatic light and dark, a corner radius from fully round to

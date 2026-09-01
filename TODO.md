@@ -132,9 +132,10 @@ named for what it actually does rather than implying stocks.
 - react-grid-layout 2.x dropped `WidthProvider` and moved drag/resize into config
   objects; `@types/react-grid-layout` is v1-only and was removed, since v2 ships
   its own types. The canvas measures width with the library's `useContainerWidth`.
-- The search box has no remote suggestion service. Suggestions come from the user's
-  own tabs, tiles, bookmarks and history, which is both more useful on a browser
-  dashboard and avoids sending every keystroke to a third party.
+- Search suggestions lead with the user's own tabs, tiles, bookmarks and history,
+  which is more useful on a browser dashboard than raw engine completions. The
+  engine's completions rank below them and are skipped for arithmetic and
+  addresses, so what leaves the device is only what would have been searched.
 - The calculator is a hand-written recursive-descent parser. MV3 forbids `eval`
   and `new Function` outright, and the grammar is then exactly what is documented.
 - Font Awesome icon *definitions* are plain path data, so `Icon` renders them with

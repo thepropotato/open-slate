@@ -72,7 +72,8 @@ to file it away; split tiles across named pages with a dot or tab switcher.
 
 **Search.** 23 engines with bang shortcuts (`!yt cats`, or `cats !yt`), address
 detection so typing a host navigates, an inline calculator, and suggestions drawn
-from your own tabs, tiles, bookmarks and history.
+from your own tabs, tiles, bookmarks and history, with the search engine's own
+completions alongside them.
 
 **Command palette.** `Cmd`/`Ctrl`+`K` over tabs, tiles, bookmarks, history and
 settings commands, with a web search as the fallback.
