@@ -184,6 +184,27 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;heigh
 .osrow h3{font-size:1.125rem;margin-bottom:.3rem}
 .osrow p{font-size:.94rem;line-height:1.6}
 
+/* --------------------------------------------------------- contributors */
+/* The list is empty until GitHub answers, so the section stays hidden rather
+   than reserving a gap for people who may never load. */
+#contributors[hidden]{display:none}
+.contribs{display:flex;flex-wrap:wrap;gap:.875rem;margin-bottom:2rem}
+.contrib{
+  display:flex;align-items:center;gap:.625rem;
+  padding:.5rem .875rem .5rem .5rem;
+  border:1px solid var(--border);border-radius:2rem;
+  background:var(--surface);text-decoration:none;color:var(--head);
+  font-size:.9375rem;font-weight:500;
+  transition:border-color .2s,transform .2s;
+}
+.contrib:hover{border-color:var(--accent);transform:translateY(-1px)}
+.contrib img{
+  width:2rem;height:2rem;border-radius:50%;display:block;
+  background:var(--accent-soft);
+}
+.contrib .commits{color:var(--muted);font-weight:400;font-size:.8125rem}
+.contribnote{font-size:.9375rem;color:var(--muted);margin:0 0 1.5rem}
+
 /* ----------------------------------------------------------------- hero */
 .hero{padding-block:clamp(2.5rem,9vw,7.25rem) 0}
 .hero h1{max-width:15ch;margin:1.375rem 0 1.5rem}
@@ -894,6 +915,31 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
   </div>
 </section>
 
+<!-- ----------------------------------------------------- contributors -->
+<!-- Hidden until the GitHub API answers; `contributors.js` fills it in. -->
+<section id="contributors" hidden>
+  <div class="wrap">
+    <div class="sechead" data-reveal>
+      <div class="eyebrow">Contributors</div>
+      <h2>Built in the open, by these people.</h2>
+      <p>
+        Everyone who has landed a commit in the repository. The list is read
+        from GitHub as you load the page, so it is never out of date.
+      </p>
+    </div>
+    <div class="contribs" id="contribs" data-reveal></div>
+    <p class="contribnote" data-reveal>
+      Want your face here? Good first issues are labelled, and the
+      <a href="https://github.com/thepropotato/open-slate/blob/main/CONTRIBUTING.md">contributing
+      guide</a> covers the build in four commands.
+    </p>
+    <div class="ctas" data-reveal>
+      <a class="btn" href="https://github.com/thepropotato/open-slate/issues" target="_blank" rel="noopener">Find something to work on</a>
+      <a class="btn ghost" href="https://github.com/thepropotato/open-slate/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Read the contributing guide</a>
+    </div>
+  </div>
+</section>
+
 <!-- --------------------------------------------------------- honesty -->
 <section>
   <div class="wrap">
@@ -1127,6 +1173,68 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
   }
 
   /**
+   * Contributors, read from GitHub at load. The section ships hidden and is
+   * only revealed once at least one person comes back, so a rate-limited or
+   * offline visitor sees the page without an empty panel in it.
+   *
+   * Bots are dropped: they are noise on a list whose point is the people.
+   */
+  ;(async () => {
+    const section = document.getElementById('contributors')
+    const list = document.getElementById('contribs')
+    if (!section || !list) return
+
+    try {
+      const res = await fetch(
+        'https://api.github.com/repos/thepropotato/open-slate/contributors?per_page=100',
+        { headers: { Accept: 'application/vnd.github+json' } },
+      )
+      if (!res.ok) return
+
+      const people = (await res.json())
+        .filter((person) => person && person.type !== 'Bot' && person.login)
+        .sort((a, b) => b.contributions - a.contributions)
+      if (!people.length) return
+
+      for (const person of people) {
+        const link = document.createElement('a')
+        link.className = 'contrib'
+        link.href = person.html_url
+        link.target = '_blank'
+        link.rel = 'noopener'
+        const commits = person.contributions
+        link.setAttribute('aria-label', `${person.login}, ${commits} commit${commits === 1 ? '' : 's'}`)
+
+        const avatar = document.createElement('img')
+        // The API's avatar is served far larger than it is drawn here.
+        avatar.src = `${person.avatar_url}&s=64`
+        avatar.alt = ''
+        avatar.loading = 'lazy'
+        avatar.width = 32
+        avatar.height = 32
+
+        const name = document.createElement('span')
+        name.textContent = person.login
+
+        const count = document.createElement('span')
+        count.className = 'commits'
+        count.textContent = commits
+
+        link.append(avatar, name, count)
+        list.append(link)
+      }
+
+      section.hidden = false
+      // The section was hidden when the observer first ran, so arm its reveals
+      // now. That block may not have run yet, hence the queue.
+      if (window.armReveals) window.armReveals(section)
+      else (window.pendingReveals ||= []).push(section)
+    } catch {
+      /* Offline, blocked or rate limited: the section stays hidden. */
+    }
+  })()
+
+  /**
    * Reveal on scroll. The hidden starting state comes from .reveal-ready,
    * set in the head, so without JS — or without IntersectionObserver — the
    * page stays fully readable. Siblings that share a container are staggered
@@ -1157,6 +1265,19 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
     void document.body.offsetHeight
     root.classList.add('reveal-armed')
     for (const el of reveals) io.observe(el)
+
+    /**
+     * Observes a subtree revealed after this ran — the contributors section is
+     * hidden until GitHub answers, so its rows were never measurable here and
+     * would otherwise stay at their hidden starting state forever.
+     */
+    window.armReveals = (scope) => {
+      for (const el of scope.querySelectorAll('[data-reveal]')) io.observe(el)
+    }
+
+    // Anything revealed before this block ran is waiting in the queue.
+    for (const scope of window.pendingReveals || []) window.armReveals(scope)
+    window.pendingReveals = null
   }
 </script>
 
