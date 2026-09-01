@@ -17,5 +17,6 @@ import './feed/FeedWidget'
 import './crypto/CryptoWidget'
 import './llm/ClaudeUsageWidget'
 import './llm/ChatGPTUsageWidget'
+import './spotify/SpotifyWidget'
 
 export { WidgetCanvas } from './WidgetCanvas'

@@ -1,0 +1,445 @@
+.spotify {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  gap: var(--space-xs);
+}
+
+.spotify__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+}
+
+.spotify__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+
+.spotify__badge {
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  /* Spotify's brand green, from the bundled Simple Icons dataset. */
+  color: #1ed760;
+}
+
+.spotify__badge svg {
+  width: 100%;
+  height: 100%;
+}
+
+.spotify__signout {
+  /* Smaller than a standard icon button: it is a rarely-used escape hatch and
+     should not compete with the brand mark beside it. */
+  --icon-btn: 24px;
+  font-size: var(--text-xs);
+  opacity: 0;
+  pointer-events: none;
+  color: var(--fg-subtle);
+  transition: opacity 120ms ease, color 120ms ease;
+}
+
+/*
+ * Disconnecting throws away a sign-in, so it stays hidden until the pointer is
+ * on the widget and does not accept a click before it is visible. Keyboard
+ * users still reach it, by focus.
+ */
+.spotify:hover .spotify__signout,
+.spotify__signout:focus-visible {
+  opacity: 0.55;
+  pointer-events: auto;
+}
+
+.spotify__signout:hover {
+  opacity: 1;
+  color: var(--fg);
+}
+
+.spotify__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  gap: var(--space-xs);
+  justify-content: flex-end;
+}
+
+/*
+ * Large is art-led: the art spans the body's full width and is square, so the
+ * frame's even padding puts it the same distance from the left, right and top
+ * edges of the tile. The text and transport sit under it, which is why the
+ * bottom inset is the only one that differs.
+ */
+.spotify__body[data-size='large'] {
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-xs);
+  /* Matches the frame's side padding, so the art clears the header by the same
+     distance it sits from the left and right edges. */
+  padding-top: var(--space-xs);
+}
+
+
+/*
+ * The controls are painted first and never yield: the stage takes whatever
+ * height is left over and spans the full width, so the art is a square of that
+ * height and the fill covers the band either side of it.
+ */
+.spotify__body[data-size='large'] .spotify__stage {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-self: stretch;
+}
+
+/* Height-driven, so `aspect-ratio` gives the width: the art is exactly as wide
+   as the leftover height, and `max-width` stops it overflowing a narrow tile. */
+.spotify__body[data-size='large'] .spotify__stage .spotify__art {
+  height: 100%;
+  width: auto;
+  max-width: 100%;
+  flex: 0 1 auto;
+  min-height: 0;
+}
+
+/* The title block belongs to the art above it, so it sits closer to the art
+   than the scrubber and controls sit to it. */
+.spotify__body[data-size='large'] .spotify__meta {
+  margin-top: var(--space-sm);
+  text-align: center;
+}
+
+/*
+ * With the art hidden there is nothing to grow into the spare height, so the
+ * text sits at the foot of the tile rather than floating in the middle of it.
+ */
+.spotify__body[data-size='large']:not(:has(.spotify__stage)) {
+  justify-content: flex-end;
+}
+
+.spotify__body[data-size='large']:not(:has(.spotify__stage)) .spotify__meta {
+  margin-top: 0;
+}
+
+.spotify__body--center {
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  text-align: center;
+}
+
+.spotify__note {
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  margin: 0;
+  padding-inline: var(--space-xs);
+}
+
+.spotify__note--error {
+  color: var(--fg-muted);
+}
+
+.spotify__connect,
+.spotify__retry {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--surface-border);
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 8%);
+  color: var(--fg);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.spotify__connect:hover,
+.spotify__retry:hover {
+  background: rgb(var(--surface-tint) / 14%);
+}
+
+/*
+ * The row the art sits on. It is transparent and shrink-wrapped by default, so
+ * every size that does not opt into a fill behaves exactly as the bare art did.
+ */
+.spotify__stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  min-width: 0;
+}
+
+/*
+ * Only large leaves a band beside the art to fill; on the inline sizes the art
+ * is the whole stage, so a backdrop there would never be visible.
+ */
+.spotify__body[data-size='large'] .spotify__stage[data-fill='true'] {
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* The art keeps its own corners when nothing is painted behind it; with a fill
+   the stage carries them instead, so the two do not double up. */
+.spotify__body[data-size='large'] .spotify__stage[data-fill='true'] .spotify__art {
+  border-radius: 0;
+}
+
+.spotify__art {
+  /* Square, and never taller than the room left once the text and scrubber have
+     taken theirs — cover art is square, so a stretched box reads as broken. The
+     cap stops the art from claiming every spare pixel and crowding the text
+     against the bottom edge on a tall tile. */
+  width: auto;
+  flex: 0 1 auto;
+  min-height: 0;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 8%);
+}
+
+.spotify__art--empty {
+  display: grid;
+  place-items: center;
+  color: var(--fg-subtle);
+}
+
+.spotify__meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.spotify__title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--fg);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+a.spotify__title:hover {
+  text-decoration: underline;
+}
+
+.spotify__artist {
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Everything spans the tile; each size sets its own text alignment below. */
+.spotify__track,
+.spotify__foot,
+.spotify__meta {
+  align-self: stretch;
+}
+
+.spotify__track {
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 16%);
+  overflow: hidden;
+}
+
+.spotify__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #1ed760;
+  /* Matches the once-a-second tick, so the bar creeps rather than stepping. */
+  transition: width 1s linear;
+}
+
+.spotify__foot {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The right cell is empty on a stale reading, so it is pinned to the end to
+   keep the middle column on the tile's centre line either way. */
+.spotify__device {
+  justify-self: end;
+  text-align: right;
+}
+
+.spotify__devices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  justify-content: center;
+}
+
+.spotify__device-pick {
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--surface-border);
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-tint) / 8%);
+  color: var(--fg);
+  font-size: var(--text-xs);
+  cursor: pointer;
+}
+
+.spotify__device-pick:hover:not(:disabled) {
+  background: rgb(var(--surface-tint) / 14%);
+}
+
+.spotify__device-pick:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.spotify__of {
+  color: var(--fg-subtle);
+  opacity: 0.7;
+}
+
+.spotify__controls {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.spotify__controls button {
+  color: var(--fg-muted);
+  border-radius: var(--radius-pill);
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.spotify__controls button:hover:not(:disabled) {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 10%);
+}
+
+/* The primary action of the three, so it carries full contrast at rest. */
+.spotify__toggle {
+  color: var(--fg);
+}
+
+/* Only a real in-flight command dims a control. */
+.spotify__controls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.spotify__device {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 10ch;
+}
+
+.spotify__time {
+  justify-self: start;
+}
+
+
+/*
+ * Medium is a 2x1 row: the art sits inline beside the title and artist only, so
+ * it is sized to that two-line block rather than to the whole tile. The scrubber
+ * and the transport keep the full width underneath.
+ */
+.spotify__body[data-size='medium'] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'art meta'
+    'track track'
+    'foot foot';
+  align-content: center;
+  column-gap: var(--space-sm);
+  row-gap: var(--space-xs);
+}
+
+.spotify__body[data-size='medium'] .spotify__stage {
+  grid-area: art;
+  /* Matches the two text lines it sits against, so the row reads as one unit. */
+  height: 2.4em;
+  align-self: center;
+}
+
+.spotify__body[data-size='medium'] .spotify__stage .spotify__art {
+  height: 100%;
+  width: auto;
+  flex: none;
+}
+
+.spotify__body[data-size='medium'] .spotify__meta {
+  grid-area: meta;
+  align-self: center;
+  text-align: left;
+}
+
+.spotify__body[data-size='medium'] .spotify__track {
+  grid-area: track;
+}
+
+.spotify__body[data-size='medium'] .spotify__foot {
+  grid-area: foot;
+}
+
+/* A 2x1 foot fits elapsed, the controls and the device, but not the duration too. */
+.spotify__body[data-size='medium'] .spotify__of {
+  display: none;
+}
+
+/*
+ * Wide is a media bar: the art takes the full height of the row and its width
+ * follows from the square aspect, leaving everything else the remaining space.
+ */
+.spotify__body[data-size='wide'] {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'art meta'
+    'art track'
+    'art foot';
+  align-content: center;
+  column-gap: var(--space-sm);
+  row-gap: var(--space-xs);
+}
+
+.spotify__body[data-size='wide'] .spotify__stage {
+  grid-area: art;
+  /* Spans all three rows at their full height; `aspect-ratio` then sets the
+     width, so the art is as large as the bar is tall and no wider. */
+  align-self: stretch;
+}
+
+.spotify__body[data-size='wide'] .spotify__stage .spotify__art {
+  height: 100%;
+  width: auto;
+  flex: none;
+}
+
+.spotify__body[data-size='wide'] .spotify__meta {
+  grid-area: meta;
+  align-self: end;
+  text-align: left;
+}
+
+.spotify__body[data-size='wide'] .spotify__track {
+  grid-area: track;
+  align-self: center;
+}
+
+.spotify__body[data-size='wide'] .spotify__foot {
+  grid-area: foot;
+  align-self: start;
+}
