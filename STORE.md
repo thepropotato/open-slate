@@ -25,6 +25,10 @@ remote code, and no analytics.
 | `alarms` | Advances the wallpaper slideshow on a schedule while no tab is open. |
 | `topSites` | Seeds the tile grid on first run, and powers the "Most visited" widget. |
 
+| Host permission | Why |
+| --- | --- |
+| `https://suggestqueries.google.com/*` | Google's public autocomplete endpoint, for search-box completions. Required rather than optional because Google is the default engine and completions are on by default, so making it optional would put a permission prompt in front of the first search a user ever types. See below. |
+
 ## Optional permissions, requested only on use
 
 These are declared as `optional_permissions` and requested at the moment the user
@@ -44,6 +48,7 @@ adds the widget that needs them. Declining leaves the rest of the page working.
 | `https://claude.ai/*` | The Claude usage widget, to read that account's own usage figures. |
 | `https://chatgpt.com/*` | The ChatGPT usage widget, to read that account's own usage figures. |
 | `https://*/*` | Required so the feeds widget can request access to **one origin at a time**, chosen by the user. See below. |
+| `https://duckduckgo.com/*`, `https://www.bing.com/*`, `https://search.brave.com/*`, `https://ac.ecosia.org/*`, `https://www.startpage.com/*`, `https://en.wikipedia.org/*`, `https://completion.amazon.com/*` | Search completions from an engine other than Google, requested the first time the user selects that engine. Declining leaves that engine working with local suggestions alone. See below. |
 
 ### On geolocation
 
@@ -86,6 +91,37 @@ What keeps this narrow:
   from conversations, prompts or account details is read or stored.
 - Nothing leaves the device. The reading is written to `chrome.storage.local` and
   rendered; it is not transmitted anywhere, including to us.
+
+### On search suggestions and the engine endpoints
+
+The search box has always drawn suggestions from the user's own tabs, tiles,
+bookmarks and history. It now also asks the chosen engine for its completions,
+which is the one place in the extension where something typed leaves the device
+before the user has committed to a search.
+
+`suggestqueries.google.com` is the only **required** host permission, because
+Google is the default engine and completions are on by default. Declaring it
+optional would mean a permission prompt interrupting the first search a user
+ever types. Every other engine's endpoint is optional and requested the first
+time that engine is selected.
+
+What keeps this narrow:
+
+- It is a switch. **Search → web suggestions** turns the whole second source
+  off, Google included, and the box then behaves exactly as it did before:
+  local sources only, nothing sent anywhere as you type.
+- Nothing is sent for input that was never going to be a search. Arithmetic
+  goes to the calculator and an address goes to the address matcher, and both
+  are excluded before any request is made, as is a query of one character.
+- The request is the engine's own public autocomplete endpoint — the same one
+  the browser's address bar calls for that engine — carrying the typed query
+  and nothing else. No identifier of ours is attached.
+- What comes back is a list of strings, rendered below the local suggestions
+  and never stored.
+- Submitting a search navigates to the chosen engine, exactly as the address
+  bar would.
+
+The endpoints and the gate are in `src/features/search/suggest.ts`.
 
 ### On the broad `https://*/*` optional host pattern
 
