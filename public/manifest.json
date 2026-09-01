@@ -23,7 +23,8 @@
     "unlimitedStorage",
     "favicon",
     "alarms",
-    "topSites"
+    "topSites",
+    "identity"
   ],
   "host_permissions": [
     "https://suggestqueries.google.com/*"
@@ -50,6 +51,9 @@
     "https://www.startpage.com/*",
     "https://en.wikipedia.org/*",
     "https://completion.amazon.com/*",
+    "https://api.spotify.com/*",
+    "https://accounts.spotify.com/*",
+    "https://i.scdn.co/*",
     "https://*/*"
   ],
   "web_accessible_resources": [
