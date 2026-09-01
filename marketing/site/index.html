@@ -19,6 +19,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
+<!-- Drives the hero swap only. Deferred and pinned, and the hero falls back to
+     the finished screenshot if either file fails to load. -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js"></script>
+
 <style>
 /* ---------------------------------------------------------------- tokens */
 :root{
@@ -251,6 +256,77 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;heigh
 .frame img{width:100%;height:auto;display:block;aspect-ratio:16/10;object-fit:cover;background:#F4F2ED}
 
 .heroshot{margin-top:clamp(2rem,6vw,4.75rem)}
+
+/* ----------------------------------------------------------- hero reveal */
+/* The scroll-driven swap from a stock new tab to Open Slate. Without JS the
+   stage is a plain block and only the "after" image is visible, which is the
+   same picture the hero has always shown — so the scriptless page loses the
+   animation and nothing else.
+
+   `--breeze` is the progress of the wipe, 0 to 1, written by GSAP. Both
+   images are stacked in the same grid cell; the top one is masked away as the
+   value climbs. */
+.stage{position:relative}
+.stage .shots{display:grid;position:relative}
+/* Both screenshots are captured at 16:10, the frame's own ratio, so neither
+   needs cropping to sit in the stack. `contain` rather than `cover` so that a
+   replacement shot at a slightly different size is letterboxed — visibly
+   wrong, and fixable — instead of silently losing its edges. */
+.stage .shot{grid-area:1/1;width:100%;height:100%;object-fit:contain}
+
+
+/* Only the "before" image is masked; the "after" sits underneath and is
+   uncovered as the mask retreats.
+
+   The wave is one static SVG, drawn once at load and three frames wide, and
+   the sweep is a change of `mask-position` alone. Regenerating the mask image
+   per frame — which is what a progress-driven path would need — makes the
+   browser re-parse and re-raster an SVG on every scroll tick, and that is
+   what the wipe used to stutter on. Moving a mask that is already decoded
+   costs nothing by comparison. */
+.stage .shot-before{
+  z-index:1;
+  -webkit-mask-image:var(--breeze-mask);
+  mask-image:var(--breeze-mask);
+  -webkit-mask-size:270% 100%;
+  mask-size:270% 100%;
+  -webkit-mask-repeat:no-repeat;
+  mask-repeat:no-repeat;
+  /* A mask wider than its box positions against the overflow, not the box:
+     0% pins its left edge, 100% its right. So the frame starts past the band,
+     on wholly kept ground, and ends before it, on wholly cut ground, with the
+     band crossing once in between — that crossing is the reveal. */
+  -webkit-mask-position:calc((1 - var(--breeze,0)) * 100%) 0;
+  mask-position:calc((1 - var(--breeze,0)) * 100%) 0;
+  will-change:mask-position;
+}
+
+/* Pinning is done by the browser, not by GSAP: sticky needs no measurement
+   and cannot leave the page mis-scrolled if the script fails midway. */
+.stage.is-live{height:320vh}
+.stage.is-live .sticky{position:sticky;top:calc(4.625rem + 1.5rem)}
+
+.scrollcue{
+  display:flex;align-items:center;justify-content:center;gap:.5rem;
+  margin-top:1.25rem;font-size:.8125rem;color:var(--muted);
+  transition:opacity .3s;
+}
+.scrollcue svg{width:.875rem;height:.875rem;animation:cuebob 1.8s ease-in-out infinite}
+@keyframes cuebob{0%,100%{transform:translateY(-.1rem)}50%{transform:translateY(.2rem)}}
+
+@media (orientation:portrait), (max-width:52rem){
+  /* A shorter scroll: the frame is smaller here, so the same distance would
+     hold the reader on one picture for too long. */
+  .stage.is-live{height:240vh}
+  .stage.is-live .sticky{top:calc(4rem + 1rem)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  /* No pin and no wipe: just the finished page. */
+  .stage.is-live{height:auto}
+  .stage.is-live .sticky{position:static}
+  .stage .shot-before,.scrollcue{display:none}
+}
 
 /* --------------------------------------------------------------- proof */
 .proof{
@@ -485,17 +561,29 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
   </div>
   <p class="note">Free and MIT licensed. No account, no sign-in, no telemetry.</p>
 
-  <div class="heroshot">
-    <div class="frame">
-      <div class="chrome">
-        <div class="dots"><i></i><i></i><i></i></div>
-        <div class="tabstrip">
-          <div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div>
+  <div class="heroshot stage" id="stage">
+    <div class="sticky">
+      <div class="frame">
+        <div class="chrome">
+          <div class="dots"><i></i><i></i><i></i></div>
+          <div class="tabstrip">
+            <div class="tab"><span class="mark"><i></i><i></i><i></i><i></i></span> New Tab</div>
+          </div>
+          <div class="omni">Search or type a URL</div>
         </div>
-        <div class="omni">Search or type a URL</div>
+        <div class="shots">
+          <img class="shot shot-after" src="img/wallpaper@2x.png" width="2560" height="1600"
+               alt="The Open Slate new tab page over a dusk photograph: a search box above a calendar showing today's events, a clock, a task list, a list of open tabs, the local weather and a Claude usage widget reading $403 of a $500 limit, each on a translucent panel tinted by the wallpaper behind it.">
+          <!-- Removed by the script if it 404s, which is what makes the whole
+               animation optional until the stock screenshot is added. -->
+          <img class="shot shot-before" id="shot-before" src="img/newtab-plain@2x.png"
+               width="2560" height="1600" alt="" aria-hidden="true">
+        </div>
       </div>
-      <img src="img/wallpaper@2x.png" width="2560" height="1600"
-           alt="The Open Slate new tab page over a dusk photograph: a search box above a calendar showing today's events, a clock, a task list, a list of open tabs, the local weather and a Claude usage widget reading $403 of a $500 limit, each on a translucent panel tinted by the wallpaper behind it.">
+      <p class="scrollcue" id="scrollcue" hidden>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v10M4 9l4 4 4-4"/></svg>
+        Scroll to replace it
+      </p>
     </div>
   </div>
 
@@ -685,7 +773,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
         </p>
         <ul>
           <li>23 search engines</li>
-          <li>Suggestions drawn from your own data, never a remote service</li>
+          <li>Suggestions from your own data, plus the engine&rsquo;s own completions when you want them</li>
           <li>Type a host and it navigates instead of searching</li>
         </ul>
       </div>
@@ -1103,6 +1191,242 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
     }
   }
 
+  /**
+   * Contributors, read from GitHub at load. The section ships hidden and is
+   * only revealed once at least one person comes back, so a rate-limited or
+   * offline visitor sees the page without an empty panel in it.
+   *
+   * Bots are dropped: they are noise on a list whose point is the people.
+   */
+  ;(async () => {
+    const section = document.getElementById('contributors')
+    const list = document.getElementById('contribs')
+    if (!section || !list) return
+
+    try {
+      const res = await fetch(
+        'https://api.github.com/repos/thepropotato/open-slate/contributors?per_page=100',
+        { headers: { Accept: 'application/vnd.github+json' } },
+      )
+      if (!res.ok) return
+
+      const people = (await res.json())
+        .filter((person) => person && person.type !== 'Bot' && person.login)
+        .sort((a, b) => b.contributions - a.contributions)
+      if (!people.length) return
+
+      for (const person of people) {
+        const link = document.createElement('a')
+        link.className = 'contrib'
+        link.href = person.html_url
+        link.target = '_blank'
+        link.rel = 'noopener'
+        const commits = person.contributions
+        link.setAttribute('aria-label', `${person.login}, ${commits} commit${commits === 1 ? '' : 's'}`)
+
+        const avatar = document.createElement('img')
+        // The API's avatar is served far larger than it is drawn here.
+        avatar.src = `${person.avatar_url}&s=64`
+        avatar.alt = ''
+        avatar.loading = 'lazy'
+        avatar.width = 32
+        avatar.height = 32
+
+        const name = document.createElement('span')
+        name.textContent = person.login
+
+        const count = document.createElement('span')
+        count.className = 'commits'
+        count.textContent = commits
+
+        link.append(avatar, name, count)
+        list.append(link)
+      }
+
+      section.hidden = false
+      // The section was hidden when the observer first ran, so arm its reveals
+      // now. That block may not have run yet, hence the queue.
+      if (window.armReveals) window.armReveals(section)
+      else (window.pendingReveals ||= []).push(section)
+    } catch {
+      /* Offline, blocked or rate limited: the section stays hidden. */
+    }
+  })()
+
+  /**
+   * Hero swap: a stock Chrome new tab, pinned while the page scrolls past it,
+   * replaced by Open Slate along a soft wavering edge.
+   *
+   * Everything here is additive. The markup renders the finished page on its
+   * own, and this only runs once GSAP, ScrollTrigger and the "before"
+   * screenshot have all actually arrived — so a blocked CDN, a missing file or
+   * reduced-motion each leave the original static hero in place.
+   */
+  ;(() => {
+    const stage = document.getElementById('stage')
+    const before = document.getElementById('shot-before')
+    const cue = document.getElementById('scrollcue')
+    if (!stage || !before) return
+
+    const still = matchMedia('(prefers-reduced-motion: reduce)')
+
+    /**
+     * The wavering edge.
+     *
+     * One SVG mask, not several CSS gradients: mask layers composite as a
+     * union, so any layer still opaque keeps the pixel visible and the wipe
+     * never lands.
+     *
+     * It is entirely gradients — no path, no shape. A filled shape keeps a
+     * crisp boundary wherever its fill is still opaque, and that boundary is
+     * what made the two screenshots read as two screenshots meeting. With
+     * only gradients there is no geometry to see: the change is a wide,
+     * diagonal blend in which both pictures are genuinely present at once.
+     *
+     * It is built once, wider than the frame, and the sweep is CSS moving the
+     * mask across. Rebuilding this string per frame is what made the old wipe
+     * stutter: every tick handed the browser a fresh SVG to parse and raster.
+     *
+     * White keeps, transparent cuts. The frame starts on the opaque end and
+     * the mask slides so the transparent end crosses it, dissolving the stock
+     * page away.
+     */
+    const buildMask = () => {
+      // A clear frame of untouched picture either side of the band, and the
+      // band itself in between: the width is chosen so the band crosses the
+      // frame over exactly the full sweep, with no dead travel at either end.
+      const w = 270
+
+      // No path, no edge. A filled shape always has a crisp boundary wherever
+      // its fill is still opaque, and that boundary is what read as a seam
+      // between the two screenshots. This is gradient only: every pixel of
+      // the change is a fade, so there is no geometry left to see.
+      //
+      // The band is wide — a full frame and a half — so at any moment a large
+      // part of the picture is a genuine blend of both shots rather than one
+      // or the other. That width is what sells it as a dissolve instead of a
+      // wipe with soft edges.
+      // The band is deliberately narrower than the frame — about two thirds of
+      // it. Wider than this and every part of the picture is fading at once,
+      // which reads as a plain crossfade with no direction to it; narrower and
+      // the leading edge starts to look like an edge again. At this width
+      // there is always clear "before" ahead of the band and clear "after"
+      // behind it, so the change visibly travels while the transition itself
+      // is still entirely a dissolve.
+      const stops = [
+        [0, 0], [0.12, 0.03], [0.26, 0.12], [0.40, 0.28],
+        [0.54, 0.50], [0.68, 0.72], [0.80, 0.88], [0.90, 0.97], [1, 1],
+      ]
+
+      const ramp = (id, x1, x2) =>
+        `<linearGradient id='${id}' gradientUnits='userSpaceOnUse' x1='${x1}' x2='${x2}'>` +
+        stops.map(([o, v]) =>
+          `<stop offset='${o}' stop-color='white' stop-opacity='${v}'/>`).join('') +
+        `</linearGradient>`
+
+      const svg =
+        `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 ${w} 100' preserveAspectRatio='none'>` +
+        `<defs>` +
+        // One clear frame before the band and one after, so at rest each end
+        // shows a single clean picture. The two are staggered along the sweep
+        // so the dissolve reaches the top of the frame a little before the
+        // bottom, which is what keeps the front from looking ruler-straight.
+        ramp('g0', 92, 162) +
+        ramp('g1', 108, 178) +
+        // A soft vertical weighting for each band, so the top of the frame
+        // leans on one and the bottom on the other and the dissolve sweeps
+        // diagonally rather than as a flat vertical front.
+        `<linearGradient id='v' gradientUnits='userSpaceOnUse' y1='0' y2='100'>` +
+        `<stop offset='0' stop-color='white' stop-opacity='1'/>` +
+        `<stop offset='1' stop-color='white' stop-opacity='0'/>` +
+        `</linearGradient>` +
+        `<mask id='vm'><rect width='${w}' height='100' fill='url(%23v)'/></mask>` +
+        `</defs>` +
+        `<rect width='${w}' height='100' fill='url(%23g1)'/>` +
+        `<rect width='${w}' height='100' fill='url(%23g0)' mask='url(%23vm)'/>` +
+        `</svg>`
+
+      return `url("data:image/svg+xml,${encodeURIComponent(svg).replace(/%2523/g, '%23')}")`
+    }
+
+    const paint = (p) => {
+      stage.style.setProperty('--breeze', p)
+    }
+
+    const start = () => {
+      if (still.matches || !window.gsap || !window.ScrollTrigger) return
+      gsap.registerPlugin(ScrollTrigger)
+
+      stage.classList.add('is-live')
+      if (cue) cue.hidden = false
+      stage.style.setProperty('--breeze-mask', buildMask())
+      paint(0)
+
+      const frame = stage.querySelector('.frame')
+      const after = stage.querySelector('.shot-after')
+
+      // A long catch-up. The wheel arrives in coarse steps and a short scrub
+      // reproduces every one of them; letting the timeline trail this far
+      // behind is what turns those steps back into a glide.
+      const tl = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: stage,
+          start: 'top top+=120',
+          end: 'bottom bottom',
+          scrub: 1.2,
+        },
+      })
+
+      // The frame settles in first: a slow push forward with a few pixels of
+      // lift, eased at both ends so it never appears to start or stop dead.
+      // It runs the full length, so the push is still easing out as the wipe
+      // lands and nothing starts up again afterwards.
+      tl.fromTo(frame,
+        { scale: 1, y: 0 },
+        { scale: 1.05, y: -12, ease: 'sine.inOut', duration: 4 }, 0)
+        .fromTo(cue, { opacity: 1 }, { opacity: 0, ease: 'power2.in', duration: 0.7 }, 0)
+
+      // The wipe, held back just long enough for the push to establish the
+      // shot. `inOut`
+      // gives it a run-up and a settle, so the edge is never travelling at a
+      // constant rate — which is what reads as mechanical. It finishes with
+      // the timeline: the pin ends on the wipe landing, not on a spare beat
+      // of motion after it.
+      tl.to({ p: 0 }, {
+        p: 1,
+        ease: 'power2.inOut',
+        duration: 3.6,
+        onUpdate() { paint(this.targets()[0].p) },
+      }, 0.4)
+
+      // The revealed page drifts a touch toward the viewer as it lands, so
+      // the swap has some depth to it rather than being flat underneath.
+      // Same window as the wipe, so the two resolve on the same frame.
+      tl.fromTo(after,
+        { scale: 1.03 },
+        { scale: 1, ease: 'power2.out', duration: 3.6 }, 0.4)
+    }
+
+    // The stock screenshot is added separately; until it exists the hero stays
+    // as it was rather than pinning three viewports of a broken image.
+    const armed = () => {
+      if (!before.complete) return
+      if (!before.naturalWidth) {
+        before.remove()
+        return
+      }
+      if (document.readyState === 'complete') start()
+      else addEventListener('load', start, { once: true })
+    }
+
+    if (before.complete) armed()
+    else {
+      before.addEventListener('load', armed, { once: true })
+      before.addEventListener('error', () => before.remove(), { once: true })
+    }
+  })()
+
   // Hairline under the nav only once the page has moved.
   const header = document.querySelector('header')
   const onScroll = () => header.classList.toggle('stuck', window.scrollY > 8)
@@ -1171,68 +1495,6 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
       answer.addEventListener('transitionend', done)
     })
   }
-
-  /**
-   * Contributors, read from GitHub at load. The section ships hidden and is
-   * only revealed once at least one person comes back, so a rate-limited or
-   * offline visitor sees the page without an empty panel in it.
-   *
-   * Bots are dropped: they are noise on a list whose point is the people.
-   */
-  ;(async () => {
-    const section = document.getElementById('contributors')
-    const list = document.getElementById('contribs')
-    if (!section || !list) return
-
-    try {
-      const res = await fetch(
-        'https://api.github.com/repos/thepropotato/open-slate/contributors?per_page=100',
-        { headers: { Accept: 'application/vnd.github+json' } },
-      )
-      if (!res.ok) return
-
-      const people = (await res.json())
-        .filter((person) => person && person.type !== 'Bot' && person.login)
-        .sort((a, b) => b.contributions - a.contributions)
-      if (!people.length) return
-
-      for (const person of people) {
-        const link = document.createElement('a')
-        link.className = 'contrib'
-        link.href = person.html_url
-        link.target = '_blank'
-        link.rel = 'noopener'
-        const commits = person.contributions
-        link.setAttribute('aria-label', `${person.login}, ${commits} commit${commits === 1 ? '' : 's'}`)
-
-        const avatar = document.createElement('img')
-        // The API's avatar is served far larger than it is drawn here.
-        avatar.src = `${person.avatar_url}&s=64`
-        avatar.alt = ''
-        avatar.loading = 'lazy'
-        avatar.width = 32
-        avatar.height = 32
-
-        const name = document.createElement('span')
-        name.textContent = person.login
-
-        const count = document.createElement('span')
-        count.className = 'commits'
-        count.textContent = commits
-
-        link.append(avatar, name, count)
-        list.append(link)
-      }
-
-      section.hidden = false
-      // The section was hidden when the observer first ran, so arm its reveals
-      // now. That block may not have run yet, hence the queue.
-      if (window.armReveals) window.armReveals(section)
-      else (window.pendingReveals ||= []).push(section)
-    } catch {
-      /* Offline, blocked or rate limited: the section stays hidden. */
-    }
-  })()
 
   /**
    * Reveal on scroll. The hidden starting state comes from .reveal-ready,
