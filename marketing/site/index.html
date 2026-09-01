@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Open Slate: your most-opened page, finally yours</title>
-<meta name="description" content="A Chrome extension that replaces the new tab page with a speed dial and dashboard: tiles, 17 widgets including Claude and ChatGPT usage, and a wallpaper engine, with close to everything about the look under your control. No analytics, no content scripts.">
+<meta name="description" content="A Chrome extension that replaces the new tab page with a speed dial and dashboard: tiles, 18 widgets including Claude, ChatGPT and Spotify, and a wallpaper engine, with close to everything about the look under your control. No analytics, no content scripts.">
 <link rel="canonical" href="https://openslate.byvenu.com/">
 
 <meta property="og:type" content="website">
@@ -588,7 +588,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
   </div>
 
   <div class="proof">
-    <span><b>17</b> widgets</span>
+    <span><b>18</b> widgets</span>
     <span><b>23</b> search engines</span>
     <span><b>233</b> brand logos</span>
     <span><b>10</b> clock faces</span>
@@ -686,7 +686,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
 
     <div class="split flip">
       <div class="copy">
-        <h3>Seventeen widgets, and none of them overlap</h3>
+        <h3>Eighteen widgets, and none of them overlap</h3>
         <p>
           A grid of square cells with five standard sizes that widgets snap to,
           the way phone widgets do. Growing or dropping one moves whatever was in
@@ -698,6 +698,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
           <li>Pomodoro, countdown and stopwatch in one timer</li>
           <li>RSS feeds, crypto prices</li>
           <li>Claude and ChatGPT usage &mdash; what you&rsquo;ve spent, what&rsquo;s left, when it resets</li>
+          <li>Spotify &mdash; what&rsquo;s playing, and the controls for whichever device is playing it</li>
           <li>Recently closed, most visited, open tabs, bookmarks, history, downloads</li>
         </ul>
       </div>
@@ -945,11 +946,15 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
         </div>
         <div class="card">
           <h3>Every outbound call is optional</h3>
-          <p>Weather, a one-off city lookup, coin prices, the feeds you added, and the usage widgets reading your own account. Each behind a widget you chose and a permission you granted.</p>
+          <p>Weather, a one-off city lookup, coin prices, the feeds you added, the usage widgets reading your own account, and Spotify if you connect it. Each behind a widget you chose and a permission you granted.</p>
         </div>
         <div class="card">
           <h3>Usage is read, not relayed</h3>
           <p>The Claude and ChatGPT widgets read the numbers from your own signed-in tab on that site, and keep them on your device. No API key, no third party, and nothing about your conversations &mdash; only the limits the site shows you.</p>
+        </div>
+        <div class="card">
+          <h3>Spotify signs in to Spotify</h3>
+          <p>Connecting Spotify sends you to Spotify&rsquo;s own consent screen; we never see your password. The token it gives back is stored on your device and used for nothing but reading what&rsquo;s playing and passing on the button you pressed. Disconnect from the widget and it is deleted.</p>
         </div>
       </div>
     </div>

@@ -5,6 +5,19 @@ Notable changes to Open Slate, newest first. Versions follow
 GitHub release, the website and the store listing's "What's new" all read from,
 so it is written for the people who use the extension rather than for the diff.
 
+## [Unreleased]
+
+### Added
+
+- A Spotify widget: the track, the artist, how far through it you are, and play,
+  pause and skip. The buttons reach whichever device is actually playing — your
+  phone or the desktop app, not only this browser — so you can change the song
+  without going to find the tab. When nothing is playing it shows the last track
+  you played, and pressing play picks up on the device you left off on, asking
+  which one if there is any doubt. Connecting is one press and Spotify's own
+  sign-in screen; starting and skipping need Spotify Premium, and seeing what is
+  playing does not. It asks Spotify only while the tab is in front of you.
+
 ## [1.2.0]
 
 ### Added

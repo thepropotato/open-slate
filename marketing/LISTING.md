@@ -41,9 +41,9 @@ every window size, not just the one you are looking at.
 
 Clock (ten faces), weather, calendar, notes, greeting, tasks (priorities, due
 dates and filters, all typed rather than clicked), timer (pomodoro, countdown,
-stopwatch), RSS feeds, crypto prices, Claude and ChatGPT usage, recently closed
-tabs, most visited, open tabs with a duplicate finder, bookmarks, history and
-downloads.
+stopwatch), RSS feeds, crypto prices, Claude and ChatGPT usage, Spotify,
+recently closed tabs, most visited, open tabs with a duplicate finder,
+bookmarks, history and downloads.
 
 YOUR AI LIMITS, WITHOUT OPENING A TAB TO CHECK
 The Claude and ChatGPT widgets show what those services already show you — what
@@ -52,6 +52,13 @@ new tab. They read the account you are already signed in to, so there is no API
 key and no second login, and a widget too small for every meter shows the one
 closest to its limit. Nothing is read until you add the widget and grant access
 to that one site, and the readings stay on your device.
+
+WHAT IS PLAYING, AND THE BUTTONS TO CHANGE IT
+The Spotify widget shows the track, the artist and how far through it you are,
+with play, pause and skip. Because it talks to Spotify's own API rather than a
+browser tab, those buttons reach whichever device is actually playing — your
+phone, the desktop app, a speaker — not just this browser. Connecting is one
+press and Spotify's own consent screen; controlling playback needs Premium.
 
 SEARCH AND A COMMAND PALETTE
 23 search engines with bang shortcuts (!yt cats), address detection so typing a
@@ -74,9 +81,10 @@ without carrying your tiles, notes or tasks.
 IT ASKS FOR NOTHING
 No analytics, no telemetry, no crash reporting, no identifiers. No content
 scripts — the extension runs on its own page and nowhere else, so it cannot read
-the sites you visit. It installs with four permissions; tabs, history,
-bookmarks, downloads and sessions are requested the moment you add the widget
-that needs one, and declining leaves the rest working.
+the sites you visit. It installs with six permissions, none of which
+can read a page you visit; tabs, history, bookmarks, downloads, sessions and
+access to any site are requested the moment you add the widget that needs one,
+and declining leaves the rest working.
 
 Settings and tiles are stored locally. Wallpapers live in IndexedDB and are
 never uploaded. Sync is off unless you turn it on, per device.

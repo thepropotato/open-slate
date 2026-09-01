@@ -24,6 +24,7 @@ remote code, and no analytics.
 | `favicon` | Draws each tile and list row with the site's own icon, read from Chrome's local favicon cache rather than fetched from a third party. |
 | `alarms` | Advances the wallpaper slideshow on a schedule while no tab is open. |
 | `topSites` | Seeds the tile grid on first run, and powers the "Most visited" widget. |
+| `identity` | Runs Spotify's OAuth consent screen in a browser-managed window, so the extension never handles the user's Spotify password. Only used when the Spotify widget is connected. |
 
 | Host permission | Why |
 | --- | --- |
@@ -47,6 +48,9 @@ adds the widget that needs them. Declining leaves the rest of the page working.
 | `https://api.coingecko.com/*` | The crypto widget's only network request. CoinGecko's public endpoint needs no account or API key. |
 | `https://claude.ai/*` | The Claude usage widget, to read that account's own usage figures. |
 | `https://chatgpt.com/*` | The ChatGPT usage widget, to read that account's own usage figures. |
+| `https://accounts.spotify.com/*` | The Spotify widget's sign-in and token refresh. |
+| `https://api.spotify.com/*` | The Spotify widget, to read what is playing or was last played, to list the account's own devices so playback can resume on one, and to pass on a play, pause or skip. |
+| `https://i.scdn.co/*` | Album art for the Spotify widget, served from Spotify's image CDN. |
 | `https://*/*` | Required so the feeds widget can request access to **one origin at a time**, chosen by the user. See below. |
 | `https://duckduckgo.com/*`, `https://www.bing.com/*`, `https://search.brave.com/*`, `https://ac.ecosia.org/*`, `https://www.startpage.com/*`, `https://en.wikipedia.org/*`, `https://completion.amazon.com/*` | Search completions from an engine other than Google, requested the first time the user selects that engine. Declining leaves that engine working with local suggestions alone. See below. |
 
@@ -91,6 +95,35 @@ What keeps this narrow:
   from conversations, prompts or account details is read or stored.
 - Nothing leaves the device. The reading is written to `chrome.storage.local` and
   rendered; it is not transmitted anywhere, including to us.
+
+### On the Spotify widget
+
+The Spotify widget uses Spotify's documented Web API with Authorization Code +
+PKCE. The extension ships a client ID, which is a public identifier rather than
+a credential; there is no client secret in the package, because an extension is
+a zip a user can unpack and a shipped secret would be a published one. PKCE
+exists for exactly this case: a per-sign-in verifier proves the exchange without
+a stored secret.
+
+Sign-in runs through `chrome.identity.launchWebAuthFlow`, so the consent screen
+is Spotify's own page in a window the browser owns. The extension never sees the
+user's Spotify credentials. What it receives is an access token and a refresh
+token, both kept in `chrome.storage.local` on the device and sent to nobody but
+Spotify. Disconnecting from the widget deletes them.
+
+The Web API is used rather than reading a signed-in `open.spotify.com` tab
+because playback commands must reach whichever device is actually playing — a
+phone or the desktop app, often not the browser at all. Controlling playback is
+a Spotify Premium feature; free accounts can still see what is playing.
+
+When nothing is playing, the widget shows the last played track and can resume
+it on a device the account already owns. That reads the recently-played list and
+the device list, both scoped to the user's own account; no device is contacted
+directly and Spotify does the waking.
+
+Nothing is requested until the user adds the widget and presses Connect. While
+connected, the widget polls only while the new tab is visible, so a background
+tab makes no requests.
 
 ### On search suggestions and the engine endpoints
 

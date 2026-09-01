@@ -190,6 +190,15 @@ footer a:hover{color:var(--accent)}
           time with your approval for each.</td>
         </tr>
         <tr>
+          <td><code>api.spotify.com</code>, <code>accounts.spotify.com</code>,
+          <code>i.scdn.co</code></td>
+          <td>Spotify widget</td>
+          <td>A token Spotify issued to you, sent back to Spotify to ask what is
+          playing or was last played, to list your own devices, or to pass on a
+          play, pause or skip, plus the album art that comes with it. Nothing is
+          sent to us or to anyone else.</td>
+        </tr>
+        <tr>
           <td><code>claude.ai</code> or <code>chatgpt.com</code></td>
           <td>Claude and ChatGPT usage widgets</td>
           <td>The provider's own usage endpoint, requested inside a tab on that
@@ -200,6 +209,21 @@ footer a:hover{color:var(--accent)}
         </tr>
       </tbody>
     </table>
+
+    <h2>On the Spotify widget</h2>
+    <p>Connecting Spotify opens Spotify's own consent screen, in a window the
+    browser manages. We never see your Spotify password, and you choose there
+    what the widget is allowed to do.</p>
+    <p>Spotify hands back a token, which is stored on your device and used for
+    one job: asking what is playing or was last played, listing the devices on
+    your account so playback can resume on one, and passing on the button you
+    pressed. It goes to Spotify and nowhere else. There is no client secret in
+    the extension, and no server of ours in between. Disconnecting from the
+    widget deletes the token.</p>
+    <p>The widget asks Spotify only while the new tab is open in front of you; a
+    tab sitting in the background makes no requests. Controlling playback is a
+    Spotify Premium feature, and it reaches whichever device is actually playing
+    &mdash; your phone or desktop app, not only this browser.</p>
 
     <h2>On the AI usage widgets</h2>
     <p>The Claude and ChatGPT widgets show the limits those services already show
