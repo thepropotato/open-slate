@@ -25,11 +25,12 @@
     "test": "node --import ./scripts/register.mjs scripts/selftest.mjs",
     "check": "npm run typecheck && npm run lint && npm run icons:check && npm run facts:check && npm run site:changelog:check && npm run test",
     "store:shots": "npm run build && node scripts/store-shots.mjs",
-    "marketing:shots": "npm run build && npm run gen:wallpaper && node scripts/marketing-shots.mjs",
+    "marketing:shots": "npm run build && npm run gen:wallpaper && npm run gen:cover && node scripts/marketing-shots.mjs",
     "marketing:promo": "node scripts/promo-tiles.mjs",
     "test:dom": "node scripts/dom-tests.mjs",
     "test:canvas": "node scripts/canvas-tests.mjs",
-    "gen:wallpaper": "node scripts/gen-wallpaper.mjs"
+    "gen:wallpaper": "node scripts/gen-wallpaper.mjs",
+    "gen:cover": "node scripts/gen-cover.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

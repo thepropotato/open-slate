@@ -15,7 +15,7 @@
  *
  * The scene list is deliberately wider than the store needs. The store caps a
  * listing at five screenshots, so exactly five scenes carry `store: true`, and
- * the website takes all of them — a page that shows three variations of the
+ * the website takes all of them - a page that shows three variations of the
  * same dark tile grid undersells an extension whose whole pitch is how far it
  * bends.
  *
@@ -68,7 +68,7 @@ const canvas = (widgets, extra = {}) => ({
  * The generated wallpaper, inlined as a data URL.
  *
  * `useBackgroundSource` prefers `image.url` over `image.blobId`, and
- * `isReadable` in `core/theme/color.ts` counts `data:` as sampleable — so this
+ * `isReadable` in `core/theme/color.ts` counts `data:` as sampleable - so this
  * one string drives both the wallpaper and the accent colour drawn out of it,
  * with no IndexedDB write and no file the page has to be able to reach.
  */
@@ -78,6 +78,13 @@ if (!existsSync(wallpaperFile)) {
   process.exit(1)
 }
 const WALLPAPER = `data:image/png;base64,${readFileSync(wallpaperFile).toString('base64')}`
+
+const coverFile = resolve('marketing/assets/cover.png')
+if (!existsSync(coverFile)) {
+  console.error('marketing/assets/cover.png is missing. Run `node scripts/gen-cover.mjs`.')
+  process.exit(1)
+}
+const COVER = readFileSync(coverFile)
 
 /** Sites with a bundled Simple Icons brand logo, so tiles show real marks. */
 const TILE_SITES = [
@@ -151,7 +158,7 @@ const FOLDER_TILES = [
  * The day view is gated on `sources.length > 0`, so the widget is only ever a
  * month grid without one. Served over HTTP rather than as a `data:` URL: the
  * widget's permission check reads the feed's origin, and a `data:` URL has
- * none — so the check always fails on one.
+ * none - so the check always fails on one.
  */
 function demoCalendarIcs() {
   const d = new Date()
@@ -245,8 +252,8 @@ const dueIn = (days) => {
 
 /*
  * Priorities and dates are on by default, so a seeded list without them shows
- * the widget at its plainest. A spread of both — and one task carrying neither
- * — is what the widget actually looks like in use.
+ * the widget at its plainest. A spread of both - and one task carrying neither
+ * - is what the widget actually looks like in use.
  */
 const TASKS = [
   { id: 't1', text: 'Ship the store listing', done: false, priority: 1, due: dueIn(0) },
@@ -259,7 +266,7 @@ const TASKS = [
 /**
  * How many tab rows a widget may show.
  *
- * Five, because the widget's own schema floors `limit` at 5 — ask for four and
+ * Five, because the widget's own schema floors `limit` at 5 - ask for four and
  * zod rejects it and restores the default of fourteen, which is how the
  * capture page ends up listing itself.
  */
@@ -270,16 +277,16 @@ const TAB_LIMIT = 5
  *
  * One more is seeded than the widget is allowed to show. `chrome.tabs.query`
  * answers in window order and the capture's own new tab page is opened last,
- * so a list capped at `TAB_LIMIT` can never reach it — which is what keeps
+ * so a list capped at `TAB_LIMIT` can never reach it - which is what keeps
  * `newtab.html` out of a screenshot of itself, under a raw extension id.
  */
 const TAB_TITLES = [
-  'Open Slate — documentation',
+  'Open Slate - documentation',
   'Pull requests · GitHub',
-  'Figma — Marketing site',
-  'Open Meteo — API docs',
-  'Chrome Web Store — Developer Dashboard',
-  'Instrument Serif — Google Fonts',
+  'Figma - Marketing site',
+  'Open Meteo - API docs',
+  'Chrome Web Store - Developer Dashboard',
+  'Instrument Serif - Google Fonts',
 ]
 
 /* ---------------------------------------------------------------- layouts */
@@ -298,7 +305,7 @@ const TAB_TITLES = [
  *
  * Three rows, not four: a fourth puts the last row past the 800px the store
  * requires and clips it. Claude's usage takes the cell the timer had, so every
- * other widget keeps the footprint it was designed around — shrinking Open
+ * other widget keeps the footprint it was designed around - shrinking Open
  * tabs instead left a row of links clipped mid-height. The timer is in the
  * widget gallery and on the website's own dashboard shots.
  */
@@ -323,7 +330,7 @@ const DASHBOARD = [
  * The same dashboard with the other provider in that cell.
  *
  * Both widgets are the same size and shape, so this swaps one for the other
- * rather than rearranging anything — it exists so the light shot carries
+ * rather than rearranging anything - it exists so the light shot carries
  * ChatGPT while the two dark ones carry Claude, and neither provider is the
  * only one a reader ever sees.
  */
@@ -334,7 +341,7 @@ const DASHBOARD_CHATGPT = DASHBOARD.map((w) =>
 )
 
 /**
- * Every widget that can be shown with real content, at once — the shot that
+ * Every widget that can be shown with real content, at once - the shot that
  * answers "what do I actually get".
  *
  * Eight columns and four rows: eight is the widest the 1240px band holds
@@ -345,7 +352,7 @@ const DASHBOARD_CHATGPT = DASHBOARD.map((w) =>
  * cannot fill them and an empty card on a marketing page sells nothing:
  * Downloads needs files actually downloaded, Recently closed needs
  * `chrome.sessions` to hold something, and Most visited reads `chrome.topSites`
- * — real browsing history, which a fresh profile answers with the Web Store
+ * - real browsing history, which a fresh profile answers with the Web Store
  * and nothing else. All three appear in the copy instead.
  *
  *   greeting(4x1)      clock       weather
@@ -360,7 +367,7 @@ const GALLERY = [
   widget('g-weather', 'weather', 6, 0, 2, 1, { detail: 'compact', place: PLACE }),
 
   widget('g-notes', 'notes', 0, 1, 2, 2, {
-    text: 'Ship v1\n— store listing\n— press kit\n— a page that sells it',
+    text: 'Ship v1\n- store listing\n- press kit\n- a page that sells it',
   }),
   widget('g-todo', 'todo', 2, 1, 2, 2, { items: TASKS }),
   widget('g-feed', 'feed', 4, 1, 2, 2, { urls: [FEED_URL], limit: 4, showSource: true }),
@@ -383,14 +390,14 @@ const GALLERY = [
  * The two AI usage widgets, one provider per row, at three footprints each.
  *
  * A real read drives a signed-in claude.ai or chatgpt.com tab, which a capture
- * run has no account for — so the readings are written straight into the cache
+ * run has no account for - so the readings are written straight into the cache
  * the panel reads (`usageCache:<id>` in `chrome.storage.local`, the key
  * `api.ts` builds). The permissions still have to be genuinely granted, or the
  * panel renders its Connect prompt instead: the scene promotes them below.
  *
  * The two rows are deliberately unalike, because the providers report unalike
  * things. Claude carries a spend reading and ChatGPT two rate-limit windows,
- * so the shot covers both meter kinds as well as both brand marks — and the
+ * so the shot covers both meter kinds as well as both brand marks - and the
  * one-cell tiles show the widget picking the meter closest to its limit, which
  * is the behaviour worth seeing.
  */
@@ -421,7 +428,7 @@ const USAGE_READINGS = {
 
 // Six columns of two rows, filled edge to edge. The canvas packs upward, so
 // both 2x2 tiles sit on the top row alongside the one-cell tiles, and the two
-// medium (2x1) tiles fill the row beneath them — no staggering and no hole.
+// medium (2x1) tiles fill the row beneath them - no staggering and no hole.
 //
 //   small  medium+  claude 2x2  chatgpt 2x2
 //   small  medium+  (the same two, continued)
@@ -482,6 +489,99 @@ const CLOCK_FACES = [
  * grant alone reads nothing: a capture run has no account on either site, so
  * the figures come from `seedUsage` rather than from a real read.
  */
+/* -------------------------------------------------------------- spotify */
+
+const SPOTIFY_ORIGINS = ['https://api.spotify.com/*', 'https://accounts.spotify.com/*']
+const SPOTIFY_ART = 'https://i.scdn.co/*'
+
+/**
+ * The track the Spotify scene shows.
+ *
+ * Invented rather than taken from a real account: the capture must be the same
+ * on any machine, and a listing should not publish whatever the author happened
+ * to be playing. The cover is drawn by `gen-cover.mjs` for the same reason.
+ */
+const SPOTIFY_TRACK = {
+  name: 'Ridgelight',
+  duration_ms: 247_000,
+  progress_ms: 96_000,
+  artists: 'Elin Marr',
+  album: 'Slow Horizon',
+  device: 'Living room',
+}
+
+/**
+ * Answers the widget's API calls from fixtures.
+ *
+ * The widget reads live and keeps no cache, so unlike the usage widgets it
+ * cannot be seeded through `chrome.storage`. Intercepting instead exercises the
+ * real render path - the same parsing, layout, progress bar and colour sampling
+ * - with only the network replaced.
+ */
+const stubSpotify = async (context, cover) => {
+  const item = {
+    id: 'shot-track',
+    name: SPOTIFY_TRACK.name,
+    duration_ms: SPOTIFY_TRACK.duration_ms,
+    artists: [{ name: SPOTIFY_TRACK.artists }],
+    album: {
+      name: SPOTIFY_TRACK.album,
+      images: [{ url: 'https://i.scdn.co/image/shot-cover', width: 640 }],
+    },
+    external_urls: { spotify: 'https://open.spotify.com/track/shot' },
+  }
+
+  const json = (route, body) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      // The extension page is a different origin to the API, so the widget's
+      // fetch needs CORS on the reply as the real endpoint sends it.
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify(body),
+    })
+
+  await context.route('https://api.spotify.com/v1/me/player', (route) =>
+    json(route, {
+      is_playing: true,
+      progress_ms: SPOTIFY_TRACK.progress_ms,
+      item,
+      device: { name: SPOTIFY_TRACK.device },
+    }),
+  )
+  await context.route('https://api.spotify.com/v1/me/player/devices', (route) =>
+    json(route, { devices: [{ id: 'd1', name: SPOTIFY_TRACK.device, is_active: true }] }),
+  )
+  await context.route('https://api.spotify.com/v1/me/player/recently-played**', (route) =>
+    json(route, { items: [{ track: item }] }),
+  )
+  // `dominantColor` draws the art to a canvas and reads it back, which needs the
+  // permissive CORS header Spotify's CDN really sends. Without it the backdrop
+  // silently falls back to plain.
+  await context.route('https://i.scdn.co/image/**', (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: 'image/png',
+      headers: { 'access-control-allow-origin': '*' },
+      body: cover,
+    }),
+  )
+}
+
+/** Puts the widget past its two gates: a stored client ID and an unexpired token. */
+const seedSpotifyAuth = async (page) => {
+  await page.evaluate(async () => {
+    await chrome.storage.local.set({
+      'spotify:client-id': '00000000000000000000000000000000',
+      'spotify:tokens': {
+        accessToken: 'shot-access-token',
+        refreshToken: 'shot-refresh-token',
+        expiresAt: Date.now() + 3600_000,
+      },
+    })
+  })
+}
+
 const LIVE = {
   origins: [WEATHER_ORIGIN, CRYPTO_ORIGIN, DEMO_ORIGIN, CLAUDE_ORIGIN, CHATGPT_ORIGIN],
   permissions: ['tabs', 'bookmarks', 'history', 'downloads', 'sessions', 'scripting'],
@@ -491,7 +591,7 @@ const LIVE = {
  * Opens throwaway tabs so the Open tabs widget and palette have real rows.
  *
  * Every tab the context holds is seeded, including the blank one a persistent
- * context opens with — an unseeded tab would otherwise list itself as
+ * context opens with - an unseeded tab would otherwise list itself as
  * `about:blank`. The capture's own new tab page is opened afterwards, and the
  * scenes cap the widget's `limit` at the number seeded so it never lists itself.
  */
@@ -556,7 +656,7 @@ const seedTabsAndHistory = (titles) => async (context) => {
 
 /** Invented bookmarks, written onto the bar so the widget has rows to list. */
 const BOOKMARKS = [
-  ['Figma — Design system', 'https://figma.com/file/design-system'],
+  ['Figma - Design system', 'https://figma.com/file/design-system'],
   ['Open Meteo docs', 'https://open-meteo.com/en/docs'],
   ['Simple Icons', 'https://simpleicons.org/'],
   ['Chrome extension docs', 'https://developer.chrome.com/docs/extensions'],
@@ -571,9 +671,9 @@ const BOOKMARKS = [
  * `<title>` is set records both.
  */
 const HISTORY = [
-  'Figma — Marketing site handoff',
+  'Figma - Marketing site handoff',
   'Extension quality guidelines',
-  'CSS backdrop-filter — MDN',
+  'CSS backdrop-filter - MDN',
   'RSS 2.0 specification',
 ]
 
@@ -582,7 +682,7 @@ const HISTORY = [
  *
  * Both widgets read Chrome's own stores rather than anything in settings, so
  * they cannot be seeded through a settings patch the way notes and tasks are.
- * `history.addUrl` backdates nothing — the rows all read "just now" — so the
+ * `history.addUrl` backdates nothing - the rows all read "just now" - so the
  * scenes that use it turn `showTime` off rather than printing one timestamp
  * four times.
  */
@@ -590,7 +690,7 @@ const HISTORY = [
  * Visits a few pages so the History widget and the palette have rows.
  *
  * Visited rather than pushed through `history.addUrl`, which takes a URL and
- * nothing else — a page added that way lists under its address instead of a
+ * nothing else - a page added that way lists under its address instead of a
  * title. The scratch tab is closed again before the capture page is opened, so
  * it never reaches the Open tabs widget.
  *
@@ -611,7 +711,7 @@ const seedHistory = async (context) => {
  * Writes bookmarks onto the bar, and clears the capture's own tracks.
  *
  * The run has to open `newtab.html` to reach the extension's APIs at all, and
- * that visit lands in the profile's history — where the History widget and the
+ * that visit lands in the profile's history - where the History widget and the
  * palette would then list "Open Slate" above the seeded rows, under a raw
  * extension id. Deleting the extension's own origin from history afterwards is
  * what keeps the capture out of its own screenshots.
@@ -701,6 +801,53 @@ const scenes = [
     },
   },
   {
+    // The Spotify widget at its three footprints, playing. Website only: the
+    // store caps at five, and the scenes carrying the listing sell the page
+    // rather than one widget on it.
+    //
+    // Fixtures rather than a real account: see `stubSpotify`. Everything the
+    // frame shows - the art, the backdrop sampled from it, the scrubber, the
+    // device name - is the widget's own render of a stubbed response.
+    name: 'spotify',
+    site: 'spotify',
+    scheme: 'dark',
+    origins: [...SPOTIFY_ORIGINS, SPOTIFY_ART],
+    stubSpotify: true,
+    clip: '.canvas__grid',
+    settings: {
+      appearance: { mode: 'dark', surface: 'glass', radius: 18 },
+      background: onWallpaper({ dim: 0.55, blur: 10 }),
+      // The three footprints the widget offers, packed so the frame is subject
+      // rather than wallpaper: the wide tile spanning the top, the medium and
+      // large ones filling the row beneath it.
+      widgets: canvas(
+        [
+          // `fillArt` off here: the backdrop is meant to fill the band beside
+          // the art on `large`, but a wide tile sizes the art to its height
+          // only, so the colour shows as a rim around the cover instead.
+          widget('s-wide', 'spotify', 0, 0, 4, 1, { showArt: true, fillArt: false }),
+          widget('s-med', 'spotify', 0, 1, 2, 2, { showArt: true, fillArt: true }),
+          widget('s-lrg', 'spotify', 2, 1, 2, 2, { showArt: true, fillArt: false }),
+        ],
+        { columns: 4, margin: 14 },
+      ),
+      layout: { order: ['widgets'], viewMode: 'tabs', maxWidth: 780, paddingY: 24, gap: 12, align: 'center' },
+    },
+  },
+  {
+    // The connectors page. Spotify needs an application the user registers, so
+    // the listing is better for showing that it is walked through rather than
+    // left as a docs link - the setup is the part people are wary of.
+    name: 'connectors',
+    site: 'connectors',
+    scheme: 'dark',
+    settings: {},
+    act: async (page, id) => {
+      await page.goto(`chrome-extension://${id}/setup.html?guide=spotify`)
+      await page.waitForTimeout(900)
+    },
+  },
+  {
     // Ten faces, one grid. The clock is the widget everyone recognises, so the
     // range of it is the quickest way to show how far the rest bends.
     name: 'clock-faces',
@@ -720,7 +867,7 @@ const scenes = [
     name: 'llm-usage',
     site: 'llm-usage',
     scheme: 'dark',
-    // Genuinely granted rather than seeded — the panel gates on
+    // Genuinely granted rather than seeded - the panel gates on
     // `chrome.permissions.contains` and would draw its Connect prompt instead.
     origins: [CLAUDE_ORIGIN, CHATGPT_ORIGIN],
     permissions: ['tabs', 'scripting'],
@@ -834,7 +981,7 @@ const scenes = [
     store: true,
     scheme: 'dark',
     // Without these the palette can only ever show Tile, Command and Search
-    // rows — the badges that prove it reaches your browser would be missing.
+    // rows - the badges that prove it reaches your browser would be missing.
     ...LIVE,
     before: seedTabsAndHistory(TAB_TITLES),
     seedBrowserData: true,
@@ -950,7 +1097,7 @@ for (const scene of scenes) {
   // A scene that needs an optional host gets its own copy of the build with
   // that host promoted to a required permission. `permissions.request` needs a
   // user gesture that a capture run cannot produce, and the shipped build must
-  // keep the host optional — so the patch lives in a throwaway directory.
+  // keep the host optional - so the patch lives in a throwaway directory.
   const ext =
     scene.origins || scene.permissions
       ? patchedExtension(scene.origins ?? [], scene.permissions ?? [])
@@ -972,6 +1119,8 @@ for (const scene of scenes) {
     const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'))
     const id = new URL(worker.url()).host
 
+    if (scene.stubSpotify) await stubSpotify(context, COVER)
+
     if (scene.before) await scene.before(context)
 
     const page = await context.newPage()
@@ -985,6 +1134,13 @@ for (const scene of scenes) {
     if (scene.seedBrowserData) await seedBookmarks(page)
     if (scene.seedMedia) await seedMedia(page)
     if (scene.seedUsage) await seedUsage(page)
+    if (scene.stubSpotify) {
+      // Written before the widget mounts, then reloaded: the phase is resolved
+      // once on mount, so seeding after it would leave the Connect prompt.
+      await seedSpotifyAuth(page)
+      await page.reload()
+      await page.waitForTimeout(1200)
+    }
 
     const apply = async (patch) => {
       await page.evaluate(async (values) => {
