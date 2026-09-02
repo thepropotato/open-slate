@@ -134,19 +134,15 @@ code{
   </header>
 
   <main>
-    <h2>Unreleased</h2>
-    <h3>Added</h3>
-    <ul><li>A Spotify widget: the track, the artist, how far through it you are, and play, pause and skip. The buttons reach whichever device is actually playing — your phone or the desktop app, not only this browser — so you can change the song without going to find the tab. When nothing is playing it shows the last track you played, and pressing play picks up on the device you left off on, asking which one if there is any doubt. Connecting is one press and Spotify's own sign-in screen; starting and skipping need Spotify Premium, and seeing what is playing does not. It asks Spotify only while the tab is in front of you.</li></ul>
-
     <h2>1.2.0</h2>
     <h3>Added</h3>
-    <ul><li>Search suggestions from the engine you actually search with, on from the start. Google works straight away; any other engine asks for access to its suggestions endpoint the first time you pick it.</li></ul>
+    <ul><li>A Spotify widget: the track, the artist, how far through it you are, and play, pause and skip. The buttons reach whichever device is actually playing - your phone or the desktop app, not only this browser - so you can change the song without going to find the tab. When nothing is playing it shows the last track you played, and pressing play picks up on the device you left off on, asking which one if there is any doubt. Starting and skipping need Spotify Premium, and seeing what is playing does not. It asks Spotify only while the tab is in front of you.</li><li>A connectors page, built into the extension, for the setup that has to happen outside it. Spotify grants playback access per registered application and its free tier covers only a handful of named testers, so the widget walks you through creating your own instead: the page links to the right place, gives you the exact line to paste, and takes the client ID at the end. About two minutes, once. Nothing is registered on your behalf and no credentials ship in the extension, so the access is yours to revoke whenever you like.</li><li>Search suggestions from the engine you actually search with, on from the start. Google works straight away; any other engine asks for access to its suggestions endpoint the first time you pick it.</li></ul>
     <h3>Changed</h3>
     <ul><li>Settings open over the new tab instead of replacing it, so closing them puts you back where you were rather than on a blank page.</li><li>The themed background is painted before the first stylesheet loads, so opening a tab no longer flashes white on the way in.</li></ul>
 
     <h2>1.1.0</h2>
     <h3>Added</h3>
-    <ul><li>Claude and ChatGPT usage widgets, reading spend and rate limits from the session you are already signed in to. No API key, nothing about your conversations, and the numbers stay on your device.</li><li>A calendar that reads ICS feeds, with a day view drawn on an hour axis and the meeting link pulled out of the event.</li><li>Tasks take priorities and due dates from the line as you type it — <code>!</code> for priority, <code>@ friday</code> for a date — and filter down by either.</li></ul>
+    <ul><li>Claude and ChatGPT usage widgets, reading spend and rate limits from the session you are already signed in to. No API key, nothing about your conversations, and the numbers stay on your device.</li><li>A calendar that reads ICS feeds, with a day view drawn on an hour axis and the meeting link pulled out of the event.</li><li>Tasks take priorities and due dates from the line as you type it - <code>!</code> for priority, <code>@ friday</code> for a date - and filter down by either.</li></ul>
     <h3>Changed</h3>
     <ul><li>Anything that would destroy stored data now asks first, overwrites included.</li><li>The wallpaper in use is named rather than merely tinted, so it is tellable apart from the other slides in a slideshow.</li></ul>
     <h3>Fixed</h3>
@@ -155,7 +151,7 @@ code{
     <h2>1.0.0</h2>
     <p>First public release.</p>
     <h3>Added</h3>
-    <ul><li>A speed dial of tiles drawn with each site's own logo, in folders and across named pages, opened by position with <code>Alt+1</code>–<code>9</code>.</li><li>A widget canvas of square cells with five standard sizes, where growing or dropping a widget moves whatever was in the way at every window size.</li><li>A wallpaper engine — solid, gradient, image, video or slideshow — with dim, blur, brightness, saturation, zoom, vignette and slow drift.</li><li>A search band with bang syntax and a built-in calculator, and a command palette over tabs, bookmarks and history.</li><li>Widgets for the clock, weather, calendar, notes, tasks, a timer, feeds, crypto prices, and your own browser data.</li><li>Settings sync, and an export and import of everything stored.</li></ul>
+    <ul><li>A speed dial of tiles drawn with each site's own logo, in folders and across named pages, opened by position with <code>Alt+1</code>–<code>9</code>.</li><li>A widget canvas of square cells with five standard sizes, where growing or dropping a widget moves whatever was in the way at every window size.</li><li>A wallpaper engine - solid, gradient, image, video or slideshow - with dim, blur, brightness, saturation, zoom, vignette and slow drift.</li><li>A search band with bang syntax and a built-in calculator, and a command palette over tabs, bookmarks and history.</li><li>Widgets for the clock, weather, calendar, notes, tasks, a timer, feeds, crypto prices, and your own browser data.</li><li>Settings sync, and an export and import of everything stored. [1.2.0]: https://github.com/thepropotato/open-slate/compare/v1.1.0...HEAD [1.1.0]: https://github.com/thepropotato/open-slate/compare/v1.0.0...v1.1.0 [1.0.0]: https://github.com/thepropotato/open-slate/releases/tag/v1.0.0</li></ul>
   </main>
 
   <footer>

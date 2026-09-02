@@ -260,7 +260,7 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;heigh
 /* ----------------------------------------------------------- hero reveal */
 /* The scroll-driven swap from a stock new tab to Open Slate. Without JS the
    stage is a plain block and only the "after" image is visible, which is the
-   same picture the hero has always shown — so the scriptless page loses the
+   same picture the hero has always shown - so the scriptless page loses the
    animation and nothing else.
 
    `--breeze` is the progress of the wipe, 0 to 1, written by GSAP. Both
@@ -270,8 +270,8 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;heigh
 .stage .shots{display:grid;position:relative}
 /* Both screenshots are captured at 16:10, the frame's own ratio, so neither
    needs cropping to sit in the stack. `contain` rather than `cover` so that a
-   replacement shot at a slightly different size is letterboxed — visibly
-   wrong, and fixable — instead of silently losing its edges. */
+   replacement shot at a slightly different size is letterboxed - visibly
+   wrong, and fixable - instead of silently losing its edges. */
 .stage .shot{grid-area:1/1;width:100%;height:100%;object-fit:contain}
 
 
@@ -280,7 +280,7 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;heigh
 
    The wave is one static SVG, drawn once at load and three frames wide, and
    the sweep is a change of `mask-position` alone. Regenerating the mask image
-   per frame — which is what a progress-driven path would need — makes the
+   per frame - which is what a progress-driven path would need - makes the
    browser re-parse and re-raster an SVG on every scroll tick, and that is
    what the wipe used to stutter on. Moving a mask that is already decoded
    costs nothing by comparison. */
@@ -295,7 +295,7 @@ nav{display:flex;align-items:center;justify-content:space-between;gap:1rem;heigh
   /* A mask wider than its box positions against the overflow, not the box:
      0% pins its left edge, 100% its right. So the frame starts past the band,
      on wholly kept ground, and ends before it, on wholly cut ground, with the
-     band crossing once in between — that crossing is the reveal. */
+     band crossing once in between - that crossing is the reveal. */
   -webkit-mask-position:calc((1 - var(--breeze,0)) * 100%) 0;
   mask-position:calc((1 - var(--breeze,0)) * 100%) 0;
   will-change:mask-position;
@@ -595,7 +595,6 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
 
   <div class="proof">
     <span><b>18</b> widgets</span>
-    <span><b>23</b> search engines</span>
     <span><b>233</b> brand logos</span>
     <span><b>10</b> clock faces</span>
     <span><b>8</b> palettes</span>
@@ -749,6 +748,34 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
         API key, no second login &mdash; and a tile too small for every meter
         shows the one closest to its limit. Nothing is read until you add the
         widget and grant that one site.
+      </figcaption>
+    </figure>
+
+    <figure class="showcase">
+      <div class="bare">
+        <img src="img/spotify@2x.png" width="1400" height="1046" loading="lazy"
+             alt="Three Spotify widgets playing the same track, Ridgelight by Elin Marr, at 1:36 of 4:07 on a device named Living room. A wide one across the top with the cover beside the title and controls, and two below it at different sizes, one with the cover bled into the tile behind it.">
+      </div>
+      <figcaption>
+        What is playing, and the buttons to change it. The controls reach
+        whichever device is actually playing &mdash; a phone, the desktop app, a
+        speaker &mdash; so the song changes without going to find the tab. When
+        nothing is playing it shows the last track instead, and pressing play
+        picks up where you left off.
+      </figcaption>
+    </figure>
+
+    <figure class="showcase">
+      <div class="bare">
+        <img src="img/connectors@2x.png" width="2560" height="1600" loading="lazy"
+             alt="The connectors page, with Spotify selected in a sidebar and a numbered walkthrough beside it: open the developer dashboard, create an app, add the redirect URI shown with a copy button, tick Web API, and paste the client ID.">
+      </div>
+      <figcaption>
+        Spotify grants playback access per registered application, and its free
+        tier covers only a handful of named testers &mdash; so rather than put
+        everyone inside one registration, the widget walks you through making
+        your own. The page gives you the exact line to paste. About two minutes,
+        once, and the access is yours to revoke.
       </figcaption>
     </figure>
 
@@ -960,7 +987,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
         </div>
         <div class="card">
           <h3>Spotify signs in to Spotify</h3>
-          <p>Connecting Spotify sends you to Spotify&rsquo;s own consent screen; we never see your password. The token it gives back is stored on your device and used for nothing but reading what&rsquo;s playing and passing on the button you pressed. Disconnect from the widget and it is deleted.</p>
+          <p>Spotify grants playback access per registered app, so the widget walks you through making your own in about two minutes &mdash; the access is yours, not ours. Connecting then sends you to Spotify&rsquo;s own consent screen; we never see your password. The token it gives back is stored on your device and used for nothing but reading what&rsquo;s playing and passing on the button you pressed. Disconnect from the widget and it is deleted.</p>
         </div>
       </div>
     </div>
@@ -1270,7 +1297,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
    *
    * Everything here is additive. The markup renders the finished page on its
    * own, and this only runs once GSAP, ScrollTrigger and the "before"
-   * screenshot have all actually arrived — so a blocked CDN, a missing file or
+   * screenshot have all actually arrived - so a blocked CDN, a missing file or
    * reduced-motion each leave the original static hero in place.
    */
   ;(() => {
@@ -1288,7 +1315,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
      * union, so any layer still opaque keeps the pixel visible and the wipe
      * never lands.
      *
-     * It is entirely gradients — no path, no shape. A filled shape keeps a
+     * It is entirely gradients - no path, no shape. A filled shape keeps a
      * crisp boundary wherever its fill is still opaque, and that boundary is
      * what made the two screenshots read as two screenshots meeting. With
      * only gradients there is no geometry to see: the change is a wide,
@@ -1313,11 +1340,11 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
       // between the two screenshots. This is gradient only: every pixel of
       // the change is a fade, so there is no geometry left to see.
       //
-      // The band is wide — a full frame and a half — so at any moment a large
+      // The band is wide - a full frame and a half - so at any moment a large
       // part of the picture is a genuine blend of both shots rather than one
       // or the other. That width is what sells it as a dissolve instead of a
       // wipe with soft edges.
-      // The band is deliberately narrower than the frame — about two thirds of
+      // The band is deliberately narrower than the frame - about two thirds of
       // it. Wider than this and every part of the picture is fading at once,
       // which reads as a plain crossfade with no direction to it; narrower and
       // the leading edge starts to look like an edge again. At this width
@@ -1401,7 +1428,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
       // The wipe, held back just long enough for the push to establish the
       // shot. `inOut`
       // gives it a run-up and a settle, so the edge is never travelling at a
-      // constant rate — which is what reads as mechanical. It finishes with
+      // constant rate - which is what reads as mechanical. It finishes with
       // the timeline: the pin ends on the wipe landing, not on a spare beat
       // of motion after it.
       tl.to({ p: 0 }, {
@@ -1478,7 +1505,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
   /**
    * Animated open/close for the FAQ. The browser flips the `open` attribute
    * instantly, which would remove the panel from flow before it could
-   * collapse — so closing is intercepted here: `open` is held on until the
+   * collapse - so closing is intercepted here: `open` is held on until the
    * slide finishes, then cleared. Opening needs no help, since the attribute
    * lands before the transition starts.
    */
@@ -1509,7 +1536,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
 
   /**
    * Reveal on scroll. The hidden starting state comes from .reveal-ready,
-   * set in the head, so without JS — or without IntersectionObserver — the
+   * set in the head, so without JS - or without IntersectionObserver - the
    * page stays fully readable. Siblings that share a container are staggered
    * so a group arrives as a sequence rather than all at once.
    */
@@ -1540,7 +1567,7 @@ footer{border-top:1px solid var(--border);padding:2.375rem 0 3.5rem;font-size:.8
     for (const el of reveals) io.observe(el)
 
     /**
-     * Observes a subtree revealed after this ran — the contributors section is
+     * Observes a subtree revealed after this ran - the contributors section is
      * hidden until GitHub answers, so its rows were never measurable here and
      * would otherwise stay at their hidden starting state forever.
      */

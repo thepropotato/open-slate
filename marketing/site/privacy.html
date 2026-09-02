@@ -117,8 +117,8 @@ footer a:hover{color:var(--accent)}
 
   <main>
     <div class="callout">
-      <p><strong>The short version.</strong> Everything Open Slate stores — your
-      tiles, settings, notes, tasks and wallpapers — stays on your own device. The
+      <p><strong>The short version.</strong> Everything Open Slate stores - your
+      tiles, settings, notes, tasks and wallpapers - stays on your own device. The
       extension has no server, no analytics and no content scripts, so it cannot
       see the sites you visit. The only network requests it ever makes are for
       widgets you added yourself, and each one needs a permission you granted.</p>
@@ -211,7 +211,14 @@ footer a:hover{color:var(--accent)}
     </table>
 
     <h2>On the Spotify widget</h2>
-    <p>Connecting Spotify opens Spotify's own consent screen, in a window the
+    <p>Spotify grants this kind of access per registered application, and its free
+    tier covers only a handful of named testers unless a company applies for a
+    commercial allowance. Rather than put everyone inside one registration we do
+    not qualify for, the widget walks you through creating your own, in a page
+    built into the extension. The client ID it produces is stored on your device
+    and sent to nobody but Spotify. The page never asks for a client secret,
+    because the sign-in method used here does not need one.</p>
+    <p>Connecting then opens Spotify's own consent screen, in a window the
     browser manages. We never see your Spotify password, and you choose there
     what the widget is allowed to do.</p>
     <p>Spotify hands back a token, which is stored on your device and used for
@@ -219,7 +226,8 @@ footer a:hover{color:var(--accent)}
     your account so playback can resume on one, and passing on the button you
     pressed. It goes to Spotify and nowhere else. There is no client secret in
     the extension, and no server of ours in between. Disconnecting from the
-    widget deletes the token.</p>
+    widget deletes the token, and the access stays yours to revoke from your own
+    Spotify account at any time.</p>
     <p>The widget asks Spotify only while the new tab is open in front of you; a
     tab sitting in the background makes no requests. Controlling playback is a
     Spotify Premium feature, and it reaches whichever device is actually playing
@@ -243,13 +251,13 @@ footer a:hover{color:var(--accent)}
 
     <h2>On location</h2>
     <p>Open Slate never asks for your location and never calls the browser's
-    geolocation API — the <code>geolocation</code> permission is not declared at
+    geolocation API - the <code>geolocation</code> permission is not declared at
     all. To place itself, the weather widget performs a single city-level lookup
     based on your IP address, using one of the two services listed above. Those
     services see your IP address, as any website you visit does; what comes back
     is an approximate city, which is stored locally and never sent anywhere.</p>
     <p>If you would rather not make that lookup, the widget falls back to your
-    browser's timezone, and you can always type a town in by hand — which is also
+    browser's timezone, and you can always type a town in by hand - which is also
     how a wrongly detected place is corrected.</p>
 
     <h2>Search</h2>

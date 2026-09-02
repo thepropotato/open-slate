@@ -5,23 +5,25 @@ Notable changes to Open Slate, newest first. Versions follow
 GitHub release, the website and the store listing's "What's new" all read from,
 so it is written for the people who use the extension rather than for the diff.
 
-## [Unreleased]
-
-### Added
-
-- A Spotify widget: the track, the artist, how far through it you are, and play,
-  pause and skip. The buttons reach whichever device is actually playing — your
-  phone or the desktop app, not only this browser — so you can change the song
-  without going to find the tab. When nothing is playing it shows the last track
-  you played, and pressing play picks up on the device you left off on, asking
-  which one if there is any doubt. Connecting is one press and Spotify's own
-  sign-in screen; starting and skipping need Spotify Premium, and seeing what is
-  playing does not. It asks Spotify only while the tab is in front of you.
-
 ## [1.2.0]
 
 ### Added
 
+- A Spotify widget: the track, the artist, how far through it you are, and play,
+  pause and skip. The buttons reach whichever device is actually playing - your
+  phone or the desktop app, not only this browser - so you can change the song
+  without going to find the tab. When nothing is playing it shows the last track
+  you played, and pressing play picks up on the device you left off on, asking
+  which one if there is any doubt. Starting and skipping need Spotify Premium,
+  and seeing what is playing does not. It asks Spotify only while the tab is in
+  front of you.
+- A connectors page, built into the extension, for the setup that has to happen
+  outside it. Spotify grants playback access per registered application and its
+  free tier covers only a handful of named testers, so the widget walks you
+  through creating your own instead: the page links to the right place, gives you
+  the exact line to paste, and takes the client ID at the end. About two minutes,
+  once. Nothing is registered on your behalf and no credentials ship in the
+  extension, so the access is yours to revoke whenever you like.
 - Search suggestions from the engine you actually search with, on from the
   start. Google works straight away; any other engine asks for access to its
   suggestions endpoint the first time you pick it.
@@ -42,8 +44,8 @@ so it is written for the people who use the extension rather than for the diff.
   conversations, and the numbers stay on your device.
 - A calendar that reads ICS feeds, with a day view drawn on an hour axis and the
   meeting link pulled out of the event.
-- Tasks take priorities and due dates from the line as you type it — `!` for
-  priority, `@ friday` for a date — and filter down by either.
+- Tasks take priorities and due dates from the line as you type it - `!` for
+  priority, `@ friday` for a date - and filter down by either.
 
 ### Changed
 
@@ -68,7 +70,7 @@ First public release.
   named pages, opened by position with `Alt+1`–`9`.
 - A widget canvas of square cells with five standard sizes, where growing or
   dropping a widget moves whatever was in the way at every window size.
-- A wallpaper engine — solid, gradient, image, video or slideshow — with dim,
+- A wallpaper engine - solid, gradient, image, video or slideshow - with dim,
   blur, brightness, saturation, zoom, vignette and slow drift.
 - A search band with bang syntax and a built-in calculator, and a command palette
   over tabs, bookmarks and history.
@@ -76,7 +78,6 @@ First public release.
   prices, and your own browser data.
 - Settings sync, and an export and import of everything stored.
 
-[Unreleased]: https://github.com/thepropotato/open-slate/compare/v1.2.0...HEAD
-[1.2.0]: https://github.com/thepropotato/open-slate/compare/v1.1.0...v1.2.0
+[1.2.0]: https://github.com/thepropotato/open-slate/compare/v1.1.0...HEAD
 [1.1.0]: https://github.com/thepropotato/open-slate/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/thepropotato/open-slate/releases/tag/v1.0.0
