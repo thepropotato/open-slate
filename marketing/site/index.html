@@ -344,7 +344,6 @@ section{padding:var(--gap) 0}
 /* ---------------------------------------------------------------- split */
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:clamp(2rem,5vw,4rem);align-items:center}
 .split.flip .copy{order:2}
-.split + .split{margin-top:var(--gap)}
 .copy h3{margin-bottom:.875rem}
 .copy p{font-size:1rem;line-height:1.66}
 .copy ul{list-style:none;margin-top:1.25rem;display:flex;flex-direction:column;gap:.7rem}
@@ -359,6 +358,13 @@ figure figcaption{
   max-width:70ch;line-height:1.55;
 }
 .showcase{margin-top:clamp(1.75rem,4vw,2.5rem)}
+
+/* One rhythm between the blocks a section is built from, whichever two happen
+   to be adjacent. Pairing the types by hand left every split/showcase
+   transition at zero, so a figcaption ran into the next heading. */
+.split + .split,
+.split + .showcase,
+.showcase + .split,
 .showcase + .showcase{margin-top:var(--gap)}
 
 /* ----------------------------------------------------------- plate strip */
