@@ -71,10 +71,10 @@ stay mounted, so a running timer and a half-typed note survive the switch.
 **Tiles in folders and across pages.** Drag a tile onto a folder in Arrange mode
 to file it away; split tiles across named pages with a dot or tab switcher.
 
-**Search.** 23 engines with bang shortcuts (`!yt cats`, or `cats !yt`), address
+**Search.** Searches run on the browser's own default engine, with address
 detection so typing a host navigates, an inline calculator, and suggestions drawn
-from your own tabs, tiles, bookmarks and history, with the search engine's own
-completions alongside them.
+from your own tabs, tiles, bookmarks and history, with web completions alongside
+them.
 
 **Command palette.** `Cmd`/`Ctrl`+`K` over tabs, tiles, bookmarks, history and
 settings commands, with a web search as the fallback.

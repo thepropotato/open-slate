@@ -61,11 +61,11 @@ phone, the desktop app, a speaker — not just this browser. Connecting is one
 press and Spotify's own consent screen; controlling playback needs Premium.
 
 SEARCH AND A COMMAND PALETTE
-23 search engines with bang shortcuts (!yt cats), address detection so typing a
-host navigates, and an inline calculator. Cmd/Ctrl+K searches your tabs, tiles,
-bookmarks, history and every settings command at once. Suggestions come from
-your own data, with the engine's own completions alongside them — turn those off
-and the box sends nothing anywhere as you type.
+Searches run on your browser's own default engine, with address detection so
+typing a host navigates, and an inline calculator. Cmd/Ctrl+K searches your tabs,
+tiles, bookmarks, history and every settings command at once. Suggestions come
+from your own data, with web completions alongside them — turn those off and the
+box sends nothing anywhere as you type.
 
 MAKE IT YOURS
 Eight palettes, automatic light and dark, a corner radius from fully round to

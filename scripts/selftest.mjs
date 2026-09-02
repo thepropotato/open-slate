@@ -46,16 +46,14 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 /* ---------------------------------------------------------- web suggestions */
 
 {
-  const { parseTerms, hasWebSuggestions } = await load('features/search/suggest.ts')
+  const { parseTerms } = await load('features/search/suggest.ts')
   const { calculate } = await load('features/search/calculator.ts')
-  const { asDestination } = await load('features/search/engines.ts')
+  const { asDestination } = await load('features/search/destination.ts')
 
   check('suggest: opensearch payload', parseTerms(['ca', ['cat', 'car']]), ['cat', 'car'])
   check('suggest: non-string entries dropped', parseTerms(['a', ['ok', 3, null]]), ['ok'])
   check('suggest: malformed payload', parseTerms({ nope: true }), [])
   check('suggest: missing completions', parseTerms(['solo']), [])
-  truthy('suggest: google is supported', hasWebSuggestions('google'))
-  check('suggest: claude has no endpoint', hasWebSuggestions('claude'), false)
 
   // The SearchBar gate: arithmetic and addresses must never reach the network.
   const asks = (value) => Boolean(!calculate(value) && !asDestination(value) && value.length > 1)
@@ -66,19 +64,10 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('suggest: a bare number is sent', asks('2024'), true)
 }
 
-/* ------------------------------------------------------- engines and bangs */
+/* ------------------------------------------------ addresses versus queries */
 
 {
-  const { parseQuery, asDestination, buildSearchUrl } = await load('features/search/engines.ts')
-
-  check('bang: leading', parseQuery('!yt cats', 'google', true).engine.id, 'youtube')
-  check('bang: leading query survives', parseQuery('!yt cats', 'google', true).query, 'cats')
-  check('bang: trailing', parseQuery('cats !yt', 'google', true).engine.id, 'youtube')
-  check('bang: trailing query survives', parseQuery('cats !yt', 'google', true).query, 'cats')
-  check('bang: bare goes to the home page', parseQuery('!gh', 'google', true).query, '')
-  check('bang: unknown falls back', parseQuery('!zz cats', 'google', true).engine.id, 'google')
-  check('bang: disabled is ignored', parseQuery('!yt cats', 'google', false).engine.id, 'google')
-  check('bang: exclamation in text', parseQuery('hello! world', 'google', true).engine.id, 'google')
+  const { asDestination } = await load('features/search/destination.ts')
 
   check('url: bare host', asDestination('github.com'), 'https://github.com')
   check('url: with path', asDestination('github.com/anthropics'), 'https://github.com/anthropics')
@@ -87,12 +76,8 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('url: a sentence is not a url', asDestination('what is a github'), null)
   check('url: a single word is not a url', asDestination('github'), null)
   check('url: no bare tld', asDestination('foo.'), null)
-
-  check(
-    'search: url encoding',
-    buildSearchUrl(parseQuery('a b&c', 'duckduckgo', true)),
-    'https://duckduckgo.com/?q=a%20b%26c',
-  )
+  // A bang is no longer special: the browser's default engine gets it verbatim.
+  check('url: a bang is not a url', asDestination('!yt cats'), null)
 }
 
 /* ------------------------------------------------------- settings and paths */
@@ -134,9 +119,9 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   )
   // A section that fails validation must not take the whole config with it.
   // This deliberately triggers the "[settings] falling back to defaults" warning.
-  const salvaged = migrate({ appearance: { radius: 'purple' }, search: { engineId: 'bing' } })
+  const salvaged = migrate({ appearance: { radius: 'purple' }, search: { placeholder: 'Find' } })
   check('migrate: invalid section falls back', salvaged.appearance.radius, 16)
-  check('migrate: valid sections survive', salvaged.search.engineId, 'bing')
+  check('migrate: valid sections survive', salvaged.search.placeholder, 'Find')
 }
 
 /* ----------------------------------------------------------- theme codes */

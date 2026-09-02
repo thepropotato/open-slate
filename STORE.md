@@ -24,11 +24,12 @@ remote code, and no analytics.
 | `favicon` | Draws each tile and list row with the site's own icon, read from Chrome's local favicon cache rather than fetched from a third party. |
 | `alarms` | Advances the wallpaper slideshow on a schedule while no tab is open. |
 | `topSites` | Seeds the tile grid on first run, and powers the "Most visited" widget. |
+| `search` | Runs a query on whatever search engine the browser is already set to use. Chrome exposes no way to read which engine that is, so this only dispatches the search. |
 | `identity` | Runs Spotify's OAuth consent screen in a browser-managed window, so the extension never handles the user's Spotify password. Only used when the Spotify widget is connected. |
 
 | Host permission | Why |
 | --- | --- |
-| `https://suggestqueries.google.com/*` | Google's public autocomplete endpoint, for search-box completions. Required rather than optional because Google is the default engine and completions are on by default, so making it optional would put a permission prompt in front of the first search a user ever types. See below. |
+| `https://suggestqueries.google.com/*` | A public autocomplete endpoint, for search-box completions. Required rather than optional because completions are on by default, so making it optional would put a permission prompt in front of the first search a user ever types. See below. |
 
 ## Optional permissions, requested only on use
 
@@ -128,15 +129,15 @@ tab makes no requests.
 ### On search suggestions and the engine endpoints
 
 The search box has always drawn suggestions from the user's own tabs, tiles,
-bookmarks and history. It now also asks the chosen engine for its completions,
+bookmarks and history. It now also fetches web completions,
 which is the one place in the extension where something typed leaves the device
 before the user has committed to a search.
 
 `suggestqueries.google.com` is the only **required** host permission, because
-Google is the default engine and completions are on by default. Declaring it
-optional would mean a permission prompt interrupting the first search a user
-ever types. Every other engine's endpoint is optional and requested the first
-time that engine is selected.
+completions are on by default. Declaring it optional would mean a permission
+prompt interrupting the first search a user ever types. Searches themselves run
+on the browser's own default engine via the `search` permission, which sends
+nothing to a host of our choosing.
 
 What keeps this narrow:
 
