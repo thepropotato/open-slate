@@ -199,18 +199,14 @@ export const Layout = z.object({
 
 export const Search = z.object({
   enabled: z.boolean().default(true),
-  engineId: z.string().default('google'),
-  showEnginePicker: z.boolean().default(false),
   autofocus: z.boolean().default(false),
   placeholder: z.string().default('Search the web'),
   width: z.number().min(240).max(1200).default(680),
   height: z.number().min(36).max(88).default(56),
-  // `!yt cats` style prefixes that redirect to another engine.
-  bangs: z.boolean().default(true),
   // Evaluate arithmetic typed into the box before searching.
   calculator: z.boolean().default(true),
   suggestions: z.boolean().default(true),
-  // Completions from the chosen engine. Unlike the above, this sends the query out.
+  // Completions as you type. Unlike the above, this sends the query out.
   webSuggestions: z.boolean().default(true),
 }).prefault({})
 

@@ -1,4 +1,3 @@
-import { searchEngines } from '@/features/search/engines'
 import { SuggestAccess } from '../SuggestAccess'
 import type { Section } from '../types'
 
@@ -11,21 +10,6 @@ export const searchSection: Section = {
       id: 'general',
       fields: [
         { path: 'search.enabled', label: 'Show the search box', control: { kind: 'toggle' } },
-        {
-          path: 'search.engineId',
-          label: 'Default engine',
-          control: {
-            kind: 'select',
-            options: searchEngines.map((engine) => ({ value: engine.id, label: engine.name })),
-          },
-          when: (s) => s.search.enabled,
-        },
-        {
-          path: 'search.showEnginePicker',
-          label: 'Engine picker',
-          control: { kind: 'toggle' },
-          when: (s) => s.search.enabled,
-        },
         {
           path: 'search.autofocus',
           label: 'Focus on open',
@@ -47,12 +31,6 @@ export const searchSection: Section = {
       when: (s) => s.search.enabled,
       fields: [
         {
-          path: 'search.bangs',
-          label: 'Bang shortcuts',
-          help: 'Typing "!yt cats" searches YouTube. Works as a suffix too.',
-          control: { kind: 'toggle' },
-        },
-        {
           path: 'search.calculator',
           label: 'Calculator',
           help: 'Evaluates arithmetic as you type. Enter copies the result.',
@@ -66,12 +44,12 @@ export const searchSection: Section = {
         },
         {
           path: 'search.webSuggestions',
-          label: 'Suggestions from the search engine',
-          help: 'Completions as you type. This sends what you type to your chosen engine. Arithmetic and addresses are never sent.',
+          label: 'Suggestions from the web',
+          help: 'Completions as you type. This sends what you type to a completions service. Arithmetic and addresses are never sent.',
           control: { kind: 'toggle' },
         },
         {
-          label: 'Engine access',
+          label: 'Suggestions access',
           control: { kind: 'custom', render: () => <SuggestAccess />, bare: true },
           when: (s) => s.search.enabled && s.search.webSuggestions,
         },
