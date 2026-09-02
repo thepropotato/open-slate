@@ -13,20 +13,29 @@ import './SettingsOverlay.css'
 export function SettingsOverlay({ onClose }: { onClose: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
 
+  // Read through a ref: the caller passes a fresh closure on every render, and
+  // this effect closes the dialog on cleanup, so depending on it would blink the
+  // panel shut and open again on each edit.
+  const close = useRef(onClose)
+  useEffect(() => {
+    close.current = onClose
+  }, [onClose])
+
+  // Opens once, on mount, and closes once, on unmount.
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
     dialog.showModal()
     const onCancel = (event: Event) => {
       event.preventDefault()
-      onClose()
+      close.current()
     }
     dialog.addEventListener('cancel', onCancel)
     return () => {
       dialog.removeEventListener('cancel', onCancel)
       dialog.close()
     }
-  }, [onClose])
+  }, [])
 
   return (
     <dialog

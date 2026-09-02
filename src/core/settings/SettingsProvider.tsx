@@ -55,18 +55,36 @@ export function SettingsProvider({
   const [draft, setDraft] = useState<Settings | null>(null)
   // Our own last write, so we can ignore the echo.
   const lastWritten = useRef<string>('')
+  // Mirrors `settings` so a staged write can read what is saved without making
+  // `actions` depend on it. Kept in step by `writeSettings`, the single writer.
+  const savedRef = useRef<Settings | null>(null)
+
+  /**
+   * The only place `settings` is set, so the ref can never drift from the state.
+   * The next value is resolved against the ref rather than inside the updater:
+   * React replays updaters, and anything but a pure one is applied more than once.
+   */
+  const writeSettings = useCallback(
+    (next: Settings | null | ((current: Settings | null) => Settings | null)) => {
+      const value = typeof next === 'function' ? next(savedRef.current) : next
+      savedRef.current = value
+      setSettings(value)
+      return value
+    },
+    [],
+  )
 
   useEffect(() => {
     let alive = true
     void loadSettings().then((loaded) => {
       if (!alive) return
       lastWritten.current = JSON.stringify(loaded)
-      setSettings(loaded)
+      writeSettings(loaded)
     })
     return () => {
       alive = false
     }
-  }, [])
+  }, [writeSettings])
 
   // Keep every open tab and the options page in step.
   useEffect(() => {
@@ -74,16 +92,14 @@ export function SettingsProvider({
       const serialised = JSON.stringify(incoming)
       if (serialised === lastWritten.current) return
       lastWritten.current = serialised
-      setSettings((previous) => {
-        // Rebase the draft so an incoming change does not eat edits in progress.
-        setDraft((current) =>
-          current && previous ? rebase(previous, current, incoming) : current,
-        )
-        return incoming
-      })
+      // Read the outgoing values before replacing them; the rebase needs both.
+      const previous = savedRef.current
+      writeSettings(incoming)
+      // Rebase the draft so an incoming change does not eat edits in progress.
+      setDraft((current) => (current && previous ? rebase(previous, current, incoming) : current))
     })
     return unsubscribe
-  }, [])
+  }, [writeSettings])
 
   // Never lose a debounced write when the tab goes away.
   useEffect(() => {
@@ -99,17 +115,17 @@ export function SettingsProvider({
 
   const commit = useCallback((next: Settings) => {
     lastWritten.current = JSON.stringify(next)
-    setSettings(next)
+    writeSettings(next)
     saveSettings(next)
     // A wholesale replacement is the new truth; a draft against the old one is meaningless.
     setDraft(null)
-  }, [])
+  }, [writeSettings])
 
   const actions = useMemo<SettingsActions>(
     () => ({
       // A whole-object recipe says nothing about which paths it touches, so it always commits.
       update: (recipe) =>
-        setSettings((current) => {
+        writeSettings((current) => {
           if (!current) return current
           const next = recipe(current)
           lastWritten.current = JSON.stringify(next)
@@ -118,19 +134,17 @@ export function SettingsProvider({
         }),
       set: (path, value) => {
         if (isStagedPath(path)) {
-          // The updater form is the only way to read saved settings without making
-          // `actions` depend on them; it must stay referentially stable.
-          setSettings((saved) => {
-            setDraft((current) => {
-              const base = current ?? saved
-              if (!base) return current
-              return setPath(base, path, value)
-            })
-            return saved
+          // Read the saved values off the ref, never from inside a `setSettings`
+          // updater: React replays those, and an enqueued `setDraft` would be
+          // replayed with them, re-applying a value the reader had moved past.
+          setDraft((current) => {
+            const base = current ?? savedRef.current
+            if (!base) return current
+            return setPath(base, path, value)
           })
           return
         }
-        setSettings((current) => {
+        writeSettings((current) => {
           if (!current) return current
           const next = setPath(current, path, value)
           lastWritten.current = JSON.stringify(next)
@@ -141,12 +155,12 @@ export function SettingsProvider({
       reset: async () => {
         const fresh = await resetSettings()
         lastWritten.current = JSON.stringify(fresh)
-        setSettings(fresh)
+        writeSettings(fresh)
         setDraft(null)
       },
       replace: commit,
     }),
-    [commit],
+    [commit, writeSettings],
   )
 
   const effective = draft ?? settings
@@ -163,7 +177,7 @@ export function SettingsProvider({
       save: () => {
         if (!draft) return
         lastWritten.current = JSON.stringify(draft)
-        setSettings(draft)
+        writeSettings(draft)
         saveSettings(draft)
         // Flush rather than wait out the debounce, so other tabs see it now.
         void flushSettings()
@@ -177,7 +191,7 @@ export function SettingsProvider({
           return stagedDiff(settings, next).length === 0 ? null : next
         }),
     }),
-    [changed, draft, settings],
+    [changed, draft, settings, writeSettings],
   )
 
   if (!settings || !effective) return <>{fallback}</>
@@ -211,7 +225,7 @@ export function useSettings(): Settings {
   return value
 }
 
-/** Saved values with any unsaved edits applied — what the settings UI edits. */
+/** Saved values with any unsaved edits applied - what the settings UI edits. */
 export function useDraftSettings(): Settings {
   const value = useContext(DraftContext)
   if (!value) throw new Error('useDraftSettings must be used inside <SettingsProvider>')

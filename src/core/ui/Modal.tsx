@@ -18,20 +18,29 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDialogElement>(null)
 
+  // Read through a ref: callers pass a fresh closure on every render, and this
+  // effect closes the dialog on cleanup, so depending on it would blink the
+  // modal shut and open again whenever the page behind it re-renders.
+  const close = useRef(onClose)
+  useEffect(() => {
+    close.current = onClose
+  }, [onClose])
+
+  // Opens once, on mount, and closes once, on unmount.
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
     dialog.showModal()
     const onCancel = (event: Event) => {
       event.preventDefault()
-      onClose()
+      close.current()
     }
     dialog.addEventListener('cancel', onCancel)
     return () => {
       dialog.removeEventListener('cancel', onCancel)
       dialog.close()
     }
-  }, [onClose])
+  }, [])
 
   return (
     <dialog

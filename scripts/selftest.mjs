@@ -347,8 +347,8 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 
   /*
    * Narrowing has to carry the reader's arrangement down rather than invent a
-   * new one. A layout clamped into fewer columns keeps its reading order —
-   * top row first, then left to right — which is what makes the narrow view
+   * new one. A layout clamped into fewer columns keeps its reading order -
+   * top row first, then left to right - which is what makes the narrow view
    * recognisably the same dashboard rather than the same widgets reshuffled.
    */
   {
@@ -382,7 +382,7 @@ const truthy = (name, value) => check(name, Boolean(value), true)
    *
    * A narrow window renders a stack, and renders it from the stored layout
    * every time rather than writing it back. So no sequence of resizes changes
-   * what is on disk, and widening always returns the arrangement intact — the
+   * what is on disk, and widening always returns the arrangement intact - the
    * failure that used to need a reload, and survived one.
    */
   {
@@ -888,6 +888,7 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 {
   const { isStagedPath, stagedDiff } = await load('core/settings/staged.ts')
   const { Settings } = await load('core/settings/schema.ts')
+  const { setPath } = await load('core/util/path.ts')
 
   // Knobs are held for confirmation; content is written straight through.
   truthy('staged: a radius is staged', isStagedPath('appearance.radius'))
@@ -907,6 +908,41 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 
   const base = Settings.parse({})
   check('diff: nothing changed', stagedDiff(base, base), [])
+
+  /*
+   * A staged write must be a pure state updater. React replays the updater queue,
+   * so a staged write that enqueues a *second* update from inside another one is
+   * replayed too, re-applying a value the reader has already moved past: dragging
+   * a slider down would snap back up to the highest value visited.
+   *
+   * `apply` is the queue React keeps, drained twice to stand for that replay.
+   */
+  {
+    const saved = Settings.parse({})
+    const write = (queue, value) =>
+      queue.push((current) => setPath(current ?? saved, 'widgets.columns', value))
+
+    // What a staged `set` must be: one draft updater per call, and no side effect
+    // that a replay could run again.
+    const pure = []
+    for (const value of [10, 9, 8, 7]) write(pure, value)
+
+    const drain = (queue) => queue.reduce((draft, step) => step(draft), null)
+    check('staged: a drag ends on the last value', drain(pure).widgets.columns, 7)
+
+    // The replay: React runs the queue again from the base state. A pure queue
+    // lands on the same value; the old nested form re-enqueued each stale write.
+    const replayed = [...pure, ...pure]
+    check('staged: a replayed queue lands on the same value', drain(replayed).widgets.columns, 7)
+
+    // The bug, stated directly: had the writes been re-enqueued in their original
+    // order after the newest one, the highest value visited would win.
+    const stale = [...pure.slice(1), pure[0]]
+    truthy(
+      'staged: a stale replay would resurrect an old value',
+      drain(stale).widgets.columns === 10,
+    )
+  }
 
   const radius = { ...base, appearance: { ...base.appearance, radius: 4 } }
   check('diff: one knob', stagedDiff(base, radius), ['appearance.radius'])
