@@ -126,7 +126,7 @@ function SwitchablePane({
   name: 'tiles' | 'widgets'
   active: boolean
   tabbed: boolean
-  /** The topmost band is not a snap target — see the stylesheet. */
+  /** The topmost band is not a snap target - see the stylesheet. */
   first: boolean
   children: ReactNode
 }) {

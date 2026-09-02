@@ -4,7 +4,7 @@ import { Button } from '@/core/ui/controls'
 
 /**
  * Chrome only prompts for a host permission on a user gesture, so an ungranted
- * suggest endpoint needs this button — typing alone can never raise the prompt.
+ * suggest endpoint needs this button - typing alone can never raise the prompt.
  */
 export function SuggestAccess() {
   const granted = useAsyncValue('suggest-access', hasSuggestAccess)

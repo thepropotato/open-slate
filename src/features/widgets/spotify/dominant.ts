@@ -2,8 +2,8 @@
  * The dominant colour of a piece of cover art, for the backdrop behind it.
  *
  * Spotify's CDN sends `access-control-allow-origin: *`, so the image can be
- * drawn to a canvas and read back. Anything else — a cross-origin failure, a
- * decode error — resolves to `null` and the caller keeps its plain background.
+ * drawn to a canvas and read back. Anything else - a cross-origin failure, a
+ * decode error - resolves to `null` and the caller keeps its plain background.
  */
 
 // Sampling a thumbnail rather than the full 640px art: the dominant colour of a

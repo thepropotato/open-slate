@@ -73,7 +73,7 @@ function toTrack(item: z.infer<typeof ItemSchema>): Track {
 /**
  * The current playback state, or null when nothing is playing.
  *
- * Spotify answers 204 with an empty body when the account has no active device —
+ * Spotify answers 204 with an empty body when the account has no active device -
  * a normal state, not an error, so it reads back as "nothing playing" rather
  * than throwing.
  */
@@ -154,7 +154,7 @@ export async function fetchDevices(): Promise<Device[]> {
 
 /**
  * Moves the session onto `deviceId` and starts it playing. Used to resume when
- * nothing is active, which a bare play call cannot do — it needs a device to
+ * nothing is active, which a bare play call cannot do - it needs a device to
  * act on.
  */
 export async function transferTo(deviceId: string): Promise<void> {
@@ -189,7 +189,7 @@ export class NoDeviceError extends Error {
 }
 
 /**
- * Drives whichever device currently holds the account's session — the desktop
+ * Drives whichever device currently holds the account's session - the desktop
  * app or a phone, not just a browser tab.
  *
  * A play with nothing active answers 404. Rather than surfacing that, the last

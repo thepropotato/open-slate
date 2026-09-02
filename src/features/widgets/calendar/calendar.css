@@ -72,7 +72,7 @@
 }
 
 /*
- * Square days at any widget shape. A cell cannot use `aspect-ratio: 1` — a wide
+ * Square days at any widget shape. A cell cannot use `aspect-ratio: 1` - a wide
  * widget would then set a row height it has no room for and drop the last weeks.
  * The whole grid carries the month's proportions instead: width is the definite
  * input, aspect-ratio derives the height, and the max-* caps preserve the ratio.
@@ -233,7 +233,7 @@
 /* Dots */
 
 /*
- * Positioned, so the dots add nothing to a cell's height — the square tracks are
+ * Positioned, so the dots add nothing to a cell's height - the square tracks are
  * exact. Anchored to the disc's centre, not the cell floor, so the gap is
  * constant; the gap is in `em` so it scales with the number it belongs to.
  */
@@ -401,7 +401,7 @@
   /*
    * Half a line at each end: hour labels centre on their lines, so the first and
    * last overhang and would otherwise clip. The height is set inline from the
-   * hour count — the axis scrolls rather than compressing, so block height means duration.
+   * hour count - the axis scrolls rather than compressing, so block height means duration.
    */
   margin-block: 0.6em;
   /* Reserved once here so the blocks' percentage offsets resolve against the room left. */

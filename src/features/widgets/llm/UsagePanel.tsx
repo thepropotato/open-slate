@@ -246,7 +246,7 @@ function SpendMeter({
       style: 'currency',
       currency: spend.currency,
       // Plain "$", not "US$": outside en-US the default disambiguates USD, which
-      // the tile does not need — the currency is repeated in the denominator.
+      // the tile does not need - the currency is repeated in the denominator.
       ...(NARROW_SYMBOL ? { currencyDisplay: 'narrowSymbol' as const } : {}),
       minimumFractionDigits: cents ? 2 : 0,
       maximumFractionDigits: cents ? 2 : 0,

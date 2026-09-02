@@ -1,4 +1,4 @@
-/* The middle column: nav, preview, controls — so a slider and its effect share a glance. */
+/* The middle column: nav, preview, controls - so a slider and its effect share a glance. */
 .preview {
   display: flex;
   flex-direction: column;
@@ -6,7 +6,7 @@
   min-height: 0;
   /*
    * Right edge only. The nav already draws the line on the left, and a column
-   * that draws both puts two 1px borders on the same seam — which reads as one
+   * that draws both puts two 1px borders on the same seam - which reads as one
    * noticeably heavier rule than every other divider on the page.
    */
   border-right: 1px solid var(--line);
@@ -121,7 +121,7 @@
 }
 
 /*
- * Zoomed: the frame overflows and becomes pannable. Centring must go — a centred
+ * Zoomed: the frame overflows and becomes pannable. Centring must go - a centred
  * overflowing flex child spills past the scroll origin, which is unreachable.
  */
 .preview__host[data-zoomed='true'] {
@@ -140,8 +140,8 @@
  * Room at both ends of the scroll range.
  *
  * The padding belongs to the *content*, not the scroll port. A scroll container
- * lays its own padding out on the start edges only — the end padding is not part
- * of the scrollable overflow area — so `padding` on the host gives the frame a
+ * lays its own padding out on the start edges only - the end padding is not part
+ * of the scrollable overflow area - so `padding` on the host gives the frame a
  * gap on the left and top that has no counterpart on the right and bottom. A
  * pseudo-element spacer does not fix it either: as a flex item it adds room on
  * the main axis alone, and it adds that room *on top of* the host's own start

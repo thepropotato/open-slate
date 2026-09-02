@@ -44,7 +44,7 @@ export function parseDue(phrase: string, today: number): number | null {
   if (raw === 'tomorrow' || raw === 'tom' || raw === 'tmr') return addDays(today, 1)
   if (raw === 'yesterday') return addDays(today, -1)
 
-  // `3d`, `2w`, `1m` — a span from today.
+  // `3d`, `2w`, `1m` - a span from today.
   const span = /^(\d{1,3})\s*(d|day|days|w|week|weeks|m|month|months)$/.exec(raw)
   if (span) {
     const count = Number(span[1])
@@ -68,7 +68,7 @@ export function parseDue(phrase: string, today: number): number | null {
     }
   }
 
-  // `25/12`, `25-12-2026` — day first; a missing year means the next occurrence.
+  // `25/12`, `25-12-2026` - day first; a missing year means the next occurrence.
   const numeric = /^(\d{1,2})[/.-](\d{1,2})(?:[/.-](\d{2,4}))?$/.exec(raw)
   if (numeric) {
     const day = Number(numeric[1])
@@ -115,7 +115,7 @@ export function parseDraft(
   }
 
   if (enabled.priorities) {
-    // `!!` is medium, `!!!` low, and a bare `!` high — fewer marks, more urgent.
+    // `!!` is medium, `!!!` low, and a bare `!` high - fewer marks, more urgent.
     const bang = /(?:^|\s)(!{1,3})(?=\s|$)/.exec(text)
     if (bang) {
       priority = bang[1].length as Priority

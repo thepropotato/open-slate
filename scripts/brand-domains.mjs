@@ -282,7 +282,7 @@ export const brandDomains = {
 /**
  * Hosts whose brand was removed from Simple Icons upstream (the project drops
  * logos without a permissive licence). For these the tile falls back to the
- * site's own favicon rendered large on a plate tinted from that favicon —
+ * site's own favicon rendered large on a plate tinted from that favicon -
  * which is what every uncurated site gets too, and looks close to identical.
  */
 export const unavailableBrands = [

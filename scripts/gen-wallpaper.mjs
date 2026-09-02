@@ -4,7 +4,7 @@
  * The wallpaper scene has to prove the thing screenshots of a flat gradient
  * cannot: that panels stay readable over a real photograph, that dim, blur and
  * vignette are doing work, and that the accent really is sampled from the
- * image. A stock photo would do that — and would also drag a licence, a
+ * image. A stock photo would do that - and would also drag a licence, a
  * download and a binary blob into a repo whose every other asset is generated.
  *
  * So it is drawn instead: a dusk sky, a sun, layered ridgelines going hazy with
@@ -14,7 +14,7 @@
  * muddy average.
  *
  * Written straight into a raw RGBA buffer and encoded with zlib, matching
- * `gen-icons.mjs` — no image dependency, and byte-reproducible on any machine.
+ * `gen-icons.mjs` - no image dependency, and byte-reproducible on any machine.
  *
  * The output lives in `marketing/assets/`, not in the site's `img/`: it is an
  * input to the capture, inlined into the page as a data URL, and the website
@@ -195,7 +195,7 @@ function draw() {
   const rgb = Buffer.alloc(WIDTH * HEIGHT * 3)
 
   // Ridge silhouettes depend only on x, so they are computed once per column
-  // rather than once per pixel — the difference is seconds on a 4MP image.
+  // rather than once per pixel - the difference is seconds on a 4MP image.
   const heights = RIDGES.map((ridge) =>
     Float64Array.from({ length: WIDTH }, (_, x) => ridgeHeight(ridge, x / WIDTH)),
   )

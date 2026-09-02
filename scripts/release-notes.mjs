@@ -1,7 +1,7 @@
 /**
  * Reads one release out of CHANGELOG.md.
  *
- * The changelog is written once and read from three places — the GitHub
+ * The changelog is written once and read from three places - the GitHub
  * release body, the site's changelog page, and the store listing's "What's
  * new" box, which is plain text and has to be pasted by hand because the
  * Chrome Web Store API has no endpoint for listing copy.

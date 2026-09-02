@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 /**
  * Every persisted preference. Every field carries a `.default()`, so parsing an
- * old blob fills in whatever was added since — that is the whole migration story.
+ * old blob fills in whatever was added since - that is the whole migration story.
  * Widget config lives in each widget's own schema; here it is an opaque blob.
  */
 

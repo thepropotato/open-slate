@@ -11,8 +11,8 @@ the README, `STORE.md` and the listing still said fifteen widgets until
 broken, and everything published about the extension was wrong for a day.
 
 So: **a change is finished when the references agree with it**, not when the
-code runs. That applies to the smallest addition — one search engine, one clock
-face, one permission — because those are exactly the ones that feel too small to
+code runs. That applies to the smallest addition - one search engine, one clock
+face, one permission - because those are exactly the ones that feel too small to
 document and silently rot the counts.
 
 ## After any change, before you call it done
@@ -40,13 +40,13 @@ rows, not all of them.
 | --- | --- |
 | A widget | [`README.md`](README.md) (the widget list and its count), [`marketing/LISTING.md`](marketing/LISTING.md), [`marketing/site/index.html`](marketing/site/index.html) (the `.proof` block and the widgets section), [`CHANGELOG.md`](CHANGELOG.md) |
 | A search engine, clock face, palette or wallpaper kind | The `.proof` block in [`marketing/site/index.html`](marketing/site/index.html), and any prose quoting the count |
-| A permission, or a new host in the manifest | [`STORE.md`](STORE.md) — every permission needs a justification a reviewer can act on, and new tab overrides are reviewed by hand |
+| A permission, or a new host in the manifest | [`STORE.md`](STORE.md) - every permission needs a justification a reviewer can act on, and new tab overrides are reviewed by hand |
 | A network request to a new origin | [`STORE.md`](STORE.md) and the privacy sections of [`marketing/site/index.html`](marketing/site/index.html) and [`marketing/site/privacy.html`](marketing/site/privacy.html). The site claims each request is one the user asked for; keep that true |
 | Anything a user would notice | [`CHANGELOG.md`](CHANGELOG.md), under `## [Unreleased]` |
 | A screen that appears in the marketing images | [`scripts/marketing-shots.mjs`](scripts/marketing-shots.mjs), then `npm run marketing:shots` |
 
 `TODO.md` also carries prose about how things work. It is notes rather than
-published copy, so it is not checked automatically — but if you contradict
+published copy, so it is not checked automatically - but if you contradict
 something written there, correct it.
 
 ## The changelog

@@ -3,7 +3,7 @@
 // never leaves the page; only the normalised numbers cross back to the worker.
 //
 // `chrome.scripting` serialises `fetchInPage`, so it must not close over anything
-// in this module — hence its own copy of the helpers.
+// in this module - hence its own copy of the helpers.
 
 import type { PageResult, ProviderAdapter, ProviderWindow } from './types'
 

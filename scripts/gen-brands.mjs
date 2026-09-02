@@ -5,7 +5,7 @@
  *   { icons: { slug: [title, hex, path] }, domains: { host: slug } }
  *
  * Tuples rather than objects keep the file small. `simple-icons` stays a dev
- * dependency — nothing imports it at runtime.
+ * dependency - nothing imports it at runtime.
  */
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'

@@ -85,7 +85,7 @@ export async function dominantColor(src: string, allowCrossOrigin = false): Prom
   }
 }
 
-/** Same sampling, for something already drawable — a `<video>`, say. */
+/** Same sampling, for something already drawable - a `<video>`, say. */
 export function dominantColorOf(source: CanvasImageSource): string | null {
   try {
     return sampleDominant(source)

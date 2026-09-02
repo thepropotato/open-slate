@@ -1,5 +1,5 @@
 /**
- * Service worker: only what must survive the page being closed — the wallpaper
+ * Service worker: only what must survive the page being closed - the wallpaper
  * slideshow alarm, install-time setup, and on-demand LLM usage reads.
  */
 

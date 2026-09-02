@@ -3,7 +3,7 @@
  *
  * `npm test` runs under plain Node, which has no `DOMParser`, so the feed parser
  * cannot be covered there. Rather than shipping a DOM shim, these run in the dev
- * server's page and import the source module directly — Vite transforms it on
+ * server's page and import the source module directly - Vite transforms it on
  * the fly, so this tests the real code with nothing extra in the bundle.
  *
  *   npm run dev            # in another terminal

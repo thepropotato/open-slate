@@ -6,7 +6,7 @@
 // deep search is the fallback; `api.ts` validates whatever comes back.
 //
 // `chrome.scripting` serialises `fetchInPage`, so it must not close over anything
-// in this module — hence its own copy of the helpers.
+// in this module - hence its own copy of the helpers.
 
 import type { PageResult, ProviderAdapter, ProviderSpend, ProviderWindow } from './types'
 

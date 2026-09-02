@@ -17,7 +17,7 @@ choose `dist/`.
 For UI work, `npm run dev` serves the page at `http://localhost:5178/newtab.html`.
 The `chrome.*` APIs are behind [`src/core/platform/browser.ts`](src/core/platform/browser.ts),
 which falls back to `localStorage` and a public favicon service outside the
-extension — so the whole interface is workable in an ordinary tab. Anything that
+extension - so the whole interface is workable in an ordinary tab. Anything that
 genuinely needs the browser (tabs, history, sessions, downloads) shows its empty
 state there.
 
@@ -45,12 +45,12 @@ background alarm, so every open tab agrees and rotation continues with no tab
 open. The accent colour can be sampled from whatever is on screen.
 
 **Widgets.** A grid of square cells, locked by default, with five standard sizes
-— small, medium, large, wide and extra large — that widgets snap to the way
+- small, medium, large, wide and extra large - that widgets snap to the way
 phone widgets do. A widget never sits on top of another one: growing or dropping
 one moves whatever was in the way, at every breakpoint rather than only the one
 on screen. Unlock the canvas and the cell grid appears behind the widgets, each
 one grows a title bar of its own, and the whole widget is the drag handle.
-Eighteen widgets: clock (ten faces — digital, minimal, mono,
+Eighteen widgets: clock (ten faces - digital, minimal, mono,
 flip, words, binary, three analog variants, rings), weather, calendar, notes,
 tasks (priorities, due dates and faceted filters, set by typing `!` and
 `@ friday` rather than by filling in a form), greeting, timer (pomodoro,
@@ -64,7 +64,7 @@ and downloads.
 to push the tiles off screen, and fewer widgets is not the answer. So in **one
 page** every band is laid out in full and each is a scroll snap point, so one
 flick lands on the next instead of dragging through the widgets. In **two tabs**
-a pill switches between widgets and tiles — `Cmd`/`Ctrl`+`1` and `2`, or arrow
+a pill switches between widgets and tiles - `Cmd`/`Ctrl`+`1` and `2`, or arrow
 keys. The search box comes first either way, and both bands
 stay mounted, so a running timer and a half-typed note survive the switch.
 
@@ -95,7 +95,7 @@ can be sampled from your wallpaper.
 extension installs with `storage`, `favicon`, `alarms` and `topSites`. Tabs,
 history, bookmarks, downloads, sessions and the weather host are all optional,
 requested the moment you add the widget that needs them. Geolocation is not
-declared at all, and never called — Chrome will not make it optional, so rather
+declared at all, and never called - Chrome will not make it optional, so rather
 than an install-time location warning the weather widget places itself from a
 city-level IP lookup, falling back to your timezone and then to a search box.
 
@@ -137,7 +137,7 @@ Bug reports and patches are welcome. [`CONTRIBUTING.md`](CONTRIBUTING.md) covers
 the setup, the checks to run before opening a PR, and the few conventions that
 lint enforces. Security issues go through
 [private reporting](https://github.com/thepropotato/open-slate/security/advisories/new)
-rather than a public issue — see [`SECURITY.md`](SECURITY.md).
+rather than a public issue - see [`SECURITY.md`](SECURITY.md).
 
 ## Licence
 

@@ -5,7 +5,7 @@ import type { Settings } from './schema'
  * Which settings are edited as a draft rather than written straight through.
  *
  * Knobs (radius, opacity, counts) are staged: overwriting one loses the old
- * value irrecoverably. Content (tiles, notes, tasks) commits at once — a
+ * value irrecoverably. Content (tiles, notes, tasks) commits at once - a
  * discarded draft must never eat work the reader never saw as a setting.
  */
 

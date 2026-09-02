@@ -23,7 +23,7 @@ import { CalendarList } from './CalendarList'
 import './calendar.css'
 
 // Month grid over iCalendar subscriptions (see `api.ts`). Connected, the widget
-// is two whole-card views — a day and a month — rather than one card split in
+// is two whole-card views - a day and a month - rather than one card split in
 // half, which gave neither view enough room.
 
 const CalendarSourceSchema = z.object({
@@ -457,7 +457,7 @@ function DayView({
                   style={{
                     top: `${top}%`,
                     // No minimum height: a floor would make a block overrun its
-                    // own end time. The axis is zoomed instead — see `hourRange`.
+                    // own end time. The axis is zoomed instead - see `hourRange`.
                     height: `${bottom - top}%`,
                     // Shares of the room left of the hour labels; the gutter is
                     // added here rather than as a margin, which would overhang.

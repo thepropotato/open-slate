@@ -142,7 +142,7 @@ function draw(size) {
       cy: inset + cellSize / 2 + row * cellStride,
     }))
 
-  // The slot, either as the favicon's dot ring or — where that would smear —
+  // The slot, either as the favicon's dot ring or - where that would smear -
   // as the same footprint filled faintly.
   const scale = size / UNIT
   const drawDots = size >= DOTS_MIN_SIZE

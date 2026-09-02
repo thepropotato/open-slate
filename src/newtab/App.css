@@ -148,7 +148,7 @@
   transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
-/* Rotate the cog, not the button — the button carries the border and blur plate. */
+/* Rotate the cog, not the button - the button carries the border and blur plate. */
 .page__settings .icon {
   transition: transform var(--dur) var(--ease);
 }

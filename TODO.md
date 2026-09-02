@@ -1,4 +1,4 @@
-# Open Slate — Build Plan
+# Open Slate - Build Plan
 
 A Chrome MV3 extension replacing the new tab with a customizable speed dial / dashboard.
 
@@ -12,7 +12,7 @@ requested per widget.
 
 ---
 
-## Phase 0 — Foundation
+## Phase 0 - Foundation
 - [x] Scaffold Vite + React + TS, MV3 manifest, newtab override, dev HMR
 - [x] Design tokens as CSS vars; `radius` token drives rounded↔boxy everywhere
 - [x] Settings core: zod schema + defaults + version migrations
@@ -20,7 +20,7 @@ requested per widget.
 - [x] Schema-driven settings UI: declare a setting once, control auto-renders
 - [x] Font Awesome subset + icon-only rule enforced by lint
 
-## Phase 1 — Tiles (the speed dial)
+## Phase 1 - Tiles (the speed dial)
 - [x] Tile data model: url, title, hero image, favicon, brand color, custom overrides
 - [x] Tile grid: responsive, drag-reorder, add/edit/delete
 - [x] Auto-fill on add: Simple Icons logo + brand bg, fallback to `_favicon` API
@@ -29,7 +29,7 @@ requested per widget.
 - [x] Tile style settings: radius, size, columns, gap, aspect, shadow, label placement
 - [x] Seed from `chrome.topSites` on first run
 
-## Phase 2 — Background engine
+## Phase 2 - Background engine
 - [x] Layer system: solid / gradient / image / video / slideshow
 - [x] IndexedDB blob store + upload UI + size guardrails
 - [x] Video wallpaper: loop, mute, pause on tab blur, respect `prefers-reduced-motion`
@@ -37,13 +37,13 @@ requested per widget.
 - [x] Accent extraction from wallpaper → feeds theme tokens
 - [x] Slideshow rotation via `chrome.alarms`
 
-## Phase 3 — Widget framework
+## Phase 3 - Widget framework
 - [x] Widget registry: manifest (id, icon, sizes, component, settings panel, defaults)
 - [x] Grid canvas: drag, resize, snap, per-breakpoint layouts, lock mode
 - [x] Per-widget config panel + global widget chrome (glass/solid/none, radius, opacity)
 - [x] Optional-permission gate on widget enable
 
-## Phase 4 — Core widgets
+## Phase 4 - Core widgets
 - [x] Clock: 6+ styles (digital, flip, minimal, binary, text, analog variants), 12/24h, seconds, timezone
 - [x] Search bar: engine switcher, bang shortcuts (`!yt`, `!gh`), inline calculator
 - [x] Continue: recently closed tabs + last session (`chrome.sessions`)
@@ -53,7 +53,7 @@ requested per widget.
 - [x] Date/calendar month view
 - [x] Greeting line (name, time-aware)
 
-## Phase 5 — Browser-native widgets
+## Phase 5 - Browser-native widgets
 <!-- Tab groups were dropped from the tabs widget: the duplicate finder and
      cross-window jump carry it, and grouping added a permission for little gain. -->
 - [x] Top sites
@@ -62,11 +62,11 @@ requested per widget.
 - [x] Open tabs overview: count, tab groups, duplicate finder
 - [x] History quick search
 
-## Phase 6 — Command palette
+## Phase 6 - Command palette
 - [x] `Cmd+K` unified search: tabs, bookmarks, history, tiles, settings, actions
 - [x] Keyboard nav across tiles (arrows + digits 1–9 to open)
 
-## Phase 7 — Polish & ship
+## Phase 7 - Polish & ship
 - [x] Full settings page: tabbed, search, live preview
 - [x] Export/import config JSON; reset to defaults
 - [x] Theme presets + shareable theme strings
@@ -74,9 +74,9 @@ requested per widget.
 - [x] A11y: focus rings, reduced motion, contrast check
 - [x] Store assets + single-purpose justification (new tab overrides get manual review)
 
-## Phase 8 — Optional / later
-- [ ] Google Calendar + Gmail unread (OAuth) — **blocked, see below**
-- [x] RSS reader, crypto ticker (stocks left out — see below)
+## Phase 8 - Optional / later
+- [ ] Google Calendar + Gmail unread (OAuth) - **blocked, see below**
+- [x] RSS reader, crypto ticker (stocks left out - see below)
 - [x] Pomodoro / timer / stopwatch
 - [x] Tile folders and multiple pages
 - [x] Sync layout across devices
@@ -99,7 +99,7 @@ would leak their quota. To add it:
 4. Add `"oauth2": { "client_id": "…", "scopes": [...] }` and the `identity`
    permission to the manifest, then read tokens via `chrome.identity.getAuthToken`.
 
-The widget framework needs no changes for this — a widget declaring
+The widget framework needs no changes for this - a widget declaring
 `permissions: ['identity']` would be gated the same way the weather widget is.
 
 **Stock quotes.** Every free equities API requires an API key, and a key inside a
@@ -112,10 +112,10 @@ named for what it actually does rather than implying stocks.
   which a tile list plus grid layouts blows past. Cross-device sync is Phase 8 and
   will push a trimmed subset. The store abstraction takes the area as a parameter,
   so switching is a one-line change.
-- TypeScript is pinned to 5.9 — `typescript-eslint` does not yet support TS 7.
+- TypeScript is pinned to 5.9 - `typescript-eslint` does not yet support TS 7.
 - Simple Icons has dropped brands whose logo licence is not permissive (Amazon,
-  LinkedIn, OpenAI, Prime Video, Hotstar among them). Those tiles — and every
-  site outside the curated 233 — use the site's own favicon rendered large on a
+  LinkedIn, OpenAI, Prime Video, Hotstar among them). Those tiles - and every
+  site outside the curated 233 - use the site's own favicon rendered large on a
   plate tinted by sampling that favicon. Visually near-identical, and legally clean.
 - Tiles reorder in an explicit "Arrange" mode rather than on always-on drag, so a
   plain click always navigates.
@@ -149,7 +149,7 @@ named for what it actually does rather than implying stocks.
   a light-mode user never sees a dark flash in the moment before JS runs.
 - Tile columns use `auto-fit`, not a fixed track count: fixed tracks stay reserved
   when empty, which left a short grid visibly off-centre.
-- `npm test` covers the pure logic screenshots cannot — calculator, bangs, address
+- `npm test` covers the pure logic screenshots cannot - calculator, bangs, address
   detection, migrations, theme codes, timezone maths, contrast. 83 checks.
 - `npm run store:shots` captures the store screenshots from the built extension in
   a real extension context, which also serves as the end-to-end check that the
@@ -157,7 +157,7 @@ named for what it actually does rather than implying stocks.
 - Folder and page membership is stored flat, as `parentId` and `pageId` on each
   tile, rather than as nested children. Reordering, moving and validation all stay
   trivial, zod never has to describe a recursive shape, and a dangling reference
-  is unrepresentable — a tile whose folder was deleted just reads as a root tile.
+  is unrepresentable - a tile whose folder was deleted just reads as a root tile.
 - Deleting a folder or a page moves its contents out rather than deleting them.
 - The timer stores absolute timestamps, not a decremented countdown, so it
   survives the page being torn down on navigation and every open tab agrees.
@@ -168,7 +168,7 @@ named for what it actually does rather than implying stocks.
   synced, so each device opts in for itself.
 - The feeds widget needs `https://*/*` in `optional_host_permissions`, because
   Chrome only grants a runtime origin request that matches a declared pattern.
-  Nothing is granted at install — verified — and each feed asks for its own origin
+  Nothing is granted at install - verified - and each feed asks for its own origin
   alone. `STORE.md` carries the justification for review.
 - Custom settings controls receive the field scope, which is how a widget ships a
   bespoke control over its own config (the feed list, the coin picker) without the

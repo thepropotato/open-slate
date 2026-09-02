@@ -14,7 +14,7 @@ export function SaveBar() {
   const { changed, dirty, save, discard } = useDraftActions()
   const count = changed.length
 
-  // Set by the save itself, not derived from `dirty` going false — that would
+  // Set by the save itself, not derived from `dirty` going false - that would
   // light up for a discard too, the one case it has to distinguish.
   const [justSaved, setJustSaved] = useState(false)
   useEffect(() => {

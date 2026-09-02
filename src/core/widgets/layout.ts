@@ -1,6 +1,6 @@
 /**
  * Non-overlap is an invariant of the stored layout, so every write goes through
- * `normalizeLayout` — `ResponsiveGridLayout` only compacts what is on screen.
+ * `normalizeLayout` - `ResponsiveGridLayout` only compacts what is on screen.
  */
 
 import type { Compactor } from 'react-grid-layout/core'

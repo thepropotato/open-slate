@@ -23,7 +23,7 @@ const inline = (name) =>
  * Two shots, because the tiles carry a different claim than the widgets do.
  *
  * The wide art sits beside copy promising "tiles, widgets and a wallpaper
- * engine", which the tile grid alone does not show — so the dashboard carries
+ * engine", which the tile grid alone does not show - so the dashboard carries
  * those, and the speed dial carries the tiles where there is no room for both.
  */
 const shot = inline('speed-dial.png')
@@ -141,7 +141,7 @@ const tiles = [
       </div>
       <h1 style="font-size:64px;line-height:1.05;max-width:16ch">Your most-opened page, finally yours.</h1>
       <div style="font-size:19px;line-height:1.55;max-width:60ch">
-        A speed dial and dashboard for the new tab — tiles, widgets and a
+        A speed dial and dashboard for the new tab - tiles, widgets and a
         wallpaper engine, with close to everything under your control.
       </div>
       <div style="margin-top:14px;border-radius:12px 12px 0 0;overflow:hidden;
@@ -180,7 +180,7 @@ const tiles = [
         </div>
         <h1 style="font-size:58px;line-height:1.06">Your most-opened page, finally yours.</h1>
         <div style="font-size:18px;line-height:1.55">
-          A speed dial and dashboard for the new tab — tiles, widgets and a
+          A speed dial and dashboard for the new tab - tiles, widgets and a
           wallpaper engine, with close to everything under your control.
         </div>
         <div style="font-size:14px;display:flex;align-items:center;gap:10px;margin-top:4px">

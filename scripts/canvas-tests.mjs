@@ -4,8 +4,8 @@
  *
  * This needs a real browser rather than `npm test`. Only a real drag, a real
  * resize and a real viewport change drive the grid library's own layout
- * machinery, and it was the layout it *emitted* on a resize — not anything the
- * reader did — that used to be written back over the stored arrangement.
+ * machinery, and it was the layout it *emitted* on a resize - not anything the
+ * reader did - that used to be written back over the stored arrangement.
  *
  *   npm run dev            # in another terminal
  *   node scripts/canvas-tests.mjs [baseUrl]
@@ -209,7 +209,7 @@ for (const locked of [true, false]) {
  * The wheel has to work everywhere on the page, not just over the content.
  *
  * The content column is centred and capped, so there is dead space either side
- * of it — and the padding gutter beside the last widget. All of that used to
+ * of it - and the padding gutter beside the last widget. All of that used to
  * belong to a parent with `overflow: hidden`, so putting the pointer where a
  * reader naturally reaches for the edge scrolled nothing at all.
  */
@@ -244,7 +244,7 @@ for (const width of [1600, 420]) {
  * Nothing may be clipped off the top of the page.
  *
  * The page is the scroller, and centring its content with `justify-content`
- * pushes the overflow past both edges — but there is no scrollable area above
+ * pushes the overflow past both edges - but there is no scrollable area above
  * the origin, so whatever spills off the top cannot be reached at all. A
  * stacked portrait dashboard is taller than the window by design, so every
  * alignment has to keep the first widget reachable.

@@ -50,7 +50,7 @@ export interface Field {
   label: string
   help?: string
   control: FieldControl
-  /** Hides the field when the predicate is false — e.g. video-only options. */
+  /** Hides the field when the predicate is false - e.g. video-only options. */
   when?: (settings: Settings) => boolean
   /** Same, against a widget's own config. Both predicates must pass. */
   whenLocal?: (values: Record<string, unknown>) => boolean

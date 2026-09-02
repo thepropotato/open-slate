@@ -7,7 +7,7 @@ const PANES: { id: Pane; label: string; icon: IconName }[] = [
 ]
 
 /**
- * The widgets/tiles switch. Tabs mode only — a scrolling page already shows both.
+ * The widgets/tiles switch. Tabs mode only - a scrolling page already shows both.
  * Arrow keys move between the two once focused; the page owns the modifier shortcuts.
  */
 export function PaneSwitch({

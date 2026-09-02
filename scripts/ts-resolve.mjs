@@ -1,8 +1,8 @@
 /**
  * Node resolver hook for the self-test.
  *
- * The app source uses bundler-style imports — no file extensions, and `@/` for
- * the source root — which Node cannot resolve on its own. Teaching it these two
+ * The app source uses bundler-style imports - no file extensions, and `@/` for
+ * the source root - which Node cannot resolve on its own. Teaching it these two
  * rules is enough to run the pure modules directly under Node's TypeScript
  * stripping, with no build step and no test framework.
  */

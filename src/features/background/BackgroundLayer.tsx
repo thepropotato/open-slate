@@ -7,7 +7,7 @@ import { useBackgroundSource } from './useBackgroundSource'
 import './background.css'
 
 /**
- * Paints the wallpaper — colour, gradient, image, video or slideshow — plus its
+ * Paints the wallpaper - colour, gradient, image, video or slideshow - plus its
  * adjustment layers. Decoding stops while the tab is hidden, and nothing
  * animates under reduced motion.
  */

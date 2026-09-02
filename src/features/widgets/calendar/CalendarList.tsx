@@ -40,7 +40,7 @@ export function CalendarList({ scope }: { scope?: FieldScope }) {
       setError(`Reading ${urlLabel(url)} needs permission for that site.`)
       return
     }
-    // Named from the feed itself. A failed probe is not fatal — the URL may be
+    // Named from the feed itself. A failed probe is not fatal - the URL may be
     // right and merely unreachable.
     const probed = await probeCalendar(url)
     setBusy(false)

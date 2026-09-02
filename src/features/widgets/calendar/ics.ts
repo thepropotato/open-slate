@@ -67,7 +67,7 @@ const unescapeText = (value: string): string =>
     .replace(/\\\\/g, '\\')
 
 // DATE or DATE-TIME to epoch ms. Bare `YYYYMMDD` is all-day, `Z` is UTC, and
-// anything else is treated as local — TZID included, since carrying a tz
+// anything else is treated as local - TZID included, since carrying a tz
 // database isn't worth it for a month grid.
 function parseDate(value: string, params: Record<string, string>): { at: number; allDay: boolean } | null {
   const date = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value.trim())
@@ -93,7 +93,7 @@ function parseDuration(value: string): number {
 }
 
 // First http(s) link in a block of text: Meet/Zoom/Teams bury join links in the
-// description. Only http(s) — these values come off the network, so no
+// description. Only http(s) - these values come off the network, so no
 // `javascript:` reaches the browser.
 function firstLink(text: string): string {
   const match = /https?:\/\/[^\s<>"')\]]+/i.exec(text)

@@ -160,7 +160,7 @@ await shot('dashboard-browser', async (page) => {
 // The usage widgets at each footprint, one provider per row. Under `vite dev`
 // the panel has no worker and no session, so this seeds readings directly into
 // their caches. Claude's row carries a spend reading and ChatGPT's carries two
-// rate-limit windows, which is what each provider actually reports — so the
+// rate-limit windows, which is what each provider actually reports - so the
 // shot covers both meter kinds as well as both brand marks.
 const usageDash = [
   widget('cu1', 'claude-usage', 0, 0, 1, 1),

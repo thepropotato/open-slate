@@ -125,5 +125,5 @@ what happened. For anything visual, a screenshot is worth more than a
 description. If it involves a widget that reads browser data, say whether you
 granted that permission.
 
-For anything security-related, please do not open a public issue — see
+For anything security-related, please do not open a public issue - see
 [`SECURITY.md`](SECURITY.md).

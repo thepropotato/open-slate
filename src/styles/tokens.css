@@ -7,7 +7,7 @@
 :root {
   color-scheme: dark;
 
-  /* Palette — replaced per preset. */
+  /* Palette - replaced per preset. */
   --bg: #0b0d12;
   --bg-elevated: #14171f;
   --fg: #eef1f6;
@@ -19,7 +19,7 @@
   --surface-tint: 255 255 255;
   --surface-base: 12 14 19;
 
-  /* Shape — `--radius` is the master control. */
+  /* Shape - `--radius` is the master control. */
   --radius: 16px;
   --radius-sm: calc(var(--radius) * 0.5);
   --radius-lg: calc(var(--radius) * 1.35);
@@ -49,7 +49,7 @@
   --text-lg: calc(1.15rem * var(--font-scale));
   --text-xl: calc(1.6rem * var(--font-scale));
 
-  /* Motion — set to 0 when animations are off or reduced motion is requested. */
+  /* Motion - set to 0 when animations are off or reduced motion is requested. */
   --motion: 1;
   --dur-fast: calc(120ms * var(--motion));
   --dur: calc(200ms * var(--motion));

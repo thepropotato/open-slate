@@ -194,7 +194,7 @@
 
 .spotify__art {
   /* Square, and never taller than the room left once the text and scrubber have
-     taken theirs — cover art is square, so a stretched box reads as broken. The
+     taken theirs - cover art is square, so a stretched box reads as broken. The
      cap stops the art from claiming every spare pixel and crowding the text
      against the bottom edge on a tall tile. */
   width: auto;

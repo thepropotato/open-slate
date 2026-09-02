@@ -84,7 +84,7 @@ function separateOverlappingWidgets(raw: Record<string, unknown>): Record<string
 }
 
 /**
- * 3 -> 4: three per-breakpoint layouts collapse to one. `lg` wins — the narrower
+ * 3 -> 4: three per-breakpoint layouts collapse to one. `lg` wins - the narrower
  * ones were only ever clamped copies of it, regenerated and written back on resize.
  */
 function toSingleLayout(raw: Record<string, unknown>): Record<string, unknown> {
