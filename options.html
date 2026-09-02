@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Before any CSS parses, so the first paint is not a white flash. -->
     <meta name="color-scheme" content="dark light" />
+    <!-- The manifest icons dress the toolbar, not the tab. Without this the new
+         tab and settings pages fall back to whatever Chrome has cached. -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon32.png" />
+    <link rel="icon" type="image/png" sizes="128x128" href="/icons/icon128.png" />
     <title>Open Slate Settings</title>
   </head>
   <body>
