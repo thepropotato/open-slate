@@ -35,9 +35,18 @@ const WidgetConfigDialog = lazyChunk(() =>
 import 'react-grid-layout/css/styles.css'
 import './widgets.css'
 
-// Below this cell size the arrangement is abandoned for a single stacked column.
-// There is no in-between: it either fits as arranged or it stacks.
+// Cell size assumed before the stage has been measured, and the narrowest a
+// stacked column is allowed to get.
 const MIN_CELL = 120
+
+// Below this width the arrangement is abandoned for a single stacked column.
+// There is no in-between: it either fits as arranged or it stacks.
+//
+// A board is measured by its total width, not by its cell size. Cells shrink as
+// `columns` rises, so a per-cell floor would stack a 9- or 10-column board at
+// every ordinary window width while leaving a 4-column one alone - the widgets
+// are the same size either way, there are just more slots to place them in.
+const MIN_BOARD = 640
 
 // Share of a narrow band the stack takes; the rest is side margin.
 const STACK_WIDTH = 0.86
@@ -88,7 +97,7 @@ export function WidgetCanvas() {
   const cellAt = (columns: number) => (width - widgets.margin * (columns - 1)) / columns
 
   // Arranging never stacks: a drag has to land in the cell under the cursor.
-  const stacked = !editing && width > 0 && cellAt(cols) < MIN_CELL
+  const stacked = !editing && width > 0 && width < MIN_BOARD
 
   const activeCols = stacked ? 1 : cols
 
