@@ -147,6 +147,22 @@ export function openUrl(url: string, where: 'current' | 'newTab' = 'current') {
   }
 }
 
+/**
+ * Runs a query against the browser's own default search engine. Chrome exposes
+ * no way to read which engine that is, so this dispatches and never resolves a
+ * URL of its own; outside the extension there is nothing to defer to, and the
+ * caller's fallback is used instead.
+ */
+export function searchDefault(query: string, where: 'current' | 'newTab' = 'current'): boolean {
+  if (!isExtension() || !chrome.search?.query) return false
+  try {
+    chrome.search.query({ text: query, disposition: where === 'newTab' ? 'NEW_TAB' : 'CURRENT_TAB' })
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function openOptions() {
   if (isExtension()) chrome.runtime.openOptionsPage()
   else window.location.assign('/options.html')

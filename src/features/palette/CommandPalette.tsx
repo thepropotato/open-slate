@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@/core/icons'
 import { useAsyncValue } from '@/core/hooks'
-import { openUrl } from '@/core/platform/browser'
+import { openUrl, searchDefault } from '@/core/platform/browser'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
-import { asDestination, buildSearchUrl, parseQuery } from '@/features/search/engines'
+import { asDestination } from '@/features/search/destination'
 import { queryLocal, type Suggestion } from '@/features/search/providers'
 import { buildActions, matchAction } from './actions'
 import './CommandPalette.css'
@@ -48,14 +48,20 @@ export function CommandPalette({
     // A web search is always offered last, so no query is ever a dead end.
     if (needle) {
       const destination = asDestination(query)
-      const parsed = parseQuery(query, settings.search.engineId, settings.search.bangs)
+      const term = query.trim()
       items.push({
         id: 'fallback:search',
         kind: 'search',
-        title: destination ? `Go to ${destination}` : `Search ${parsed.engine.name} for “${parsed.query}”`,
+        title: destination ? `Go to ${destination}` : `Search for “${term}”`,
         icon: destination ? 'link' : 'search',
         score: -1,
-        run: () => openUrl(destination ?? buildSearchUrl(parsed), settings.tiles.openIn),
+        run: () => {
+          const where = settings.tiles.openIn
+          if (destination) openUrl(destination, where)
+          else if (!searchDefault(term, where)) {
+            openUrl(`https://www.google.com/search?q=${encodeURIComponent(term)}`, where)
+          }
+        },
       })
     }
 

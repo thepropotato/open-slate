@@ -66,80 +66,6 @@
   flex: none;
 }
 
-/* Engine picker */
-
-.search__engine {
-  position: relative;
-  flex: none;
-}
-
-.search__enginebtn {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 7px;
-  border-radius: var(--radius-sm);
-  color: var(--fg-subtle);
-  font-size: 9px;
-}
-
-.search__enginebtn:hover {
-  background: rgb(var(--surface-tint) / 12%);
-}
-
-.search__enginebtn img {
-  border-radius: 4px;
-}
-
-.search__enginelist {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  z-index: var(--z-overlay);
-  width: 236px;
-  max-height: 320px;
-  overflow-y: auto;
-  padding: 5px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-elevated);
-}
-
-.search__engineitem {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  padding: 7px 9px;
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
-  color: var(--fg-muted);
-}
-
-.search__engineitem:hover {
-  background: rgb(var(--surface-tint) / 10%);
-  color: var(--fg);
-}
-
-.search__engineitem[aria-pressed='true'] {
-  color: var(--fg);
-}
-
-.search__engineitem[aria-pressed='true'] > span:first-of-type {
-  font-weight: 650;
-}
-
-.search__engineitem img {
-  border-radius: 3px;
-  flex: none;
-}
-
-.search__bang {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--fg-subtle);
-}
-
 /* Results */
 
 /* Absolute, not in flow: growing the box would shove the tiles down on every keystroke. */
@@ -171,7 +97,7 @@
   background: rgb(var(--surface-tint) / 12%);
 }
 
-/* Splits your own tabs and bookmarks from the engine's guesses below. The rule
+/* Splits your own tabs and bookmarks from the web's guesses below. The rule
    is drawn as a border on the row so the hover fill stays clear of it. */
 .search__result[data-divided='true'] {
   margin-top: 5px;
