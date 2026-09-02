@@ -21,6 +21,7 @@ export default defineConfig({
       input: {
         newtab: resolve(import.meta.dirname, 'newtab.html'),
         options: resolve(import.meta.dirname, 'options.html'),
+        setup: resolve(import.meta.dirname, 'setup.html'),
         background: resolve(import.meta.dirname, 'src/background/service-worker.ts'),
       },
       output: {

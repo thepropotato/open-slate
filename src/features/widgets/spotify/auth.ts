@@ -4,12 +4,12 @@
  * PKCE replaces the client secret with a per-sign-in proof: a random verifier is
  * hashed into a challenge, the challenge goes out with the authorise request,
  * and the verifier is only revealed when the code is redeemed. An intercepted
- * code is useless without the verifier, which never leaves this browser — so
+ * code is useless without the verifier, which never leaves this browser - so
  * there is no secret to ship. See `config.ts`.
  */
 
 import { isExtension, localStore } from '@/core/platform/browser'
-import { CLIENT_ID, SCOPES } from './config'
+import { readClientId, SCOPES } from './config'
 
 const AUTHORIZE = 'https://accounts.spotify.com/authorize'
 const TOKEN = 'https://accounts.spotify.com/api/token'
@@ -61,13 +61,16 @@ async function challengeFor(verifier: string): Promise<string> {
 export async function signIn(): Promise<void> {
   if (!isExtension()) throw new Error('Signing in needs the extension.')
 
+  const clientId = await readClientId()
+  if (!clientId) throw new Error('No Spotify client ID is set up yet.')
+
   const verifier = randomVerifier()
   // Guards against a redirect that wasn't the one we started.
   const state = base64url(crypto.getRandomValues(new Uint8Array(16)))
 
   const authorize = new URL(AUTHORIZE)
   authorize.search = new URLSearchParams({
-    client_id: CLIENT_ID,
+    client_id: clientId,
     response_type: 'code',
     redirect_uri: redirectUri(),
     code_challenge_method: 'S256',
@@ -92,7 +95,7 @@ export async function signIn(): Promise<void> {
 
   await redeem(
     new URLSearchParams({
-      client_id: CLIENT_ID,
+      client_id: clientId,
       grant_type: 'authorization_code',
       code,
       redirect_uri: redirectUri(),
@@ -157,10 +160,17 @@ export async function accessToken(): Promise<string> {
     throw new SignedOutError()
   }
 
+  const clientId = await readClientId()
+  // The ID was cleared out from under the tokens; they can no longer be refreshed.
+  if (!clientId) {
+    await signOut()
+    throw new SignedOutError()
+  }
+
   try {
     const refreshed = await redeem(
       new URLSearchParams({
-        client_id: CLIENT_ID,
+        client_id: clientId,
         grant_type: 'refresh_token',
         refresh_token: tokens.refreshToken,
       }),

@@ -1,11 +1,12 @@
 /**
  * The one place Font Awesome is imported; every icon is referenced by a key here,
  * which keeps the bundle tree-shaken and makes the icons-only rule lintable.
- * Keep it pruned — `npm run icons:check` reports unreferenced entries.
+ * Keep it pruned - `npm run icons:check` reports unreferenced entries.
  */
 import type { IconDefinition } from '@fortawesome/fontawesome-svg-core'
 import {
   faArrowRightFromBracket,
+  faUpRightFromSquare,
   faArrowRotateLeft,
   faBackwardStep,
   faBoxArchive,
@@ -89,6 +90,7 @@ export const icons = {
   check: faCheck,
   edit: faPen,
   open: faArrowRightFromBracket,
+  external: faUpRightFromSquare,
   remove: faTrash,
   copy: faCopy,
   duplicate: faClone,

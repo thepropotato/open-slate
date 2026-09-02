@@ -1,13 +1,14 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { z } from 'zod'
 import { Icon } from '@/core/icons'
 import { useAsyncValue } from '@/core/hooks'
 import { registerWidget } from '@/core/widgets/registry'
 import type { WidgetProps } from '@/core/widgets/types'
 import { isExtension } from '@/core/platform/browser'
-import { hasSpotifyAccess, requestSpotifyAccess, SPOTIFY_PERMISSIONS } from './api'
-import { isSignedIn, signIn, signOut } from './auth'
-import { ART_ORIGIN, isConfigured, SPOTIFY_ORIGINS } from './config'
+import { hasSpotifyAccess, SPOTIFY_PERMISSIONS } from './api'
+import { isSignedIn, signOut } from './auth'
+import { ART_ORIGIN, isConfigured, SPOTIFY_ORIGINS, subscribeClientId } from './config'
+import { guideUrl } from '@/features/setup/registry'
 import { NowPlaying } from './NowPlaying'
 import './spotify.css'
 
@@ -17,35 +18,37 @@ const SpotifyConfig = z.object({
 })
 type SpotifyConfig = z.infer<typeof SpotifyConfig>
 
-// Connecting is two gates: the host permission, then Spotify's own consent. They
-// are requested one after the other from a single button, so it reads as one step.
-type Phase = 'checking' | 'unconfigured' | 'needs-connect' | 'ready'
+// Connecting needs a client ID, the host permission and Spotify's own consent.
+// All three are handled by the setup page, so the widget only shows the door.
+type Phase = 'checking' | 'needs-connect' | 'ready'
 
 function SpotifyWidget({ config, sizeName }: WidgetProps<SpotifyConfig>) {
   // `null` until the gates have been checked; set directly once connecting or
   // signing out has moved the widget on from whatever was resolved.
   const [override, setOverride] = useState<Phase | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   const resolved = useAsyncValue<Phase>('spotify-phase', async () => {
     // Outside the extension the dev stub renders, so neither gate applies and a
-    // missing client ID does not matter — there is nothing to sign in to.
+    // missing client ID does not matter - there is nothing to sign in to.
     if (!isExtension()) return 'ready'
-    if (!isConfigured()) return 'unconfigured'
+    if (!(await isConfigured())) return 'needs-connect'
     return (await hasSpotifyAccess()) && (await isSignedIn()) ? 'ready' : 'needs-connect'
   })
 
   const phase: Phase = override ?? resolved ?? 'checking'
 
-  const connect = useCallback(async () => {
-    setError(null)
-    try {
-      if (!(await requestSpotifyAccess())) return
-      await signIn()
-      setOverride('ready')
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not connect to Spotify.')
-    }
+  const connect = useCallback(() => {
+    window.open(guideUrl('spotify'), '_blank', 'noopener,noreferrer')
+  }, [])
+
+  // Setup finishes in that other tab, so this one waits for the stored ID to
+  // appear rather than leaving a stale "Connect" button behind.
+  useEffect(() => {
+    if (!isExtension()) return
+    return subscribeClientId(async (value) => {
+      if (!value) return setOverride('needs-connect')
+      if ((await hasSpotifyAccess()) && (await isSignedIn())) setOverride('ready')
+    })
   }, [])
 
   const disconnect = useCallback(async () => {
@@ -78,16 +81,9 @@ function SpotifyWidget({ config, sizeName }: WidgetProps<SpotifyConfig>) {
         <div className="spotify__body spotify__body--center">
           <Icon name="spinner" spin />
         </div>
-      ) : phase === 'unconfigured' ? (
-        <div className="spotify__body spotify__body--center">
-          <p className="spotify__note">
-            This build has no Spotify client ID set. See <code>spotify/config.ts</code>.
-          </p>
-        </div>
       ) : phase === 'needs-connect' ? (
         <div className="spotify__body spotify__body--center">
-          {error ? <p className="spotify__note spotify__note--error">{error}</p> : null}
-          <button className="spotify__connect" onClick={() => void connect()}>
+          <button className="spotify__connect" onClick={connect}>
             <Icon name="link" /> Connect Spotify
           </button>
         </div>
