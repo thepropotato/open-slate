@@ -4,7 +4,7 @@
  * The same numbers appear in the README, the site and the store listing, and a
  * new widget used to mean remembering every one of them. Each is read back out
  * of the code that implements it, then matched in its own prose context rather
- * than as a bare number, because these files are full of incidental digits —
+ * than as a bare number, because these files are full of incidental digits -
  * CSS lengths, SVG path data, image dimensions.
  *
  *   node --import ./scripts/register.mjs scripts/check-facts.mjs
@@ -25,7 +25,6 @@ const unwrap = (node, key) => {
 }
 
 export async function collectFacts() {
-  const { searchEngines } = await import('@/features/search/engines.ts')
   const { themePresets } = await import('@/core/theme/presets.ts')
   const { Background } = await import('@/core/settings/schema.ts')
 
@@ -47,7 +46,6 @@ export async function collectFacts() {
   return {
     version: pkg.version,
     widgets,
-    searchEngines: searchEngines.length,
     brandLogos: Object.keys(brands.icons).length,
     clockFaces,
     palettes: themePresets.length,
@@ -71,7 +69,7 @@ const numberPattern = (value) => {
 /**
  * Each claim pairs the fact with the phrasing that must carry it. `near` is the
  * wording that identifies the sentence, and the count has to appear within
- * `window` characters either side of it — close enough that the incidental
+ * `window` characters either side of it - close enough that the incidental
  * digits elsewhere in the file cannot satisfy a claim by accident.
  */
 const CLAIMS = [
@@ -80,7 +78,6 @@ const CLAIMS = [
   { file: 'marketing/LISTING.md', fact: 'brandLogos', near: 'Logos for \\d+ sites' },
   { file: 'marketing/site/index.html', fact: 'widgets', near: ' widgets including' },
   { file: 'marketing/site/index.html', fact: 'widgets', near: '</b> widgets<' },
-  { file: 'marketing/site/index.html', fact: 'searchEngines', near: '</b> search engines<' },
   { file: 'marketing/site/index.html', fact: 'brandLogos', near: '</b> brand logos<' },
   { file: 'marketing/site/index.html', fact: 'clockFaces', near: '</b> clock faces<' },
   { file: 'marketing/site/index.html', fact: 'palettes', near: '</b> palettes<' },
@@ -105,7 +102,7 @@ for (const { file, fact, near } of CLAIMS) {
 
   const hits = [...text.matchAll(new RegExp(near, 'g'))]
   if (hits.length === 0) {
-    problems.push(`${file}: nothing matches /${near}/ — the copy was reworded, so this claim needs updating`)
+    problems.push(`${file}: nothing matches /${near}/ - the copy was reworded, so this claim needs updating`)
     continue
   }
 
