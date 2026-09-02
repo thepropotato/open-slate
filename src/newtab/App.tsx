@@ -16,7 +16,7 @@ import './App.css'
 
 /**
  * The new tab. The markup lives in `PageShell` (the settings preview mounts it
- * too); this owns only what is true of the tab itself — shortcuts, the settings
+ * too); this owns only what is true of the tab itself - shortcuts, the settings
  * cog, the palette, and the remembered pane.
  */
 export function App() {
@@ -70,6 +70,20 @@ export function App() {
     [update, layout.viewMode, appearance.animations],
   )
 
+  // Settings is the heaviest chunk on the page and nothing fetches it until it is
+  // asked for, so the first open pays the whole download. Warm it once the tab has
+  // gone idle, which is off the first-paint path and long before any click.
+  useEffect(() => {
+    const warm = () => {
+      SettingsOverlay.preload()
+      if (paletteEnabled) CommandPalette.preload()
+    }
+    // `requestIdleCallback` is in every Chrome this extension targets; the timeout
+    // keeps a permanently busy tab from starving the warm-up indefinitely.
+    const id = requestIdleCallback(warm, { timeout: 2000 })
+    return () => cancelIdleCallback(id)
+  }, [paletteEnabled])
+
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const modifier = event.metaKey || event.ctrlKey
@@ -106,6 +120,9 @@ export function App() {
         type="button"
         className="page__settings is-icon-btn"
         onClick={() => setSettingsOpen(true)}
+        // A pointer on its way to the cog is the last chance to beat the click.
+        onPointerEnter={() => SettingsOverlay.preload()}
+        onFocus={() => SettingsOverlay.preload()}
         title="Settings"
         aria-label="Settings"
         data-zen={appearance.zenMode}
