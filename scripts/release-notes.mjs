@@ -132,6 +132,14 @@ function renderPage(sections) {
 <link rel="canonical" href="https://openslate.byvenu.com/changelog">
 <meta name="robots" content="index, follow">
 
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://openslate.byvenu.com/changelog">
+<meta property="og:title" content="Open Slate: changelog">
+<meta property="og:description" content="What changed in each release of the Open Slate Chrome extension.">
+<meta property="og:image" content="https://openslate.byvenu.com/img/og.png">
+<meta property="og:site_name" content="Open Slate">
+<meta name="twitter:card" content="summary_large_image">
+
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

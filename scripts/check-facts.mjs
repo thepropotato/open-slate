@@ -84,6 +84,7 @@ const CLAIMS = [
   { file: 'marketing/site/index.html', fact: 'wallpaperKinds', near: '</b> wallpaper kinds<' },
   { file: 'marketing/site/index.html', fact: 'trackers', near: '</b> trackers<' },
   { file: 'marketing/site/index.html', fact: 'widgets', near: ' widgets, and none of them overlap' },
+  { file: 'marketing/site/index.html', fact: 'version', near: '"softwareVersion": "' },
 ]
 
 const WINDOW = 24

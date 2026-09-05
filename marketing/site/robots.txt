@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://openslate.byvenu.com/sitemap.xml
