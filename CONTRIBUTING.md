@@ -127,3 +127,36 @@ granted that permission.
 
 For anything security-related, please do not open a public issue - see
 [`SECURITY.md`](SECURITY.md).
+
+## Submitting a slate
+
+A slate is an arrangement of widgets: which ones are on the grid and where they
+sit. The gallery is a folder of JSON files in `slates/`, so submitting one is an
+ordinary pull request and merging it is what publishes it. There is no server
+and no account.
+
+The easiest route is from the extension. Open Settings, go to Backup and press
+**Share this layout**: that opens a submission form on GitHub with your code
+already filled in, which you post yourself. To open a pull request directly
+instead, add one file to `slates/` named after its `id`:
+
+```json
+{
+  "id": "two-columns",
+  "name": "Two columns",
+  "description": "Reading on the left, the day on the right.",
+  "author": "your-github-username",
+  "code": "ns1.…",
+  "added": "2026-09-12"
+}
+```
+
+Then run `npm run slates`, which validates every file and rewrites the index the
+gallery reads. Commit both. CI runs the same check, so a submission that cannot
+be applied never reaches review.
+
+A slate carries no content, and that is enforced rather than trusted: the code
+holds widget types and positions only, never the calendar you subscribe to, the
+city your weather is set to, or your tiles and notes. Names and descriptions are
+rendered in the extension and on the site, so they are held to plain text within
+a length cap.

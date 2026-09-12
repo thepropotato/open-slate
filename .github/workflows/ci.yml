@@ -25,7 +25,9 @@ jobs:
 
       - run: npm ci
 
-      # Typecheck, lint, the unused-icon check and the self-test.
+      # Typecheck, lint, the unused-icon check, the facts check, submitted
+      # slates and the self-test. A slate submission is reviewed by hand, so
+      # this is what a reviewer can rely on before reading one.
       - run: npm run check
 
       # Proves the extension still builds into something loadable.
