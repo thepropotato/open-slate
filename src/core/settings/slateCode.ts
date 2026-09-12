@@ -1,0 +1,139 @@
+import { z } from 'zod'
+import { GridItem, Settings, WidgetInstance, type Settings as SettingsType } from './schema'
+import { fromBase64Url, toBase64Url } from './themeCode'
+
+/**
+ * Shareable slate codes: the arrangement a theme code deliberately leaves out.
+ *
+ * A theme carries the look. A slate carries where things sit - which widgets are
+ * on the grid, at what size, and the layout knobs that frame them.
+ *
+ * What it never carries is content, and that is the whole design rather than an
+ * omission. Widget config holds the secret iCal address of somebody's work
+ * calendar, a Spotify client ID, the city they live in; tiles are a list of the
+ * sites they visit. A code is pasted into a chat message by people who will not
+ * audit it first, so none of that goes in: a shared slate places a calendar
+ * widget, and the person who imports it points it at their own calendar.
+ */
+
+const PREFIX = 'ns1.'
+
+/** The one piece of instance state worth carrying: it is a frame, not content. */
+const SlateWidget = z.object({
+  type: WidgetInstance.shape.type,
+  surface: WidgetInstance.shape.surface,
+  // Grid cell, less the id - ids are minted fresh on import.
+  x: GridItem.shape.x,
+  y: GridItem.shape.y,
+  w: GridItem.shape.w,
+  h: GridItem.shape.h,
+})
+
+const SlatePayload = z.object({
+  /** Shown before the code is applied, so nothing lands unannounced. */
+  name: z.string().default(''),
+  widgets: z.array(SlateWidget).default([]),
+  columns: z.number().default(6),
+  margin: z.number().default(14),
+  compact: z.string().default('vertical'),
+  /** Layout knobs only; `lastPane` is a record of what you did, not a design. */
+  layout: z.record(z.string(), z.unknown()).default({}),
+})
+
+export type SlatePayload = z.infer<typeof SlatePayload>
+
+export function encodeSlate(settings: SettingsType, name = ''): string {
+  const cells = new Map(settings.widgets.layout.map((cell) => [cell.i, cell]))
+  const payload: SlatePayload = {
+    name,
+    widgets: settings.widgets.instances.map((instance) => {
+      const cell = cells.get(instance.id)
+      return {
+        type: instance.type,
+        surface: instance.surface,
+        x: cell?.x ?? 0,
+        y: cell?.y ?? 0,
+        w: cell?.w ?? 2,
+        h: cell?.h ?? 1,
+      }
+    }),
+    columns: settings.widgets.columns,
+    margin: settings.widgets.margin,
+    compact: settings.widgets.compact,
+    layout: { ...settings.layout, lastPane: undefined },
+  }
+  return PREFIX + toBase64Url(JSON.stringify(payload))
+}
+
+/** Reads a code without applying it, so the reader can be told what they are about to get. */
+export function decodeSlate(code: string): SlatePayload {
+  const trimmed = code.trim()
+  if (!trimmed.startsWith(PREFIX)) throw new Error('That is not a slate code.')
+  let raw: unknown
+  try {
+    raw = JSON.parse(fromBase64Url(trimmed.slice(PREFIX.length)))
+  } catch {
+    throw new Error('That slate code is damaged.')
+  }
+  const parsed = SlatePayload.safeParse(raw)
+  if (!parsed.success) throw new Error('That slate code contains values this version cannot use.')
+  return parsed.data
+}
+
+/** A preset is applied through the same path as a pasted code, not beside it. */
+export function encodePayload(payload: SlatePayload): string {
+  return PREFIX + toBase64Url(JSON.stringify(payload))
+}
+
+/**
+ * Replaces the arrangement, leaving every tile, note and widget setting alone.
+ * Widgets are rebuilt from scratch rather than matched to what is already there:
+ * a slate describes a whole grid, and half of one merged into half of another is
+ * an arrangement nobody designed.
+ */
+export function applySlate(
+  settings: SettingsType,
+  code: string,
+  mintId: () => string,
+  /** Which widget types this build actually has; unknown ones are dropped. */
+  isKnownType: (type: string) => boolean = () => true,
+): SettingsType {
+  const payload = decodeSlate(code)
+
+  // A slate written by a newer build, or one naming a widget since removed, would
+  // otherwise leave a hole on the grid that cannot be selected or deleted.
+  const known = payload.widgets.filter((widget) => isKnownType(widget.type))
+
+  const instances = known.map((widget) => ({
+    id: mintId(),
+    type: widget.type,
+    // Left at the widget's own defaults: a slate carries no config to restore.
+    config: {},
+    surface: widget.surface,
+  }))
+
+  const layout = instances.map((instance, index) => ({
+    i: instance.id,
+    x: known[index].x,
+    y: known[index].y,
+    w: known[index].w,
+    h: known[index].h,
+  }))
+
+  const merged = {
+    ...settings,
+    widgets: {
+      ...settings.widgets,
+      instances,
+      layout,
+      columns: payload.columns,
+      margin: payload.margin,
+      compact: payload.compact,
+    },
+    layout: { ...settings.layout, ...payload.layout, lastPane: settings.layout.lastPane },
+  }
+
+  const parsed = Settings.safeParse(merged)
+  if (!parsed.success) throw new Error('That slate code contains values this version cannot use.')
+  return parsed.data
+}
