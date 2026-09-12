@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { getPath, setPath } from '@/core/util/path'
 import type { Settings } from './schema'
-import { isStagedPath, stagedDiff } from './staged'
+import { isStagedPath, rebase, stagedDiff } from './staged'
 import {
   flushSettings,
   loadSettings,
@@ -130,6 +130,12 @@ export function SettingsProvider({
           const next = recipe(current)
           lastWritten.current = JSON.stringify(next)
           saveSettings(next)
+          // An open draft still holds the pre-commit value of every staged path,
+          // and `effective` prefers the draft - so a recipe touching one (picking
+          // a wallpaper sets `background.type` beside the blob id) would commit
+          // and then be hidden behind the stale draft. Rebasing keeps edits in
+          // progress without letting them mask what was just written.
+          setDraft((draft) => (draft ? rebase(current, draft, next) : draft))
           return next
         }),
       set: (path, value) => {
@@ -207,15 +213,6 @@ export function SettingsProvider({
       </ActionsContext.Provider>
     </SettingsContext.Provider>
   )
-}
-
-/** Carries draft edits across a change written by another tab. */
-function rebase(previousSaved: Settings, draft: Settings, incoming: Settings): Settings | null {
-  const edited = stagedDiff(previousSaved, draft)
-  if (edited.length === 0) return null
-  let next = incoming
-  for (const path of edited) next = setPath(next, path, getPath(draft, path))
-  return next
 }
 
 /** The saved settings the app runs on, never a draft. The settings UI uses `useDraftSettings`. */

@@ -497,7 +497,9 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 
 {
   const { parseCalendar, calendarName } = await load('features/widgets/calendar/ics.ts')
-  const { normaliseUrl, colorOf } = await load('features/widgets/calendar/api.ts')
+  const { normaliseUrl, colorOf, isFreeBusyOnly, probeMessage } = await load(
+    'features/widgets/calendar/api.ts',
+  )
 
   const wrap = (body) => `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nX-WR-CALNAME:Work\r\n${body}\r\nEND:VCALENDAR`
   const event = (lines) => wrap(`BEGIN:VEVENT\r\n${lines.join('\r\n')}\r\nEND:VEVENT`)
@@ -719,6 +721,60 @@ const truthy = (name, value) => check(name, Boolean(value), true)
     )
   }
 
+  /*
+   * A calendar shared as free/busy really does send `SUMMARY:Busy` and nothing
+   * else. That is indistinguishable from our own placeholder unless the parser
+   * says which it was, and the widget needs to know so it can explain the
+   * missing titles rather than looking like it failed to read them.
+   */
+  {
+    const named = read(event(['UID:n', 'SUMMARY:Standup', 'DTSTART:20260304T090000']))
+    check('ics: a real title is not flagged', named[0].untitled, false)
+
+    const busy = read(event(['UID:f', 'SUMMARY:Busy', 'DTSTART:20260304T090000']))
+    check('ics: a free/busy title still reads Busy', busy[0].title, 'Busy')
+    truthy('ics: a free/busy event is flagged untitled', busy[0].untitled)
+
+    const blank = read(event(['UID:b', 'DTSTART:20260304T090000']))
+    truthy('ics: a missing title is flagged too', blank[0].untitled)
+    check('ics: a missing title falls back', blank[0].title, 'Busy')
+
+    // Hidden details means no join link either, so the row must not be clickable.
+    check('ics: a free/busy event has no link', busy[0].url, '')
+  }
+
+  /*
+   * A whole calendar of placeholders is the free/busy case, and the widget says
+   * so instead of showing a column of "Busy" that looks like a bug. One real
+   * title anywhere means the feed does send details.
+   */
+  {
+    const of = (events) => ({ url: 'https://example.com/c.ics', name: 'Work', color: 0, events })
+    const busy = read(event(['UID:f', 'SUMMARY:Busy', 'DTSTART:20260304T090000']))
+    const named = read(event(['UID:n', 'SUMMARY:Standup', 'DTSTART:20260304T090000']))
+
+    truthy('cal: an all-placeholder calendar is free/busy', isFreeBusyOnly(of(busy)))
+    check('cal: a named calendar is not', isFreeBusyOnly(of(named)), false)
+    check('cal: a mixed calendar is not', isFreeBusyOnly(of([...busy, ...named])), false)
+    // An empty month is not evidence of anything; it must not accuse the feed.
+    check('cal: an empty calendar is not', isFreeBusyOnly(of([])), false)
+  }
+
+  /*
+   * A work calendar that answers with a sign-in page has a perfectly correct
+   * address, so "check the address" is the one thing not worth telling the
+   * reader. Each reason has to say something different.
+   */
+  {
+    const url = 'https://calendar.google.com/calendar/ical/x/basic.ics'
+    const reasons = ['private', 'missing', 'not-a-calendar', 'unreachable']
+    const messages = reasons.map((reason) => probeMessage(reason, url))
+    check('probe: every reason says something', messages.filter(Boolean).length, 4)
+    check('probe: the reasons differ', new Set(messages).size, 4)
+    truthy('probe: a refused feed names the host', messages[0].includes('calendar.google.com'))
+    truthy('probe: a refused feed does not blame the address', !/check the address/i.test(messages[0]))
+  }
+
   check('ics: junk is not a calendar', read('not a calendar at all').length, 0)
   check('ics: an empty document is empty', read(''), [])
 
@@ -886,9 +942,9 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 /* Staged settings (draft) */
 
 {
-  const { isStagedPath, stagedDiff } = await load('core/settings/staged.ts')
+  const { isStagedPath, stagedDiff, rebase } = await load('core/settings/staged.ts')
   const { Settings } = await load('core/settings/schema.ts')
-  const { setPath } = await load('core/util/path.ts')
+  const { getPath, setPath } = await load('core/util/path.ts')
 
   // Knobs are held for confirmation; content is written straight through.
   truthy('staged: a radius is staged', isStagedPath('appearance.radius'))
@@ -943,6 +999,38 @@ const truthy = (name, value) => check(name, Boolean(value), true)
       drain(stale).widgets.columns === 10,
     )
   }
+
+  /*
+   * Picking a wallpaper writes the blob id (immediate) and `background.type`
+   * (staged) in one recipe. With settings open there is a draft holding the old
+   * type, and the draft is what the page and the preview render - so the commit
+   * landed and nothing changed on screen until the draft was saved or discarded.
+   */
+  {
+    const saved = Settings.parse({})
+    // Settings open with one unrelated knob nudged, so a draft exists.
+    const draft = setPath(saved, 'appearance.radius', 4)
+    // "Use" on an image: type and blob id together.
+    const committed = setPath(
+      setPath(saved, 'background.type', 'image'),
+      'background.image.blobId',
+      'img_1',
+    )
+
+    check(
+      'wallpaper: a stale draft used to hide the new type',
+      getPath(draft, 'background.type'),
+      getPath(saved, 'background.type'),
+    )
+
+    const next = rebase(saved, draft, committed)
+    check('wallpaper: the committed type shows through', next.background.type, 'image')
+    check('wallpaper: the blob id comes with it', next.background.image.blobId, 'img_1')
+    check('wallpaper: the edit in progress survives', next.appearance.radius, 4)
+  }
+
+  // Nothing edited means nothing to carry: the commit stands on its own.
+  check('rebase: an untouched draft is dropped', rebase(base, base, base), null)
 
   const radius = { ...base, appearance: { ...base.appearance, radius: 4 } }
   check('diff: one knob', stagedDiff(base, radius), ['appearance.radius'])

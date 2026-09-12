@@ -5,6 +5,23 @@ Notable changes to Open Slate, newest first. Versions follow
 GitHub release, the website and the store listing's "What's new" all read from,
 so it is written for the people who use the extension rather than for the diff.
 
+## [Unreleased]
+
+### Fixed
+
+- Choosing a wallpaper while settings are open now shows up straight away, on
+  both the preview and the page behind it. It was being applied but left hidden
+  behind the settings you had not saved yet, so a picture you had definitely
+  chosen appeared to do nothing until you saved or closed the panel.
+- A calendar that will not load now says why. A work calendar that answers with
+  a sign-in page instead of a calendar, an address that has been reset, and a
+  site that cannot be reached are three different problems, and "check the
+  address" was the wrong advice for the one where the address is correct.
+- A calendar shared as free or busy only now says so, rather than showing a day
+  of meetings all called "Busy" with nothing to click. The titles and joining
+  links are removed before the calendar ever reaches the browser, so the widget
+  now explains that and points at the sharing setting that controls it.
+
 ## [1.2.0]
 
 ### Added

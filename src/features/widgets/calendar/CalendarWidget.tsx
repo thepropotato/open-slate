@@ -10,9 +10,11 @@ import type { WidgetProps } from '@/core/widgets/types'
 import { resolveLocale } from '@/core/util/time'
 import {
   colorOf,
+  isFreeBusyOnly,
   loadCalendars,
   normaliseUrl,
   probeCalendar,
+  probeMessage,
   requestCalendarAccess,
   urlLabel,
   type CalendarSource,
@@ -83,6 +85,8 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
   // actually chosen.
   const showSelection = selected !== null && selected !== startOfToday
   const needsPermission = (calendars ?? []).filter((cal) => cal.error === 'needs-permission')
+  // Named once here so both panes can explain an agenda full of "Busy".
+  const hiddenDetails = (calendars ?? []).filter(isFreeBusyOnly)
 
   // The grid is always the face; setup is offered by the header `+`, never opened
   // unasked.
@@ -128,6 +132,7 @@ function CalendarWidget({ config, setConfig }: WidgetProps<CalendarConfig>) {
             }
           />
         ) : null}
+        {hiddenDetails.length > 0 ? <HiddenDetailsNotice calendars={hiddenDetails} /> : null}
       </div>
     )
   }
@@ -507,6 +512,24 @@ function GrantNotice({
   )
 }
 
+/**
+ * Every event came back as "Busy" with no link, which means the calendar is
+ * shared as free/busy rather than that the widget failed to read it. Only the
+ * owner can change that, so this explains rather than offering a button.
+ */
+function HiddenDetailsNotice({ calendars }: { calendars: LoadedCalendar[] }) {
+  return (
+    <div className="cal__grant" data-tone="quiet">
+      <Icon name="info" />
+      <span>
+        {calendars.map((cal) => cal.name).join(', ')}{' '}
+        {calendars.length > 1 ? 'are' : 'is'} shared as free/busy, so no titles or joining links
+        are sent. Share with full details to see them.
+      </span>
+    </div>
+  )
+}
+
 // First-run flow. It spells out where the secret iCal address comes from, since
 // nobody finds it by guessing.
 function CalendarSetup({
@@ -541,12 +564,12 @@ function CalendarSetup({
     }
     const probed = await probeCalendar(url)
     setBusy(false)
-    if (!probed) {
-      setError('Could not read a calendar there. Check the address.')
+    if (probed.failure) {
+      setError(probeMessage(probed.failure, url))
       return
     }
     // Next colour along; `colorOf` wraps, so this stays in range.
-    onAdd({ url, name: probed.name, color: existing.length })
+    onAdd({ url, name: probed.name ?? '', color: existing.length })
   }
 
   return (

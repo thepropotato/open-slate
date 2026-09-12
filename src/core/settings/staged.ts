@@ -1,4 +1,4 @@
-import { getPath } from '@/core/util/path'
+import { getPath, setPath } from '@/core/util/path'
 import type { Settings } from './schema'
 
 /**
@@ -78,3 +78,17 @@ function walk(saved: unknown, draft: unknown, path: string, out: string[]): void
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
+
+/**
+ * Carries draft edits across a change written elsewhere: another tab, or an
+ * `update` that commits. Only paths the reader actually edited are replayed onto
+ * the incoming settings, so an untouched staged path follows what was just
+ * written instead of masking it. `null` means the draft held nothing worth keeping.
+ */
+export function rebase(previousSaved: Settings, draft: Settings, incoming: Settings): Settings | null {
+  const edited = stagedDiff(previousSaved, draft)
+  if (edited.length === 0) return null
+  let next = incoming
+  for (const path of edited) next = setPath(next, path, getPath(draft, path))
+  return next
+}
