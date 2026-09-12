@@ -1,0 +1,66 @@
+.slatep {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.slatep__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.slatep__msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--fg-muted);
+}
+
+.slatep__msg[data-kind='bad'] {
+  color: var(--danger, #e5484d);
+}
+
+/* Starter layouts. A grid rather than a row: each one needs a line of prose to
+   say what it is for, and those do not fit side by side in the panel. */
+.slatep__presets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-xs);
+}
+
+.slatep__preset {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
+  text-align: start;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    background var(--dur-fast) var(--ease);
+}
+
+.slatep__preset:hover {
+  border-color: var(--accent);
+  background: rgb(var(--surface-tint) / 8%);
+}
+
+.slatep__presetname {
+  font-size: var(--text-sm);
+  font-weight: 590;
+}
+
+.slatep__presetwhat {
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+  line-height: 1.4;
+}
