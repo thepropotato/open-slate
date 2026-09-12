@@ -54,3 +54,11 @@ body:
             I built this layout, and I am happy for it to be published in the
             gallery under the project's licence with my GitHub username credited.
           required: true
+
+  - type: markdown
+    attributes:
+      value: >
+        You are not asked for your username: the slate is credited to the account
+        that files this, which is one thing nobody can type in on your behalf. If
+        you are sharing someone else's layout, say whose in a comment so they can
+        be credited instead.

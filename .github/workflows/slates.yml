@@ -1,0 +1,62 @@
+name: Slates
+
+# Authorship, checked against the one identity nobody can fill in themselves.
+#
+# The `author` field in a slate file is a claim typed into a JSON body, so on its
+# own it is worth nothing: a submission can say it was written by anyone. GitHub
+# already knows who opened the pull request and that cannot be forged, so this
+# compares the two and refuses a mismatch.
+#
+# It runs separately from CI because it needs the pull request context, and
+# because a fork's CI run must not be able to influence the result.
+
+on:
+  pull_request_target:
+    paths:
+      - 'slates/**'
+
+# Read-only. `pull_request_target` runs with the base repository's token, so it
+# never checks out or executes code from the fork.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  authorship:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The base branch, deliberately: the fork's own workflow files and
+          # scripts are never run here.
+          ref: ${{ github.base_ref }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - run: npm ci
+
+      # Only the submitted files are read, and only as data.
+      - name: Fetch the submitted slates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          mkdir -p .incoming
+          gh api "repos/$REPO/pulls/$PR/files" --paginate \
+            --jq '.[] | select(.filename | startswith("slates/")) | select(.status != "removed") | .filename' \
+            > .incoming/paths.txt
+          while read -r path; do
+            [ -z "$path" ] && continue
+            mkdir -p ".incoming/$(dirname "$path")"
+            gh api "repos/$REPO/contents/$path?ref=${{ github.event.pull_request.head.sha }}" \
+              --jq '.content' | base64 -d > ".incoming/$path"
+          done < .incoming/paths.txt
+
+      - name: Check each slate is credited to whoever submitted it
+        env:
+          SUBMITTER: ${{ github.event.pull_request.user.login }}
+        run: node scripts/check-slate-authorship.mjs .incoming
