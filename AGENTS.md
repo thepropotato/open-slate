@@ -42,6 +42,7 @@ rows, not all of them.
 | A search engine, clock face, palette or wallpaper kind | The `.proof` block in [`marketing/site/index.html`](marketing/site/index.html), and any prose quoting the count |
 | A permission, or a new host in the manifest | [`STORE.md`](STORE.md) - every permission needs a justification a reviewer can act on, and new tab overrides are reviewed by hand |
 | A network request to a new origin | [`STORE.md`](STORE.md) and the privacy sections of [`marketing/site/index.html`](marketing/site/index.html) and [`marketing/site/privacy.html`](marketing/site/privacy.html). The site claims each request is one the user asked for; keep that true |
+| A slate in `slates/` | `npm run slates`, which validates every submission and rewrites both the index and the gallery page. Both are committed and checked in CI |
 | Anything a user would notice | [`CHANGELOG.md`](CHANGELOG.md), under `## [Unreleased]` |
 | A screen that appears in the marketing images | [`scripts/marketing-shots.mjs`](scripts/marketing-shots.mjs), then `npm run marketing:shots` |
 

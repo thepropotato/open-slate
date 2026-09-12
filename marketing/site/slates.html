@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open Slate: layouts</title>
+<meta name="description" content="Layouts shared by people who use Open Slate. Apply one to your new tab in a click.">
+<link rel="canonical" href="https://openslate.byvenu.com/slates">
+<meta name="robots" content="index, follow">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://openslate.byvenu.com/slates">
+<meta property="og:title" content="Open Slate: layouts">
+<meta property="og:description" content="Layouts shared by people who use Open Slate. Apply one to your new tab in a click.">
+<meta property="og:image" content="https://openslate.byvenu.com/img/og.png">
+<meta property="og:site_name" content="Open Slate">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --page:#FAF9F6;
+  --surface:#FFFFFF;
+  --border:#E4E1D9;
+  --body:#5A5750;
+  --head:#1A1917;
+  --muted:#8A857B;
+  --accent:#2F5D50;
+  --accent-soft:#2F5D5014;
+  --serif:'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --sans:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --measure:45rem;
+  --gutter:clamp(1.25rem, 4vw, 1.5rem);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--page);color:var(--body);
+  font:400 clamp(1rem, 0.95rem + 0.25vw, 1.0625rem)/1.65 var(--sans);
+  -webkit-font-smoothing:antialiased;
+}
+/* Long strings in a policy (a permission name, a URL) must wrap rather than
+   push the page wider than the screen. */
+h1,h2,p,li,td,th{overflow-wrap:break-word}
+.wrap{max-width:var(--measure);margin:0 auto;padding:0 var(--gutter)}
+header{padding:clamp(2.25rem,8vw,4rem) 0 .5rem}
+a{color:var(--accent)}
+.back{
+  font-size:14px;color:var(--muted);text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.back:hover{color:var(--accent)}
+h1{
+  font:400 clamp(2.375rem,9vw,3.625rem)/1.05 var(--serif);
+  color:var(--head);margin:1.75rem 0 .625rem;letter-spacing:-.01em;
+}
+.lede{font-size:clamp(1.0625rem,2.6vw,1.1875rem);color:var(--body);margin:0 0 .375rem}
+.updated{font-size:.875rem;color:var(--muted);margin:1.125rem 0 0}
+main{padding:1.25rem 0 2.5rem}
+h2{
+  font:600 .9375rem/1.3 var(--sans);text-transform:uppercase;letter-spacing:.08em;
+  color:var(--head);margin:clamp(2rem,6vw,3.25rem) 0 .875rem;
+}
+p{margin:0 0 1rem}
+ul{margin:0 0 1rem;padding-left:1.375rem}
+li{margin:0 0 .5625rem}
+strong{color:var(--head);font-weight:600}
+.callout{
+  background:var(--surface);border:1px solid var(--border);border-radius:1rem;
+  padding:clamp(1.125rem,4vw,1.5rem) clamp(1.125rem,4vw,1.625rem);margin:0 0 .5rem;
+}
+.callout p:last-child{margin-bottom:0}
+/* The table scrolls inside its own box rather than widening the page. */
+table{
+  width:100%;border-collapse:collapse;margin:0 0 1.125rem;font-size:.94rem;
+  display:block;overflow-x:auto;white-space:nowrap;
+  -webkit-overflow-scrolling:touch;
+}
+th,td{text-align:left;padding:.7rem .875rem;border-bottom:1px solid var(--border);vertical-align:top}
+th{color:var(--head);font-weight:600;font-size:.8rem;text-transform:uppercase;letter-spacing:.06em}
+code{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
+  background:var(--accent-soft);padding:.12em .38em;border-radius:.3em;color:var(--head);
+  overflow-wrap:anywhere;
+}
+footer{
+  border-top:1px solid var(--border);margin-top:clamp(2.25rem,7vw,3.5rem);padding:1.75rem 0 4rem;
+  font-size:.875rem;color:var(--muted);display:flex;gap:.75rem 1.25rem;flex-wrap:wrap;
+}
+footer a{color:var(--muted)}
+footer a:hover{color:var(--accent)}
+/* Orientation is the breakpoint, matching the main page; the width query is a
+   guard for narrow landscape windows on a desktop. */
+@media (orientation:portrait), (max-width:52rem){
+  footer a,.back{display:inline-flex;align-items:center;min-height:2.25rem}
+}
+
+@media (hover:none){
+  a:hover{color:inherit}
+}
+
+@media (prefers-color-scheme:dark){
+  :root{
+    --page:#1A1917;--surface:#252320;--border:#332F2B;
+    --body:#B9B4AA;--head:#FAF9F6;--muted:#8A857B;--accent:#8FB3A6;
+    --accent-soft:#8FB3A61F;
+  }
+}
+</style>
+<style>
+.wrap{max-width:64rem}
+header h1{font:400 clamp(2rem,5vw,2.75rem)/1.1 var(--serif);letter-spacing:-.02em;color:var(--head);margin:1rem 0 .5rem}
+.lede{max-width:62ch;color:var(--muted);margin:0 0 2.5rem}
+
+.slates{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));padding:0;list-style:none}
+.slate{border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:var(--surface)}
+
+/* The preview: blocks on the slate's own grid, so the shape is the message. */
+.grid{display:grid;gap:4px;padding:12px;aspect-ratio:16/10;background:rgba(127,127,127,.06);border-bottom:1px solid var(--border)}
+.cell{border-radius:5px;background:rgba(127,127,127,.22);display:grid;place-items:center;overflow:hidden;min-width:0}
+.cell i{font-style:normal;font-size:9px;letter-spacing:.02em;color:var(--muted);opacity:.85;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.meta{padding:1rem 1.1rem 1.15rem;display:flex;flex-direction:column;gap:.35rem;flex:1}
+.meta h2{font:600 1.05rem/1.3 var(--sans,inherit);text-transform:none;letter-spacing:0;color:var(--head);margin:0;border:0;padding:0}
+.what{margin:0;color:var(--muted);font-size:.925rem;line-height:1.5}
+.by{margin:.15rem 0 0;font-size:.825rem;color:var(--muted)}
+.actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:auto;padding-top:.85rem}
+.use,.copy{font:500 .875rem/1 inherit;padding:.6rem .9rem;border-radius:8px;border:1px solid var(--border);background:none;color:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+/* Paired with --page, not a fixed white: the accent lightens in dark mode, so a
+   hardcoded white label loses its contrast exactly where the ground is palest. */
+.use{background:var(--accent);color:var(--page);border-color:var(--accent)}
+.copy[data-done]{color:var(--muted)}
+.none{color:var(--muted)}
+
+.how{margin-top:3rem;border-top:1px solid var(--border);padding-top:1.5rem;color:var(--muted);max-width:62ch}
+.how h2{font:600 1rem/1.3 inherit;text-transform:none;letter-spacing:0;color:var(--head);margin:0 0 .5rem;border:0;padding:0}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <a class="back" href="/">&larr; Open Slate</a>
+    <h1>Layouts</h1>
+    <p class="lede">Arrangements people have shared. Applying one rearranges the widgets on your
+    new tab and leaves your tiles, notes and tasks exactly as they are.</p>
+  </header>
+
+<main>
+<div class="slates">
+<article class="slate">
+  <div class="grid" style="grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(3,1fr)" aria-hidden="true"><span class="cell" style="grid-column:1/span 2;grid-row:1/span 1"><i>clock</i></span><span class="cell" style="grid-column:3/span 2;grid-row:1/span 1"><i>weather</i></span><span class="cell" style="grid-column:5/span 2;grid-row:1/span 1"><i>timer</i></span><span class="cell" style="grid-column:1/span 2;grid-row:2/span 2"><i>calendar</i></span><span class="cell" style="grid-column:3/span 2;grid-row:2/span 2"><i>todo</i></span><span class="cell" style="grid-column:5/span 2;grid-row:2/span 2"><i>notes</i></span></div>
+  <div class="meta">
+    <h2>Dashboard</h2>
+    <p class="what">Clock, weather and calendar across the top, with the day below.</p>
+    <p class="by">6 widgets &middot; by <a href="https://github.com/thepropotato" rel="noopener noreferrer">thepropotato</a></p>
+    <div class="actions">
+      <a class="use" href="chrome-extension://kbacclgoobafnkifgckaenacaeghfonm/slate.html?code=ns1.eyJuYW1lIjoiRGFzaGJvYXJkIiwid2lkZ2V0cyI6W3sidHlwZSI6ImNsb2NrIiwic3VyZmFjZSI6bnVsbCwieCI6MCwieSI6MCwidyI6MiwiaCI6MX0seyJ0eXBlIjoid2VhdGhlciIsInN1cmZhY2UiOm51bGwsIngiOjIsInkiOjAsInciOjIsImgiOjF9LHsidHlwZSI6InRpbWVyIiwic3VyZmFjZSI6bnVsbCwieCI6NCwieSI6MCwidyI6MiwiaCI6MX0seyJ0eXBlIjoiY2FsZW5kYXIiLCJzdXJmYWNlIjpudWxsLCJ4IjowLCJ5IjoxLCJ3IjoyLCJoIjoyfSx7InR5cGUiOiJ0b2RvIiwic3VyZmFjZSI6bnVsbCwieCI6MiwieSI6MSwidyI6MiwiaCI6Mn0seyJ0eXBlIjoibm90ZXMiLCJzdXJmYWNlIjpudWxsLCJ4Ijo0LCJ5IjoxLCJ3IjoyLCJoIjoyfV0sImNvbHVtbnMiOjYsIm1hcmdpbiI6MTQsImNvbXBhY3QiOiJ2ZXJ0aWNhbCIsImxheW91dCI6e319&amp;name=Dashboard&amp;by=thepropotato">Use this layout</a>
+      <button class="copy" type="button" data-code="ns1.eyJuYW1lIjoiRGFzaGJvYXJkIiwid2lkZ2V0cyI6W3sidHlwZSI6ImNsb2NrIiwic3VyZmFjZSI6bnVsbCwieCI6MCwieSI6MCwidyI6MiwiaCI6MX0seyJ0eXBlIjoid2VhdGhlciIsInN1cmZhY2UiOm51bGwsIngiOjIsInkiOjAsInciOjIsImgiOjF9LHsidHlwZSI6InRpbWVyIiwic3VyZmFjZSI6bnVsbCwieCI6NCwieSI6MCwidyI6MiwiaCI6MX0seyJ0eXBlIjoiY2FsZW5kYXIiLCJzdXJmYWNlIjpudWxsLCJ4IjowLCJ5IjoxLCJ3IjoyLCJoIjoyfSx7InR5cGUiOiJ0b2RvIiwic3VyZmFjZSI6bnVsbCwieCI6MiwieSI6MSwidyI6MiwiaCI6Mn0seyJ0eXBlIjoibm90ZXMiLCJzdXJmYWNlIjpudWxsLCJ4Ijo0LCJ5IjoxLCJ3IjoyLCJoIjoyfV0sImNvbHVtbnMiOjYsIm1hcmdpbiI6MTQsImNvbXBhY3QiOiJ2ZXJ0aWNhbCIsImxheW91dCI6e319">Copy code</button>
+    </div>
+  </div>
+</article>
+</div>
+
+<section class="how">
+<h2>How this works</h2>
+<p>A slate carries the arrangement and nothing else: which widgets are on the grid
+and where they sit. It holds no calendars, no locations and no accounts, so
+whoever applies one points the widgets at their own. &ldquo;Use this layout&rdquo;
+opens the extension with the slate in the link and shows you the result before
+anything changes.</p>
+<p>To share yours, open Settings &rarr; Widgets in the extension and press
+<strong>Share this layout</strong>.</p>
+</section>
+</main>
+</div>
+
+<script>
+// Progressive enhancement: the link works without this, the copy button is extra.
+document.querySelectorAll('.copy').forEach((button) => {
+  button.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(button.dataset.code)
+      button.textContent = 'Copied'
+      button.dataset.done = '1'
+      setTimeout(() => { button.textContent = 'Copy code'; delete button.dataset.done }, 2000)
+    } catch {
+      button.textContent = 'Press Ctrl+C'
+    }
+  })
+})
+</script>
+</body>
+</html>
