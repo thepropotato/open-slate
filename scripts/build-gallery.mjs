@@ -152,7 +152,7 @@ and where they sit. It holds no calendars, no locations and no accounts, so
 whoever applies one points the widgets at their own. &ldquo;Use this layout&rdquo;
 opens the extension with the slate in the link and shows you the result before
 anything changes.</p>
-<p>To share yours, open Settings &rarr; Widgets in the extension and press
+<p>To share yours, open Settings &rarr; Slates in the extension and press
 <strong>Share this layout</strong>.</p>
 </section>
 </main>

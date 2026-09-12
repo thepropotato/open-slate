@@ -5,6 +5,7 @@ import { behaviorSection } from './behavior'
 import { dataSection } from './data'
 import { layoutSection } from './layout'
 import { searchSection } from './search'
+import { slatesSection } from './slates'
 import { tilesSection } from './tiles'
 import { widgetsSection } from './widgets'
 
@@ -16,6 +17,7 @@ export const sections: Section[] = [
   searchSection,
   tilesSection,
   widgetsSection,
+  slatesSection,
   behaviorSection,
   dataSection,
 ]

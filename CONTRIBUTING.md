@@ -135,7 +135,7 @@ sit. The gallery is a folder of JSON files in `slates/`, so submitting one is an
 ordinary pull request and merging it is what publishes it. There is no server
 and no account.
 
-The easiest route is from the extension. Open Settings, go to Widgets and press
+The easiest route is from the extension. Open Settings, go to Slates and press
 **Share this layout**: that opens a submission form on GitHub with your code
 already filled in, which you post yourself. To open a pull request directly
 instead, add one file to `slates/` named after its `id`:
@@ -189,6 +189,6 @@ Commenting on the submission is enough to reach you.
 
 Submitting needs a free GitHub account, because that account is what proves who
 wrote the slate. If you do not want one, the code is still yours to share: copy
-it from Settings → Widgets and send it however you like. Anyone can apply it
+it from Settings → Slates and send it however you like. Anyone can apply it
 directly, and a maintainer can open the pull request for you with the credit
 left in your name.
