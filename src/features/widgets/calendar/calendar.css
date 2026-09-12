@@ -681,6 +681,19 @@
   white-space: nowrap;
 }
 
+/* An explanation is a sentence, not a label: it wraps rather than being clipped,
+   and sits above the agenda it is accounting for. */
+.cal__grant[data-tone='quiet'] {
+  align-items: flex-start;
+}
+
+.cal__grant[data-tone='quiet'] span {
+  overflow: visible;
+  white-space: normal;
+  text-overflow: clip;
+  line-height: 1.4;
+}
+
 /* Subscription list, in settings */
 
 .callist {

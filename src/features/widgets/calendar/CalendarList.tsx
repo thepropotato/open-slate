@@ -7,6 +7,7 @@ import {
   forgetCalendar,
   normaliseUrl,
   probeCalendar,
+  probeMessage,
   requestCalendarAccess,
   urlLabel,
   type CalendarSource,
@@ -40,17 +41,17 @@ export function CalendarList({ scope }: { scope?: FieldScope }) {
       setError(`Reading ${urlLabel(url)} needs permission for that site.`)
       return
     }
-    // Named from the feed itself. A failed probe is not fatal - the URL may be
-    // right and merely unreachable.
+    // Named from the feed itself, and the reason it could not be read is worth
+    // more to the reader than the fact that it could not.
     const probed = await probeCalendar(url)
     setBusy(false)
-    if (!probed) {
-      setError('Could not read a calendar there. Check the address.')
+    if (probed.failure) {
+      setError(probeMessage(probed.failure, url))
       return
     }
     setError('')
     setDraft('')
-    write([...sources, { url, name: probed.name, color: nextColor(sources) }])
+    write([...sources, { url, name: probed.name ?? '', color: nextColor(sources) }])
   }
 
   const remove = (url: string) => {

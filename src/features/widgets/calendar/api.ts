@@ -87,18 +87,62 @@ export function urlLabel(url: string): string {
   }
 }
 
+/** Why a probe failed, in the words the reader needs to act on. */
+export type ProbeFailure = 'private' | 'missing' | 'unreachable' | 'not-a-calendar'
+
+export interface ProbeResult {
+  name?: string
+  failure?: ProbeFailure
+}
+
 // Fetches a calendar for its own name, so a new subscription shows "Work"
-// rather than the pasted secret URL.
-export async function probeCalendar(url: string): Promise<{ name: string } | null> {
+// rather than the pasted secret URL. A failure carries its reason: "check the
+// address" is wrong advice for a work calendar whose address is perfectly
+// correct and merely refused to an extension.
+export async function probeCalendar(url: string): Promise<ProbeResult> {
+  let response: Response
   try {
-    const response = await fetch(url)
-    if (!response.ok) return null
-    const text = await response.text()
-    if (!/BEGIN:VCALENDAR/i.test(text)) return null
-    return { name: calendarName(text) || urlLabel(url) }
+    response = await fetch(url)
   } catch {
-    return null
+    return { failure: 'unreachable' }
   }
+  // A calendar behind a sign-in answers the request rather than the calendar:
+  // 401/403 outright, and Google redirects a Workspace feed to a login page that
+  // is a perfectly good 200 of HTML.
+  if (response.status === 401 || response.status === 403) return { failure: 'private' }
+  if (response.status === 404) return { failure: 'missing' }
+  if (!response.ok) return { failure: 'unreachable' }
+
+  const text = await response.text()
+  if (!/BEGIN:VCALENDAR/i.test(text)) {
+    return { failure: /<html/i.test(text) ? 'private' : 'not-a-calendar' }
+  }
+  return { name: calendarName(text) || urlLabel(url) }
+}
+
+/** What to tell the reader about a failed probe. */
+export function probeMessage(failure: ProbeFailure, url: string): string {
+  const host = urlLabel(url)
+  switch (failure) {
+    case 'private':
+      return `${host} asked for a sign-in instead of a calendar. Copy the calendar's secret address in iCal format, not the one from your browser's address bar. Some work accounts have that sharing turned off by an administrator.`
+    case 'missing':
+      return 'There is no calendar at that address. It may have been reset - copy the secret address again.'
+    case 'not-a-calendar':
+      return 'That address answered with something that is not a calendar.'
+    case 'unreachable':
+      return `Could not reach ${host}.`
+  }
+}
+
+/**
+ * Whether a calendar arrived with its details hidden. Sharing a calendar as
+ * "free/busy only" strips every title, location and join link before it leaves
+ * the server, so the widget has nothing to show and no amount of re-reading will
+ * change that - it is worth saying so rather than looking broken.
+ */
+export function isFreeBusyOnly(calendar: LoadedCalendar): boolean {
+  return calendar.events.length > 0 && calendar.events.every((event) => event.untitled)
 }
 
 /** Every event across the given calendars overlapping `[from, to)`. */

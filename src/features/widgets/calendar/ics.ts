@@ -12,6 +12,12 @@ export interface CalendarEvent {
   /** Epoch ms, exclusive. All-day events end at local midnight after the last day. */
   end: number
   allDay: boolean
+  /**
+   * This event carries no title of its own. Either the feed sent none, or it
+   * sent the placeholder a calendar shared as free/busy uses in place of one -
+   * both mean the reader is looking at a stand-in, not a meeting nobody named.
+   */
+  untitled: boolean
 }
 
 // Undoes RFC 5545 line folding: a continuation is marked by a leading space or
@@ -101,6 +107,16 @@ function firstLink(text: string): string {
   // Trailing punctuation belongs to the sentence, not the address.
   return match[0].replace(/[.,;:]+$/, '')
 }
+
+/**
+ * Titles a server substitutes when it is hiding details rather than a title
+ * someone typed. Google and Outlook both publish a free/busy calendar this way,
+ * so the words arrive looking exactly like a real SUMMARY.
+ */
+const PLACEHOLDER_TITLES = new Set(['busy', 'private', 'free'])
+
+const isPlaceholderTitle = (title: string): boolean =>
+  PLACEHOLDER_TITLES.has(title.trim().toLowerCase())
 
 interface RawEvent {
   uid: string
@@ -339,6 +355,7 @@ export function parseCalendar(text: string, from: number, to: number): CalendarE
       out.push({
         id: `${event.uid || at.title}:${at.start}`,
         title: at.title || 'Busy',
+        untitled: !at.title || isPlaceholderTitle(at.title),
         location: at.location,
         url: at.url,
         start: at.start,
@@ -358,6 +375,7 @@ export function parseCalendar(text: string, from: number, to: number): CalendarE
     out.push({
       id: `${override.uid}:${override.start}:moved`,
       title: override.title || 'Busy',
+      untitled: !override.title || isPlaceholderTitle(override.title),
       location: override.location,
       url: override.url,
       start: override.start,
