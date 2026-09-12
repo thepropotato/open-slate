@@ -136,7 +136,7 @@ ordinary pull request and merging it is what publishes it. There is no server
 and no account.
 
 The easiest route is from the extension. Open Settings, go to Slates and press
-**Share this layout**: that opens a submission form on GitHub with your code
+**Share my slate**: that opens a submission form on GitHub with your code
 already filled in, which you post yourself. To open a pull request directly
 instead, add one file to `slates/` named after its `id`:
 
