@@ -58,11 +58,15 @@ export function PageShell({
         {/* Snap point for the top: without it a scrolling page snaps past the top on load. */}
         <div className="page__snaptop" aria-hidden="true" />
 
-        {bands.map((band) =>
-          band === 'search' ? (
-            // Search sits outside the switch: it belongs to both panes.
-            <Band key="search" name="search" />
-          ) : (
+        {bands.map((band) => {
+          // Search sits outside the switch: it belongs to both panes.
+          if (band === 'search') return <Band key="search" name="search" />
+
+          // Every pane is rendered at the first one's position, so the stored
+          // order still decides whether the panes sit above or below search.
+          if (tabbed && band !== firstPane) return null
+
+          return (
             <Fragment key={band}>
               {/* Above the first switchable band, wherever the order puts it. */}
               {band === firstPane && showSwitch ? (
@@ -70,17 +74,34 @@ export function PageShell({
                   <PaneSwitch active={active} panes={panes} onSelect={onSelectPane} />
                 </div>
               ) : null}
-              <SwitchablePane
-                name={band}
-                active={active === band}
-                tabbed={tabbed}
-                first={band === bands[0]}
-              >
-                <Band name={band} />
-              </SwitchablePane>
+
+              {tabbed ? (
+                /*
+                 * One grid cell holds every pane, so the column is as tall as the
+                 * tallest of them whichever is showing. Switching from two widgets
+                 * to thirty tiles would otherwise resize the centred column and
+                 * walk the search bar up the page.
+                 */
+                <div className="page__panes">
+                  {panes.map((pane) => (
+                    <SwitchablePane key={pane} name={pane} active={active === pane} tabbed first>
+                      <Band name={pane} />
+                    </SwitchablePane>
+                  ))}
+                </div>
+              ) : (
+                <SwitchablePane
+                  name={band}
+                  active={active === band}
+                  tabbed={false}
+                  first={band === bands[0]}
+                >
+                  <Band name={band} />
+                </SwitchablePane>
+              )}
             </Fragment>
-          ),
-        )}
+          )
+        })}
       </main>
 
       {children}
@@ -130,14 +151,21 @@ function SwitchablePane({
   first: boolean
   children: ReactNode
 }) {
+  const away = tabbed && !active
   return (
     <div
       className="pane"
       data-band={name}
       data-active={active}
       data-first={first}
-      hidden={tabbed && !active}
-      aria-hidden={tabbed && !active}
+      /*
+       * Hidden by visibility rather than `hidden`, so the pane keeps its grid
+       * cell and goes on contributing height. A display:none pane also reports
+       * no width, which left the widget grid measuring its columns against
+       * nothing until it was next looked at.
+       */
+      inert={away || undefined}
+      aria-hidden={away}
     >
       {children}
     </div>

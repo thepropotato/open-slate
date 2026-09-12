@@ -52,8 +52,21 @@
   scroll-margin-top: var(--space);
 }
 
-.pane[hidden] {
-  display: none;
+/*
+ * Tabbed panes share one cell, so the stack is as tall as the tallest pane and
+ * the centred column stops resizing as you switch. Without this, moving from a
+ * pane of two widgets to one of thirty tiles walks the search bar up the page.
+ */
+.page__panes {
+  display: grid;
+}
+
+.page__panes > .pane {
+  grid-area: 1 / 1;
+}
+
+.page__panes > .pane[aria-hidden='true'] {
+  visibility: hidden;
 }
 
 /* Cross-fade only after the page has entered; on first paint there is nothing to read against. */

@@ -199,3 +199,37 @@ export function previewUrl(code: string, name = '', by = '', id: string = STORE_
   if (by) params.set('by', by)
   return `chrome-extension://${id}/slate.html?${params.toString()}`
 }
+
+export interface SlateCell {
+  type: string
+  /** 1-based grid lines, ready for `grid-column` / `grid-row`. */
+  column: number
+  row: number
+  spanX: number
+  spanY: number
+}
+
+/**
+ * A slate as a thumbnail: the cells, and the grid they sit on.
+ *
+ * Shared by the settings panel and the website generator so the two cannot
+ * drift into drawing the same slate differently. Geometry only - each surface
+ * styles it, and neither has to agree about colour to agree about shape.
+ */
+export function slateThumbnail(payload: SlatePayload): {
+  columns: number
+  rows: number
+  cells: SlateCell[]
+} {
+  return {
+    columns: payload.columns || 6,
+    rows: Math.max(...payload.widgets.map((widget) => widget.y + widget.h), 1),
+    cells: payload.widgets.map((widget) => ({
+      type: widget.type,
+      column: widget.x + 1,
+      row: widget.y + 1,
+      spanX: widget.w,
+      spanY: widget.h,
+    })),
+  }
+}

@@ -7,8 +7,10 @@ import {
   decodeSlate,
   encodePayload,
   encodeSlate,
+  slateThumbnail,
   submissionUrl,
   GALLERY_URL,
+  type SlatePayload,
 } from '@/core/settings/slateCode'
 import { SLATE_PRESETS } from '@/core/settings/slatePresets'
 import { getWidget } from '@/core/widgets/registry'
@@ -105,6 +107,7 @@ export function SlatePanel() {
                 )
               }
             >
+              <SlateThumb payload={preset} />
               <span className="slatep__presetname">{preset.name}</span>
               <span className="slatep__presetwhat">{preset.description}</span>
             </button>
@@ -170,6 +173,36 @@ export function SlatePanel() {
         />
       ) : null}
     </div>
+  )
+}
+
+/**
+ * The shape of a slate, as blocks on its own grid. The same drawing the website
+ * makes, from the same geometry: a card that only named the widgets left the
+ * reader to imagine the arrangement, which is the one thing a slate is.
+ */
+function SlateThumb({ payload }: { payload: SlatePayload }) {
+  const { columns, rows, cells } = slateThumbnail(payload)
+  return (
+    <span
+      className="slatep__thumb"
+      style={{
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, 1fr)`,
+      }}
+      aria-hidden="true"
+    >
+      {cells.map((cell, index) => (
+        <span
+          key={index}
+          className="slatep__cell"
+          style={{
+            gridColumn: `${cell.column} / span ${cell.spanX}`,
+            gridRow: `${cell.row} / span ${cell.spanY}`,
+          }}
+        />
+      ))}
+    </span>
   )
 }
 

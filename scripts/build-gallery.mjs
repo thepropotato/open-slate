@@ -17,7 +17,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const { decodeSlate, previewUrl, STORE_ID } = await import('@/core/settings/slateCode')
+const { decodeSlate, previewUrl, slateThumbnail, STORE_ID } = await import('@/core/settings/slateCode')
 const { GalleryIndex, creditOf } = await import('@/core/settings/slateGallery')
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -38,18 +38,14 @@ const esc = (value) =>
  * how many widgets, how big, and where they sit.
  */
 function renderPreview(payload) {
-  const columns = payload.columns || 6
-  const rows = Math.max(...payload.widgets.map((w) => w.y + w.h), 1)
-  const cells = payload.widgets
-    .map((widget) => {
-      const style = [
-        `grid-column:${widget.x + 1}/span ${widget.w}`,
-        `grid-row:${widget.y + 1}/span ${widget.h}`,
-      ].join(';')
-      return `<span class="cell" style="${style}"><i>${esc(widget.type)}</i></span>`
+  const { columns, rows, cells } = slateThumbnail(payload)
+  const blocks = cells
+    .map((cell) => {
+      const style = `grid-column:${cell.column}/span ${cell.spanX};grid-row:${cell.row}/span ${cell.spanY}`
+      return `<span class="cell" style="${style}"><i>${esc(cell.type)}</i></span>`
     })
     .join('')
-  return `<div class="grid" style="grid-template-columns:repeat(${columns},1fr);grid-template-rows:repeat(${rows},1fr)" aria-hidden="true">${cells}</div>`
+  return `<div class="grid" style="grid-template-columns:repeat(${columns},1fr);grid-template-rows:repeat(${rows},1fr)" aria-hidden="true">${blocks}</div>`
 }
 
 function renderCard(entry) {

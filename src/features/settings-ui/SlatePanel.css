@@ -25,12 +25,16 @@
   color: var(--danger, #e5484d);
 }
 
-/* Starter layouts. A grid rather than a row: each one needs a line of prose to
-   say what it is for, and those do not fit side by side in the panel. */
+/* The row's control column is a flex container, so a grid dropped into it
+   shrinks to its content and leaves the rest of a wide panel empty. Claiming the
+   width is what lets auto-fit do its job. */
 .slatep__presets {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: var(--space-xs);
+  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .slatep__preset {
@@ -63,4 +67,27 @@
   font-size: var(--text-xs);
   color: var(--fg-muted);
   line-height: 1.4;
+}
+
+/* The slate's shape, as blocks. Unlabelled here, unlike the website's cards:
+   at this size the widget names would not be readable, and the arrangement is
+   what the reader is choosing between. */
+.slatep__thumb {
+  display: grid;
+  gap: 2px;
+  aspect-ratio: 16 / 10;
+  margin-bottom: 8px;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 6%);
+}
+
+.slatep__cell {
+  border-radius: 3px;
+  background: rgb(var(--surface-tint) / 22%);
+  min-width: 0;
+}
+
+.slatep__preset:hover .slatep__cell {
+  background: rgb(var(--surface-tint) / 32%);
 }
