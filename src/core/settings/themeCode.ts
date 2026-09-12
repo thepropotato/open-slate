@@ -54,14 +54,15 @@ export function applyTheme(settings: SettingsType, code: string): SettingsType {
 }
 
 // Base64url, so a code survives being pasted into a URL or a chat message.
-function toBase64Url(text: string): string {
+// Shared with `slateCode`, which carries arrangement rather than look.
+export function toBase64Url(text: string): string {
   const bytes = new TextEncoder().encode(text)
   let binary = ''
   for (const byte of bytes) binary += String.fromCharCode(byte)
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
-function fromBase64Url(code: string): string {
+export function fromBase64Url(code: string): string {
   const padded = code.replace(/-/g, '+').replace(/_/g, '/')
   const binary = atob(padded + '='.repeat((4 - (padded.length % 4)) % 4))
   const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0))

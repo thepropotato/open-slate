@@ -6,12 +6,17 @@ import { mediaStore } from '@/core/storage/blobStore'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { exportSettings, importSettings } from '@/core/settings/store'
 import { applyTheme, encodeTheme } from '@/core/settings/themeCode'
+import { applySlate, decodeSlate, encodePayload, encodeSlate } from '@/core/settings/slateCode'
+import { SLATE_PRESETS } from '@/core/settings/slatePresets'
+import { getWidget } from '@/core/widgets/registry'
+import { uid } from '@/core/util/id'
 import './DataPanel.css'
 
 /**
- * Backup, restore and sharing. Two separate things: a full config file
- * (including tiles and notes) for moving machines, and a theme code (the look
- * only) that shares nothing personal.
+ * Backup, restore and sharing. Three separate things: a full config file
+ * (including tiles and notes) for moving machines, a theme code (the look only),
+ * and a slate code (the arrangement only). Neither code carries anything
+ * personal, which is what makes them safe to paste into a chat.
  */
 export function DataPanel() {
   const settings = useSettings()
@@ -19,6 +24,7 @@ export function DataPanel() {
 
   const [paste, setPaste] = useState('')
   const [themeInput, setThemeInput] = useState('')
+  const [slateInput, setSlateInput] = useState('')
   const [message, setMessage] = useState<{ kind: 'ok' | 'bad'; text: string } | null>(null)
   // Anything overwriting or deleting stored data waits here for a confirmation.
   const [pending, setPending] = useState<Confirmation | null>(null)
@@ -101,6 +107,54 @@ export function DataPanel() {
     }
   }
 
+  // Replacing the grid is not recoverable from the panel, so every route into it
+  // goes through the same confirmation rather than only the pasted one.
+  const confirmSlate = (code: string, title: string, body: string, done: string) =>
+    setPending({
+      title,
+      body,
+      confirmLabel: 'Replace layout',
+      confirmIcon: 'check',
+      run: () => {
+        try {
+          replace(applySlate(settings, code, uid, (type) => getWidget(type) !== undefined))
+          setSlateInput('')
+          setMessage({ kind: 'ok', text: done })
+        } catch (error) {
+          setMessage({ kind: 'bad', text: describe(error) })
+        }
+      },
+    })
+
+  const copySlate = async () => {
+    const code = encodeSlate(settings)
+    try {
+      await navigator.clipboard.writeText(code)
+      setMessage({ kind: 'ok', text: 'Slate code copied.' })
+    } catch {
+      setSlateInput(code)
+      setMessage({ kind: 'ok', text: 'Slate code placed in the box below.' })
+    }
+  }
+
+  const applySlateCode = () => {
+    let count: number
+    // Decoded first so the confirmation can say what is coming, and so a damaged
+    // code is reported before anything is offered to replace.
+    try {
+      count = decodeSlate(slateInput).widgets.length
+    } catch (error) {
+      setMessage({ kind: 'bad', text: describe(error) })
+      return
+    }
+    confirmSlate(
+      slateInput,
+      'Replace your layout?',
+      `This arranges ${count === 1 ? '1 widget' : `${count} widgets`} and removes the ones you have now. Tiles, notes and tasks are untouched.`,
+      'Layout applied. Your tiles and notes are untouched.',
+    )
+  }
+
   return (
     <div className="data">
       {message ? (
@@ -172,6 +226,55 @@ export function DataPanel() {
             Apply theme
           </Button>
           <Button variant="ghost" onClick={() => setThemeInput('')}>
+            Cancel
+          </Button>
+        </div>
+      ) : null}
+
+      <Row
+        title="Slate code"
+        help="The arrangement only: which widgets are on the grid and where. No calendars, cities or accounts - whoever applies it points the widgets at their own."
+        stacked
+      >
+        <div className="data__row">
+          <Button icon="copy" onClick={() => void copySlate()}>
+            Copy this layout
+          </Button>
+        </div>
+      </Row>
+
+      <Row title="Start from a layout" help="Replaces the widgets on your grid." stacked>
+        <div className="data__presets">
+          {SLATE_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              className="data__preset"
+              onClick={() =>
+                confirmSlate(
+                  encodePayload(preset),
+                  `Use the ${preset.name} layout?`,
+                  'This replaces the widgets on your grid. Tiles, notes and tasks are untouched.',
+                  `${preset.name} layout applied.`,
+                )
+              }
+            >
+              <span className="data__presetname">{preset.name}</span>
+              <span className="data__presetwhat">{preset.description}</span>
+            </button>
+          ))}
+        </div>
+      </Row>
+
+      <Row title="Or apply a slate code" stacked>
+        <TextArea value={slateInput} onChange={setSlateInput} placeholder="ns1.…" rows={3} />
+      </Row>
+      {slateInput.trim() ? (
+        <div className="data__row">
+          <Button variant="primary" icon="check" onClick={applySlateCode}>
+            Apply layout
+          </Button>
+          <Button variant="ghost" onClick={() => setSlateInput('')}>
             Cancel
           </Button>
         </div>

@@ -82,7 +82,8 @@ settings commands, with a web search as the fallback.
 **Settings.** Every preference is declared once, as a schema field plus a spec
 entry, and the UI renders itself from that. Searchable, with live updates across
 every open tab. Full config export and import, theme codes that carry the look
-without carrying your content, and opt-in sync across devices.
+and slate codes that carry the arrangement - neither carrying your content - a
+set of starter layouts, and opt-in sync across devices.
 
 ## Two things worth knowing
 

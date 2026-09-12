@@ -939,6 +939,129 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   )
 }
 
+/* Slate codes: the arrangement, shared without the content */
+
+{
+  const { encodeSlate, decodeSlate, applySlate, encodePayload } = await load(
+    'core/settings/slateCode.ts',
+  )
+  const { SLATE_PRESETS } = await load('core/settings/slatePresets.ts')
+  const { Settings } = await load('core/settings/schema.ts')
+
+  // A profile with something worth leaking in it: a secret calendar address, a
+  // city, and a list of sites.
+  const mine = Settings.parse({
+    widgets: {
+      instances: [
+        { id: 'w1', type: 'calendar', config: { sources: [{ url: 'https://cal/secret.ics', name: 'Work', color: 0 }] } },
+        { id: 'w2', type: 'weather', config: { place: 'Hyderabad' } },
+      ],
+      layout: [
+        { i: 'w1', x: 0, y: 0, w: 2, h: 2 },
+        { i: 'w2', x: 2, y: 0, w: 2, h: 1 },
+      ],
+      columns: 6,
+    },
+    tiles: { items: [{ id: 't1', url: 'https://example.com/private', title: 'Payroll' }] },
+  })
+
+  const code = encodeSlate(mine)
+  truthy('slate: a code is recognisable', code.startsWith('ns1.'))
+
+  /*
+   * The guarantee the format exists for. A code is pasted into chat by people
+   * who will not decode it first, so this checks the encoded text itself rather
+   * than trusting the shape of the payload.
+   */
+  {
+    const decoded = Buffer.from(
+      code.slice(4).replace(/-/g, '+').replace(/_/g, '/'),
+      'base64',
+    ).toString('utf8')
+    check('slate: no calendar address travels', decoded.includes('secret.ics'), false)
+    check('slate: no place name travels', decoded.includes('Hyderabad'), false)
+    check('slate: no tile url travels', decoded.includes('example.com'), false)
+    check('slate: no tile title travels', decoded.includes('Payroll'), false)
+    // What it does carry: which widgets, and where.
+    truthy('slate: the widget types travel', decoded.includes('calendar') && decoded.includes('weather'))
+  }
+
+  const read = decodeSlate(code)
+  check('slate: both widgets are carried', read.widgets.length, 2)
+  check('slate: the footprint is carried', read.widgets[0], {
+    type: 'calendar', surface: null, x: 0, y: 0, w: 2, h: 2,
+  })
+
+  // Applying onto a different profile: the grid is replaced, content is not.
+  {
+    let n = 0
+    const mint = () => `new-${(n += 1)}`
+    const theirs = Settings.parse({
+      tiles: { items: [{ id: 'keep', url: 'https://theirs.example', title: 'Theirs' }] },
+    })
+    const after = applySlate(theirs, code, mint)
+
+    check('slate: the grid is replaced', after.widgets.instances.length, 2)
+    check('slate: ids are minted fresh', after.widgets.instances[0].id, 'new-1')
+    check('slate: the layout follows the ids', after.widgets.layout[0].i, 'new-1')
+    check('slate: widgets start on their own defaults', after.widgets.instances[0].config, {})
+    // The half that must survive untouched.
+    check('slate: their tiles are untouched', after.tiles.items.length, 1)
+    check('slate: their tile is the same one', after.tiles.items[0].title, 'Theirs')
+  }
+
+  // A code naming a widget this build does not have must not leave a hole.
+  {
+    const odd = encodePayload({
+      name: '', columns: 6, margin: 14, compact: 'vertical', layout: {},
+      widgets: [
+        { type: 'clock', surface: null, x: 0, y: 0, w: 2, h: 1 },
+        { type: 'from-the-future', surface: null, x: 2, y: 0, w: 2, h: 1 },
+      ],
+    })
+    const after = applySlate(Settings.parse({}), odd, () => 'only', (type) => type === 'clock')
+    check('slate: an unknown widget is dropped', after.widgets.instances.length, 1)
+    check('slate: the known one survives', after.widgets.instances[0].type, 'clock')
+    check('slate: no layout cell is orphaned', after.widgets.layout.length, 1)
+  }
+
+  // Damaged input is reported, never applied.
+  {
+    const refuses = (code) => {
+      try { decodeSlate(code); return false } catch { return true }
+    }
+    truthy('slate: a theme code is not a slate code', refuses('nt1.abc'))
+    truthy('slate: junk is refused', refuses('ns1.not-base64-at-all!!'))
+    truthy('slate: an empty code is refused', refuses(''))
+  }
+
+  /* Every shipped preset has to be one the importer can actually apply. */
+  {
+    let n = 0
+    const mint = () => `p-${(n += 1)}`
+    truthy('slate: presets are shipped', SLATE_PRESETS.length > 0)
+    for (const preset of SLATE_PRESETS) {
+      const after = applySlate(Settings.parse({}), encodePayload(preset), mint)
+      check(`slate: the ${preset.id} preset applies`, after.widgets.instances.length, preset.widgets.length)
+      // Inside the grid it declares, or it lands half off the canvas.
+      const fits = preset.widgets.every((w) => w.x >= 0 && w.x + w.w <= preset.columns)
+      truthy(`slate: the ${preset.id} preset fits its columns`, fits)
+      // Two widgets in one cell is a layout nobody designed.
+      const cells = new Set()
+      let overlap = false
+      for (const w of preset.widgets) {
+        for (let x = w.x; x < w.x + w.w; x += 1) {
+          for (let y = w.y; y < w.y + w.h; y += 1) {
+            if (cells.has(`${x},${y}`)) overlap = true
+            cells.add(`${x},${y}`)
+          }
+        }
+      }
+      check(`slate: the ${preset.id} preset does not overlap`, overlap, false)
+    }
+  }
+}
+
 /* Staged settings (draft) */
 
 {
