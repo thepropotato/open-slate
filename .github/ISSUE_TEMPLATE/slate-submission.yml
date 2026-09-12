@@ -12,7 +12,7 @@ body:
 
 
         The easiest way to fill this in is from the extension itself: open
-        Settings, go to Widgets, and press **Share this layout**. That brings you
+        Settings, go to Slates, and press **Share this layout**. That brings you
         here with the code already in place.
 
   - type: input
@@ -38,7 +38,7 @@ body:
     attributes:
       label: The slate code
       description: >
-        The `ns1.` code from Settings → Widgets → Copy this layout. Paste it
+        The `ns1.` code from Settings → Slates → Copy this layout. Paste it
         exactly as it was copied.
       placeholder: ns1.…
       render: text

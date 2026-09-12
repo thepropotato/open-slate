@@ -145,6 +145,9 @@ export function applySlate(
 
 const REPO = 'https://github.com/thepropotato/open-slate'
 
+/** The gallery of shared layouts. Linked, never fetched. */
+export const GALLERY_URL = 'https://openslate.byvenu.com/slates'
+
 /**
  * Where "Share this layout" sends you: the submission form, prefilled.
  *

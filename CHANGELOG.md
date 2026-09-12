@@ -13,8 +13,8 @@ so it is written for the people who use the extension rather than for the diff.
   already share the look. A code says which widgets are on the grid and where
   they sit, and nothing else: not the calendar you subscribe to, not the city
   your weather is set to, not your tiles or notes. Whoever applies it points the
-  widgets at their own. Copy one from Widgets settings, paste one into the same
-  place, or share it straight to the gallery.
+  widgets at their own. They live in their own Slates section in settings: start
+  from one, browse what others have shared, or share the one you built.
 - A layouts gallery on the website, at openslate.byvenu.com/slates, showing what
   people have shared. Each one has a preview drawn from the layout itself, so it
   cannot show you something other than what you would get. "Use this layout"

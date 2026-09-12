@@ -8,6 +8,7 @@ import {
   encodePayload,
   encodeSlate,
   submissionUrl,
+  GALLERY_URL,
 } from '@/core/settings/slateCode'
 import { SLATE_PRESETS } from '@/core/settings/slatePresets'
 import { getWidget } from '@/core/widgets/registry'
@@ -16,12 +17,13 @@ import { uid } from '@/core/util/id'
 import './SlatePanel.css'
 
 /**
- * Slates: starting from a layout, and sharing the one you have built.
+ * Slates: starting from a layout, browsing what others have shared, and sharing
+ * the one you have built.
  *
- * This lives beside the grid settings rather than with backup and restore. A
- * slate is not a copy of your data - it is the same arrangement the sliders
- * above it describe, written down: which widgets are on the grid, where they
- * sit, and the columns, spacing and compacting that frame them.
+ * Its own section rather than a group under Widgets or Layout, because a slate
+ * spans both: the widget grid, and the page around it - band order, alignment,
+ * width, padding, view mode. Filed under either, half of what it does would sit
+ * somewhere the reader was not looking.
  */
 export function SlatePanel() {
   const settings = useSettings()
@@ -74,7 +76,7 @@ export function SlatePanel() {
     confirmSlate(
       input,
       'Replace your layout?',
-      `This arranges ${count === 1 ? '1 widget' : `${count} widgets`} and removes the ones you have now. Tiles, notes and tasks are untouched.`,
+      `This arranges ${count === 1 ? '1 widget' : `${count} widgets`}, removes the ones you have now, and sets the shape of the page. Tiles, notes and tasks are untouched.`,
       'Layout applied. Your tiles and notes are untouched.',
     )
   }
@@ -87,7 +89,7 @@ export function SlatePanel() {
         </p>
       ) : null}
 
-      <Row title="Start from a layout" help="Replaces the widgets on your grid." stacked>
+      <Row title="Start from a layout" help="Replaces your widgets and the shape of the page. Tiles, notes and tasks are untouched." stacked>
         <div className="slatep__presets">
           {SLATE_PRESETS.map((preset) => (
             <button
@@ -98,7 +100,7 @@ export function SlatePanel() {
                 confirmSlate(
                   encodePayload(preset),
                   `Use the ${preset.name} layout?`,
-                  'This replaces the widgets on your grid. Tiles, notes and tasks are untouched.',
+                  'This replaces your widgets and the shape of the page. Tiles, notes and tasks are untouched.',
                   `${preset.name} layout applied.`,
                 )
               }
@@ -110,9 +112,24 @@ export function SlatePanel() {
         </div>
       </Row>
 
+      {/* The gallery is on the website, so this is the only thing that tells anyone
+          it exists. A link rather than a list: browsing here would mean the
+          extension fetching from a server, which it does not do. */}
+      <Row
+        title="More slates"
+        help="Layouts other people have shared, on the website. Opening one brings it back here to look at before anything changes."
+        stacked
+      >
+        <div className="slatep__row">
+          <Button icon="external" onClick={() => openUrl(GALLERY_URL, 'newTab')}>
+            Browse shared layouts
+          </Button>
+        </div>
+      </Row>
+
       <Row
         title="Share your layout"
-        help="A slate code is the arrangement only: which widgets are on the grid and where. No calendars, cities or accounts - whoever applies it points the widgets at their own. Sharing opens a prefilled submission on GitHub, which needs a free GitHub account; you can also copy the code and send it anywhere."
+        help="A slate code is the arrangement only: the widgets on your grid and the shape of the page around them. No calendars, cities or accounts - whoever applies it points the widgets at their own. Sharing opens a prefilled submission on GitHub, which needs a free GitHub account; you can also copy the code and send it anywhere."
         stacked
       >
         <div className="slatep__row">
