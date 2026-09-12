@@ -6,10 +6,11 @@ import { mediaStore } from '@/core/storage/blobStore'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { exportSettings, importSettings } from '@/core/settings/store'
 import { applyTheme, encodeTheme } from '@/core/settings/themeCode'
-import { applySlate, decodeSlate, encodePayload, encodeSlate } from '@/core/settings/slateCode'
+import { applySlate, decodeSlate, encodePayload, encodeSlate, submissionUrl } from '@/core/settings/slateCode'
 import { SLATE_PRESETS } from '@/core/settings/slatePresets'
 import { getWidget } from '@/core/widgets/registry'
 import { uid } from '@/core/util/id'
+import { openUrl } from '@/core/platform/browser'
 import './DataPanel.css'
 
 /**
@@ -233,12 +234,15 @@ export function DataPanel() {
 
       <Row
         title="Slate code"
-        help="The arrangement only: which widgets are on the grid and where. No calendars, cities or accounts - whoever applies it points the widgets at their own."
+        help="The arrangement only: which widgets are on the grid and where. No calendars, cities or accounts - whoever applies it points the widgets at their own. Sharing opens a submission on GitHub with the code filled in; you post it yourself."
         stacked
       >
         <div className="data__row">
           <Button icon="copy" onClick={() => void copySlate()}>
             Copy this layout
+          </Button>
+          <Button icon="external" onClick={() => openUrl(submissionUrl(settings), 'newTab')}>
+            Share this layout
           </Button>
         </div>
       </Row>

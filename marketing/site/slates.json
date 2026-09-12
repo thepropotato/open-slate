@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "slates": [
+    {
+      "id": "dashboard",
+      "name": "Dashboard",
+      "description": "Clock, weather and calendar across the top, with the day below.",
+      "author": "thepropotato",
+      "code": "ns1.eyJuYW1lIjoiRGFzaGJvYXJkIiwid2lkZ2V0cyI6W3sidHlwZSI6ImNsb2NrIiwic3VyZmFjZSI6bnVsbCwieCI6MCwieSI6MCwidyI6MiwiaCI6MX0seyJ0eXBlIjoid2VhdGhlciIsInN1cmZhY2UiOm51bGwsIngiOjIsInkiOjAsInciOjIsImgiOjF9LHsidHlwZSI6InRpbWVyIiwic3VyZmFjZSI6bnVsbCwieCI6NCwieSI6MCwidyI6MiwiaCI6MX0seyJ0eXBlIjoiY2FsZW5kYXIiLCJzdXJmYWNlIjpudWxsLCJ4IjowLCJ5IjoxLCJ3IjoyLCJoIjoyfSx7InR5cGUiOiJ0b2RvIiwic3VyZmFjZSI6bnVsbCwieCI6MiwieSI6MSwidyI6MiwiaCI6Mn0seyJ0eXBlIjoibm90ZXMiLCJzdXJmYWNlIjpudWxsLCJ4Ijo0LCJ5IjoxLCJ3IjoyLCJoIjoyfV0sImNvbHVtbnMiOjYsIm1hcmdpbiI6MTQsImNvbXBhY3QiOiJ2ZXJ0aWNhbCIsImxheW91dCI6e319",
+      "added": "2026-09-12"
+    }
+  ]
+}

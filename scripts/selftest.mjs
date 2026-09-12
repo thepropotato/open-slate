@@ -1062,6 +1062,88 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   }
 }
 
+/* The community gallery: entries are untrusted until validated */
+
+{
+  const { validateEntry, overlaps } = await load('core/settings/slateGallery.ts')
+  const { encodePayload } = await load('core/settings/slateCode.ts')
+
+  const code = (widgets) =>
+    encodePayload({ name: '', columns: 6, margin: 14, compact: 'vertical', layout: {}, widgets })
+  const one = code([{ type: 'clock', surface: null, x: 0, y: 0, w: 2, h: 1 }])
+  const entry = {
+    id: 'nice-one',
+    name: 'Nice One',
+    description: 'A tidy grid.',
+    author: 'octocat',
+    code: one,
+    added: '2026-09-12',
+  }
+
+  const refuses = (patch, known = () => true) => {
+    try {
+      validateEntry({ ...entry, ...patch }, known)
+      return false
+    } catch {
+      return true
+    }
+  }
+
+  truthy('gallery: a good entry is accepted', validateEntry(entry).entry.id === 'nice-one')
+
+  /*
+   * An entry is written by whoever opened the pull request and is rendered in
+   * the extension and on the site. A reviewer reading a diff is not a parser, so
+   * these are refused in code rather than asked for in a contributing guide.
+   */
+  truthy('gallery: markup in a name is refused', refuses({ name: '<script>alert(1)</script>' }))
+  truthy('gallery: markup in a description is refused', refuses({ description: '<img onerror=x>' }))
+  // Bidi overrides reorder text, so a name reads one way in review and another in the gallery.
+  truthy('gallery: a bidi override is refused', refuses({ name: 'Focus\u202egnittes' }))
+  truthy('gallery: a zero-width character is refused', refuses({ name: 'Fo\u200bcus' }))
+  truthy('gallery: a newline in a description is refused', refuses({ description: 'a\nb' }))
+  truthy('gallery: an overlong description is refused', refuses({ description: 'x'.repeat(200) }))
+  truthy('gallery: an empty name is refused', refuses({ name: '   ' }))
+
+  // The id is the file name, so it must not be able to escape the folder.
+  truthy('gallery: a traversing id is refused', refuses({ id: '../../etc/passwd' }))
+  truthy('gallery: an uppercase id is refused', refuses({ id: 'MixedCase' }))
+  truthy('gallery: a bogus author is refused', refuses({ author: 'not a user!' }))
+  truthy('gallery: a date in the wrong order is refused', refuses({ added: '12-09-2026' }))
+
+  // The code has to be a slate, and one this build can actually draw.
+  truthy('gallery: a theme code is refused', refuses({ code: 'nt1.abc' }))
+  truthy('gallery: a damaged code is refused', refuses({ code: 'ns1.!!!!' }))
+  truthy('gallery: an empty slate is refused', refuses({ code: code([]) }))
+  truthy('gallery: an unknown widget type is refused', refuses({}, (type) => type !== 'clock'))
+
+  // Two faults a reviewer cannot see in a diff of base64.
+  truthy(
+    'gallery: a widget outside the grid is refused',
+    refuses({ code: code([{ type: 'clock', surface: null, x: 5, y: 0, w: 4, h: 1 }]) }),
+  )
+  truthy(
+    'gallery: overlapping widgets are refused',
+    refuses({
+      code: code([
+        { type: 'clock', surface: null, x: 0, y: 0, w: 2, h: 1 },
+        { type: 'notes', surface: null, x: 1, y: 0, w: 2, h: 1 },
+      ]),
+    }),
+  )
+
+  check(
+    'gallery: widgets side by side do not overlap',
+    overlaps({
+      widgets: [
+        { type: 'clock', surface: null, x: 0, y: 0, w: 2, h: 1 },
+        { type: 'notes', surface: null, x: 2, y: 0, w: 2, h: 1 },
+      ],
+    }),
+    false,
+  )
+}
+
 /* Staged settings (draft) */
 
 {

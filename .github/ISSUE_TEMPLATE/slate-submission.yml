@@ -1,0 +1,56 @@
+name: Submit a slate
+description: Share a layout you have built for the gallery
+labels: ['slate']
+body:
+  - type: markdown
+    attributes:
+      value: >
+        A slate is the arrangement of your widgets - which ones are on the grid
+        and where they sit. It carries none of your content: not the calendar
+        you subscribe to, not the city your weather is set to, not your tiles or
+        notes. Whoever applies it points the widgets at their own.
+
+
+        The easiest way to fill this in is from the extension itself: open
+        Settings, go to Backup, and press **Share this layout**. That brings you
+        here with the code already in place.
+
+  - type: input
+    id: name
+    attributes:
+      label: Name
+      description: A few words. "Focus", "Two columns", "Everything at once".
+      placeholder: Focus
+    validations:
+      required: true
+
+  - type: input
+    id: description
+    attributes:
+      label: What it is for
+      description: One sentence, so someone browsing knows whether it suits them.
+      placeholder: A clock, the day ahead, and somewhere to put what you are doing.
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: The slate code
+      description: >
+        The `ns1.` code from Settings → Backup → Copy this layout. Paste it
+        exactly as it was copied.
+      placeholder: ns1.…
+      render: text
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: >
+            I built this layout, and I am happy for it to be published in the
+            gallery under the project's licence with my GitHub username credited.
+          required: true

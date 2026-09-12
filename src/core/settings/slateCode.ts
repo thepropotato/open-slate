@@ -80,9 +80,14 @@ export function decodeSlate(code: string): SlatePayload {
   return parsed.data
 }
 
-/** A preset is applied through the same path as a pasted code, not beside it. */
+/**
+ * A preset is applied through the same path as a pasted code, not beside it.
+ * Re-parsed rather than stringified as given: callers pass richer objects (a
+ * preset carries an id and a description for the picker), and those fields have
+ * no business travelling inside a code that is already labelled by its entry.
+ */
 export function encodePayload(payload: SlatePayload): string {
-  return PREFIX + toBase64Url(JSON.stringify(payload))
+  return PREFIX + toBase64Url(JSON.stringify(SlatePayload.parse(payload)))
 }
 
 /**
@@ -136,4 +141,28 @@ export function applySlate(
   const parsed = Settings.safeParse(merged)
   if (!parsed.success) throw new Error('That slate code contains values this version cannot use.')
   return parsed.data
+}
+
+const REPO = 'https://github.com/thepropotato/open-slate'
+
+/**
+ * Where "Share this layout" sends you: the submission form, prefilled.
+ *
+ * An extension cannot open a pull request on someone's behalf - that needs a
+ * token, and an unpackable extension has nowhere to keep one. It does not need
+ * to. The code is built here and handed to GitHub as a prefilled issue, so the
+ * submission is posted by the person making it, under their own account, after
+ * they have read it. Nothing is sent anywhere until they press the button on
+ * GitHub's own page.
+ */
+export function submissionUrl(settings: SettingsType, name = '', description = ''): string {
+  const params = new URLSearchParams({
+    template: 'slate-submission.yml',
+    labels: 'slate',
+    title: name ? `Slate: ${name}` : 'Slate: ',
+    name,
+    description,
+    code: encodeSlate(settings),
+  })
+  return `${REPO}/issues/new?${params.toString()}`
 }
