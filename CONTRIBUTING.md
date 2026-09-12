@@ -160,3 +160,19 @@ holds widget types and positions only, never the calendar you subscribe to, the
 city your weather is set to, or your tiles and notes. Names and descriptions are
 rendered in the extension and on the site, so they are held to plain text within
 a length cap.
+
+### Who a slate is credited to
+
+`author` is your GitHub username, and on its own it is a claim rather than a
+proof: it is a string in a file, and a file can say anything. What makes it mean
+something is that a separate check compares it against the account that opened
+the pull request, which is the one identity you cannot type in yourself. A
+mismatch fails the check.
+
+It fails rather than silently correcting the field, because submitting someone
+else's layout on their behalf is legitimate. If you are doing that, leave their
+name in place, say so in the description, and a maintainer can merge it with the
+credit as it stands.
+
+Submitting through the extension needs no username at all: the slate is credited
+to whoever files the issue.

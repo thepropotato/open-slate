@@ -53,7 +53,16 @@ export const GalleryEntry = z.object({
     .regex(/^[a-z0-9][a-z0-9-]*$/, 'lowercase letters, digits and hyphens only'),
   name: safeText(NAME_MAX),
   description: safeText(DESCRIPTION_MAX),
-  /** GitHub username, for credit. No email, no display name, nothing else. */
+  /**
+   * GitHub username, for credit. No email, no display name, nothing else.
+   *
+   * On its own this is a claim, not a proof - it is a string in a file anyone
+   * can write. What makes it mean something is `check-slate-authorship.mjs`,
+   * which compares it against the account that opened the pull request, an
+   * identity the submitter cannot fill in themselves. The field is kept rather
+   * than derived so that credit survives in the file after merge, and so a
+   * maintainer can submit someone else's layout with the original credit intact.
+   */
   author: z
     .string()
     .trim()
