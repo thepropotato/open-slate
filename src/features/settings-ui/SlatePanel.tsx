@@ -56,10 +56,10 @@ export function SlatePanel() {
     const code = encodeSlate(settings)
     try {
       await navigator.clipboard.writeText(code)
-      setMessage({ kind: 'ok', text: 'Slate code copied.' })
+      setMessage({ kind: 'ok', text: 'Slate copied.' })
     } catch {
       setInput(code)
-      setMessage({ kind: 'ok', text: 'Slate code placed in the box below.' })
+      setMessage({ kind: 'ok', text: 'Slate placed in the box below.' })
     }
   }
 
@@ -75,9 +75,9 @@ export function SlatePanel() {
     }
     confirmSlate(
       input,
-      'Replace your layout?',
+      'Apply this slate?',
       `This arranges ${count === 1 ? '1 widget' : `${count} widgets`}, removes the ones you have now, and sets the shape of the page. Tiles, notes and tasks are untouched.`,
-      'Layout applied. Your tiles and notes are untouched.',
+      'Slate applied. Your tiles and notes are untouched.',
     )
   }
 
@@ -89,7 +89,7 @@ export function SlatePanel() {
         </p>
       ) : null}
 
-      <Row title="Start from a layout" help="Replaces your widgets and the shape of the page. Tiles, notes and tasks are untouched." stacked>
+      <Row title="Start from a slate" help="A ready-made slate to begin from. Replaces your widgets and the shape of the page; tiles, notes and tasks are untouched." stacked>
         <div className="slatep__presets">
           {SLATE_PRESETS.map((preset) => (
             <button
@@ -99,9 +99,9 @@ export function SlatePanel() {
               onClick={() =>
                 confirmSlate(
                   encodePayload(preset),
-                  `Use the ${preset.name} layout?`,
+                  `Apply the ${preset.name} slate?`,
                   'This replaces your widgets and the shape of the page. Tiles, notes and tasks are untouched.',
-                  `${preset.name} layout applied.`,
+                  `${preset.name} slate applied.`,
                 )
               }
             >
@@ -116,39 +116,39 @@ export function SlatePanel() {
           it exists. A link rather than a list: browsing here would mean the
           extension fetching from a server, which it does not do. */}
       <Row
-        title="More slates"
-        help="Layouts other people have shared, on the website. Opening one brings it back here to look at before anything changes."
+        title="Slates from the community"
+        help="Slates other people have built and shared, on the website. Opening one brings it back here to look at before anything changes."
         stacked
       >
         <div className="slatep__row">
           <Button icon="external" onClick={() => openUrl(GALLERY_URL, 'newTab')}>
-            Browse shared layouts
+            Browse community slates
           </Button>
         </div>
       </Row>
 
       <Row
-        title="Share your layout"
+        title="Share your slate"
         help="A slate code is the arrangement only: the widgets on your grid and the shape of the page around them. No calendars, cities or accounts - whoever applies it points the widgets at their own. Sharing opens a prefilled submission on GitHub, which needs a free GitHub account; you can also copy the code and send it anywhere."
         stacked
       >
         <div className="slatep__row">
           <Button icon="copy" onClick={() => void copy()}>
-            Copy this layout
+            Copy my slate
           </Button>
           <Button icon="external" onClick={() => openUrl(submissionUrl(settings), 'newTab')}>
-            Share this layout
+            Share my slate
           </Button>
         </div>
       </Row>
 
-      <Row title="Apply a slate code" stacked>
+      <Row title="Paste a slate code" stacked>
         <TextArea value={input} onChange={setInput} placeholder="ns1.…" rows={3} />
       </Row>
       {input.trim() ? (
         <div className="slatep__row">
           <Button variant="primary" icon="check" onClick={apply}>
-            Apply layout
+            Apply slate
           </Button>
           <Button variant="ghost" onClick={() => setInput('')}>
             Cancel
@@ -160,7 +160,7 @@ export function SlatePanel() {
         <ConfirmDialog
           title={pending.title}
           body={pending.body}
-          confirmLabel="Replace layout"
+          confirmLabel="Apply slate"
           confirmIcon="check"
           onCancel={() => setPending(null)}
           onConfirm={() => {

@@ -60,7 +60,7 @@ export function SlatePreviewPage() {
       <div className="slatepv slatepv--bad">
         <Icon name="warning" />
         <h1>{outcome.error}</h1>
-        <p>Check the link, or copy the slate code and paste it into Settings → Widgets.</p>
+        <p>Check the link, or copy the slate code and paste it into Settings → Slates.</p>
         <Button onClick={() => window.location.assign('/newtab.html')}>Go to the new tab</Button>
       </div>
     )
@@ -76,8 +76,8 @@ export function SlatePreviewPage() {
     <div className="slatepv">
       <header className="slatepv__head">
         <div>
-          <p className="slatepv__kicker">A slate for your new tab</p>
-          <h1>{name || 'Untitled layout'}</h1>
+          <p className="slatepv__kicker">A community slate</p>
+          <h1>{name || 'Untitled slate'}</h1>
           <p className="slatepv__by">
             {credit ? `Shared by ${credit}. ` : ''}
             {count === 1 ? '1 widget' : `${count} widgets`}
@@ -103,7 +103,7 @@ export function SlatePreviewPage() {
                 Not now
               </Button>
               <Button variant="primary" icon="check" onClick={apply}>
-                Use this layout
+                Use this slate
               </Button>
             </>
           )}

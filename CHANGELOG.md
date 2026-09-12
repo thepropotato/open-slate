@@ -15,17 +15,16 @@ so it is written for the people who use the extension rather than for the diff.
   your weather is set to, not your tiles or notes. Whoever applies it points the
   widgets at their own. They live in their own Slates section in settings: start
   from one, browse what others have shared, or share the one you built.
-- A layouts gallery on the website, at openslate.byvenu.com/slates, showing what
-  people have shared. Each one has a preview drawn from the layout itself, so it
-  cannot show you something other than what you would get. "Use this layout"
-  opens the extension and shows the arrangement on your own new tab, with your
-  wallpaper and theme, before anything changes; nothing is applied until you say
-  so. Browsing the gallery asks nothing of the extension, which still makes no
-  request of its own.
-- Four starter layouts, so a new grid does not have to begin as an empty one.
+- Community slates, at openslate.byvenu.com/slates, showing what people have
+  shared. Each has a preview drawn from the slate itself, so it cannot show you
+  something other than what you would get. "Use this slate" opens the extension
+  and shows the arrangement on your own new tab, with your wallpaper and theme,
+  before anything changes; nothing is applied until you say so. Browsing asks
+  nothing of the extension, which still makes no request of its own.
+- Four starter slates, so a new grid does not have to begin as an empty one.
   Focus, Dashboard, Reading and Minimal each arrange a handful of widgets that
-  work without any setting up. Applying one replaces the widgets on the grid and
-  leaves your tiles, notes and tasks alone, and asks before it does.
+  work without any setting up. Applying one replaces your widgets and the shape
+  of the page, leaves your tiles, notes and tasks alone, and asks before it does.
 
 ### Fixed
 

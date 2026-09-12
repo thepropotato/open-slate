@@ -65,8 +65,8 @@ function renderCard(entry) {
     <p class="what">${esc(entry.description)}</p>
     <p class="by">${count === 1 ? '1 widget' : `${count} widgets`} &middot; by <a href="https://github.com/${esc(username)}" rel="noopener noreferrer">${esc(label)}</a></p>
     <div class="actions">
-      <a class="use" href="${esc(link)}">Use this layout</a>
-      <button class="copy" type="button" data-code="${esc(entry.code)}">Copy code</button>
+      <a class="use" href="${esc(link)}">Use this slate</a>
+      <button class="copy" type="button" data-code="${esc(entry.code)}">Copy slate</button>
     </div>
   </div>
 </article>`
@@ -84,15 +84,15 @@ function renderPage(entries) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Open Slate: layouts</title>
-<meta name="description" content="Layouts shared by people who use Open Slate. Apply one to your new tab in a click.">
+<title>Open Slate: community slates</title>
+<meta name="description" content="Slates shared by people who use Open Slate. Apply one to your new tab in a click.">
 <link rel="canonical" href="https://openslate.byvenu.com/slates">
 <meta name="robots" content="index, follow">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://openslate.byvenu.com/slates">
-<meta property="og:title" content="Open Slate: layouts">
-<meta property="og:description" content="Layouts shared by people who use Open Slate. Apply one to your new tab in a click.">
+<meta property="og:title" content="Open Slate: community slates">
+<meta property="og:description" content="Slates shared by people who use Open Slate. Apply one to your new tab in a click.">
 <meta property="og:image" content="https://openslate.byvenu.com/img/og.png">
 <meta property="og:site_name" content="Open Slate">
 <meta name="twitter:card" content="summary_large_image">
@@ -137,9 +137,10 @@ header h1{font:400 clamp(2rem,5vw,2.75rem)/1.1 var(--serif);letter-spacing:-.02e
 <div class="wrap">
   <header>
     <a class="back" href="/">&larr; Open Slate</a>
-    <h1>Layouts</h1>
-    <p class="lede">Arrangements people have shared. Applying one rearranges the widgets on your
-    new tab and leaves your tiles, notes and tasks exactly as they are.</p>
+    <h1>Community slates</h1>
+    <p class="lede">A slate is an arrangement of your new tab: which widgets are on the grid,
+    where they sit, and the shape of the page around them. These are the ones people have
+    built and shared. Applying one leaves your tiles, notes and tasks exactly as they are.</p>
   </header>
 
 <main>
@@ -147,13 +148,13 @@ ${entries.length > 0 ? `<div class="slates">\n${cards}\n</div>` : empty}
 
 <section class="how">
 <h2>How this works</h2>
-<p>A slate carries the arrangement and nothing else: which widgets are on the grid
-and where they sit. It holds no calendars, no locations and no accounts, so
-whoever applies one points the widgets at their own. &ldquo;Use this layout&rdquo;
-opens the extension with the slate in the link and shows you the result before
-anything changes.</p>
+<p>A slate carries the arrangement and nothing else: which widgets are on the grid,
+where they sit, and the shape of the page around them. It holds no calendars, no
+locations and no accounts, so whoever applies one points the widgets at their own.
+&ldquo;Use this slate&rdquo; opens the extension with it in the link and shows you
+the result before anything changes.</p>
 <p>To share yours, open Settings &rarr; Slates in the extension and press
-<strong>Share this layout</strong>.</p>
+<strong>Share my slate</strong>.</p>
 </section>
 </main>
 </div>
@@ -166,7 +167,7 @@ document.querySelectorAll('.copy').forEach((button) => {
       await navigator.clipboard.writeText(button.dataset.code)
       button.textContent = 'Copied'
       button.dataset.done = '1'
-      setTimeout(() => { button.textContent = 'Copy code'; delete button.dataset.done }, 2000)
+      setTimeout(() => { button.textContent = 'Copy slate'; delete button.dataset.done }, 2000)
     } catch {
       button.textContent = 'Press Ctrl+C'
     }
