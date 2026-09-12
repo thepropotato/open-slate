@@ -173,3 +173,26 @@ export function submissionUrl(
   })
   return `${REPO}/issues/new?${params.toString()}`
 }
+
+/** The Web Store listing id, which is the id an installed copy runs under. */
+export const STORE_ID = 'kbacclgoobafnkifgckaenacaeghfonm'
+
+/**
+ * A link that opens the slate preview inside the extension.
+ *
+ * This is what lets the gallery live entirely on the website without the
+ * extension fetching anything: the slate travels in the URL, so following a link
+ * is a navigation rather than a request, and the site needs no access to the
+ * browser. Nothing is applied on arrival - the page shows the result first.
+ *
+ * The id is the published one. An unpacked build has a different, machine-local
+ * id, so a link built here will not open that copy; that is a development
+ * concern rather than a shipped one, and the page reads the same URL under any
+ * id it is served from.
+ */
+export function previewUrl(code: string, name = '', by = '', id: string = STORE_ID): string {
+  const params = new URLSearchParams({ code })
+  if (name) params.set('name', name)
+  if (by) params.set('by', by)
+  return `chrome-extension://${id}/slate.html?${params.toString()}`
+}

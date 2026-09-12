@@ -22,6 +22,7 @@ export default defineConfig({
         newtab: resolve(import.meta.dirname, 'newtab.html'),
         options: resolve(import.meta.dirname, 'options.html'),
         setup: resolve(import.meta.dirname, 'setup.html'),
+        slate: resolve(import.meta.dirname, 'slate.html'),
         background: resolve(import.meta.dirname, 'src/background/service-worker.ts'),
       },
       output: {
