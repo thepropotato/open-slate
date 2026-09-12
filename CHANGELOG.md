@@ -13,7 +13,8 @@ so it is written for the people who use the extension rather than for the diff.
   already share the look. A code says which widgets are on the grid and where
   they sit, and nothing else: not the calendar you subscribe to, not the city
   your weather is set to, not your tiles or notes. Whoever applies it points the
-  widgets at their own. Copy one from Backup, paste one into the same place.
+  widgets at their own. Copy one from Widgets settings, paste one into the same
+  place, or share it straight to the gallery.
 - Four starter layouts, so a new grid does not have to begin as an empty one.
   Focus, Dashboard, Reading and Minimal each arrange a handful of widgets that
   work without any setting up. Applying one replaces the widgets on the grid and

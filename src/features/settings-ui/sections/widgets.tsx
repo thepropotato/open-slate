@@ -1,3 +1,4 @@
+import { SlatePanel } from '../SlatePanel'
 import type { Section } from '../types'
 
 export const widgetsSection: Section = {
@@ -14,6 +15,18 @@ export const widgetsSection: Section = {
           label: 'Lock the layout',
           help: 'Unlock to drag and resize. Widgets stay interactive either way.',
           control: { kind: 'toggle' },
+        },
+      ],
+    },
+    {
+      id: 'slates',
+      label: 'Layouts',
+      when: (s) => s.widgets.enabled,
+      fields: [
+        {
+          label: 'Slates',
+          control: { kind: 'custom', render: () => <SlatePanel />, bare: true },
+          keywords: 'slate layout preset template share gallery community arrangement starter',
         },
       ],
     },
