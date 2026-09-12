@@ -234,7 +234,7 @@ export function DataPanel() {
 
       <Row
         title="Slate code"
-        help="The arrangement only: which widgets are on the grid and where. No calendars, cities or accounts - whoever applies it points the widgets at their own. Sharing opens a submission on GitHub with the code filled in; you post it yourself."
+        help="The arrangement only: which widgets are on the grid and where. No calendars, cities or accounts - whoever applies it points the widgets at their own. Sharing opens a prefilled submission on GitHub, which needs a free GitHub account; you can also copy the code and send it anywhere."
         stacked
       >
         <div className="data__row">

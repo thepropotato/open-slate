@@ -79,7 +79,8 @@ for (const { path, claimed } of mismatched) {
 }
 console.error(
   '\nSet `author` to the account opening the pull request. If you are submitting\n' +
-    "someone else's layout on their behalf, say so in the description and a\n" +
-    'maintainer can merge this with the credit left as it is.\n',
+    "someone else's layout on their behalf - including a slate sent in by someone\n" +
+    'without a GitHub account - say so in the description, and a maintainer can\n' +
+    'merge this with the credit left as it is.\n',
 )
 process.exit(1)

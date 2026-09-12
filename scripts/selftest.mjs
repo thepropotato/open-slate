@@ -1132,6 +1132,27 @@ const truthy = (name, value) => check(name, Boolean(value), true)
     }),
   )
 
+  /*
+   * Credit is two things: the account that was verified against the pull
+   * request, and an optional name to show instead. The account is never
+   * replaced by the display name, because only one of them was checked.
+   */
+  {
+    const { creditOf } = await load('core/settings/slateGallery.ts')
+    check('gallery: credit falls back to the username', creditOf(entry), {
+      label: 'octocat',
+      username: 'octocat',
+    })
+    const named = validateEntry({ ...entry, credit: 'Ada Lovelace' }).entry
+    check('gallery: a display name is shown instead', creditOf(named), {
+      label: 'Ada Lovelace',
+      username: 'octocat',
+    })
+    // Whatever it is called, it is still rendered text and still held to the rules.
+    truthy('gallery: markup in a display name is refused', refuses({ credit: '<b>x</b>' }))
+    truthy('gallery: an overlong display name is refused', refuses({ credit: 'x'.repeat(80) }))
+  }
+
   check(
     'gallery: widgets side by side do not overlap',
     overlaps({
