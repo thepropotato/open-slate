@@ -176,3 +176,19 @@ credit as it stands.
 
 Submitting through the extension needs no username at all: the slate is credited
 to whoever files the issue.
+
+If you would rather not be credited as your GitHub handle, set `credit` to the
+name you want shown. Your username still appears beside it, because the username
+is the part that was checked and the display name is not.
+
+Do not put an email address in a slate file. The gallery is a public folder and
+its history is permanent, so an address added there could not be taken back out.
+Commenting on the submission is enough to reach you.
+
+### Without a GitHub account
+
+Submitting needs a free GitHub account, because that account is what proves who
+wrote the slate. If you do not want one, the code is still yours to share: copy
+it from Settings → Backup and send it however you like. Anyone can apply it
+directly, and a maintainer can open the pull request for you with the credit
+left in your name.

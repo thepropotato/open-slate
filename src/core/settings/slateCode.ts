@@ -155,13 +155,20 @@ const REPO = 'https://github.com/thepropotato/open-slate'
  * they have read it. Nothing is sent anywhere until they press the button on
  * GitHub's own page.
  */
-export function submissionUrl(settings: SettingsType, name = '', description = ''): string {
+export function submissionUrl(
+  settings: SettingsType,
+  name = '',
+  description = '',
+  /** What the author would rather be credited as; their username is used if empty. */
+  credit = '',
+): string {
   const params = new URLSearchParams({
     template: 'slate-submission.yml',
     labels: 'slate',
     title: name ? `Slate: ${name}` : 'Slate: ',
     name,
     description,
+    credit,
     code: encodeSlate(settings),
   })
   return `${REPO}/issues/new?${params.toString()}`

@@ -69,6 +69,12 @@ export const GalleryEntry = z.object({
     .min(1)
     .max(AUTHOR_MAX)
     .regex(/^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/, 'not a GitHub username'),
+  /**
+   * Shown instead of the username, for someone who would rather be credited as
+   * "Ada" than as "@ada-l-1815". Optional, and never a substitute for `author`:
+   * the account is what was verified, and this is only what is displayed.
+   */
+  credit: safeText(NAME_MAX).optional(),
   /** The slate itself, exactly as the extension hands it out. */
   code: z.string().startsWith('ns1.').max(4000),
   /** ISO date the entry was merged, filled in by the reviewer. */
@@ -129,4 +135,13 @@ export function overlaps(payload: SlatePayload): boolean {
     }
   }
   return false
+}
+
+/**
+ * How a slate is credited on screen. The username is what was verified against
+ * the pull request; `credit` is only what the author would rather be called, so
+ * the account is still shown alongside rather than replaced by it.
+ */
+export function creditOf(entry: GalleryEntry): { label: string; username: string } {
+  return { label: entry.credit?.trim() || entry.author, username: entry.author }
 }

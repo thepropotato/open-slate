@@ -45,6 +45,18 @@ body:
     validations:
       required: true
 
+  - type: input
+    id: credit
+    attributes:
+      label: Name to credit (optional)
+      description: >
+        Leave this empty to be credited as your GitHub username. Fill it in to be
+        shown under a name you prefer instead; your username is still displayed
+        alongside, because that is the part that was checked.
+      placeholder: Ada Lovelace
+    validations:
+      required: false
+
   - type: checkboxes
     id: confirm
     attributes:
@@ -62,3 +74,9 @@ body:
         that files this, which is one thing nobody can type in on your behalf. If
         you are sharing someone else's layout, say whose in a comment so they can
         be credited instead.
+
+
+        You are not asked for an email either, and please do not put one in. The
+        gallery is a folder of files in a public repository and its history is
+        permanent, so an address added there could never be taken back out.
+        Replying to this issue reaches you already.
