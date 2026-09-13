@@ -86,6 +86,9 @@ export const Tiles = z.object({
   gap: z.number().min(0).max(64).default(18),
   // Null follows `appearance.radius`.
   radius: z.number().min(0).max(60).nullable().default(null),
+  // icon drops the plate for a round favicon over a label, the shape a browser's
+  // own new tab uses; the plate settings below stop applying.
+  style: z.enum(['plate', 'icon']).default('plate'),
   labelPlacement: z.enum(['below', 'inside-bottom', 'inside-top', 'none']).default('inside-bottom'),
   labelVisibility: Visibility.default('hover'),
   labelAlign: z.enum(['start', 'center', 'end']).default('center'),
@@ -174,6 +177,7 @@ export const Widgets = z.object({
   // Cells across. Cells are square and one cell is a small widget, so fewer columns means bigger widgets.
   columns: z.number().min(4).max(10).default(6),
   margin: z.number().min(0).max(48).default(14),
+  // Unread since arrange became transient; kept so old blobs still parse.
   locked: z.boolean().default(true),
   compact: z.enum(['vertical', 'horizontal', 'none']).default('vertical'),
 }).prefault({})
