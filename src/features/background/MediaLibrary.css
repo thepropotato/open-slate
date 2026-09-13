@@ -26,6 +26,14 @@
   color: #ffb08a;
 }
 
+.library__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+}
+
 .library__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(146px, 1fr));
@@ -115,6 +123,22 @@
   display: flex;
   align-items: center;
   gap: 3px;
+  /* A grid track is narrower than these buttons want to be; without this they
+     refuse to shrink and spill out past the card's own border. */
+  min-width: 0;
+}
+
+/* The labelled button takes the room that is left; the bin keeps its size. */
+.media__row > .ctl-btn:not(.ctl-btn--icon) {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.media__row > .ctl-btn:not(.ctl-btn--icon) > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .media__row > .ctl-btn:not(.ctl-btn--icon) {

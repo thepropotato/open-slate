@@ -88,7 +88,11 @@ export function MediaLibrary() {
   const pickStill = (id: string) =>
     update((current) => ({
       ...current,
-      background: { ...current.background, type: 'image', image: { blobId: id, url: '' } },
+      background: {
+        ...current.background,
+        type: 'image',
+        image: { ...current.background.image, blobId: id, url: '' },
+      },
     }))
 
   const pickVideo = (id: string) =>
@@ -146,9 +150,18 @@ export function MediaLibrary() {
         </p>
       ) : null}
 
+      {background.type === 'slideshow' && inSlideshow.size === 0 && items.length > 0 ? (
+        <p className="library__hint">
+          <Icon name="info" /> A slideshow needs at least one picture. Include the ones you want
+          it to turn between.
+        </p>
+      ) : null}
+
       {items.length === 0 ? (
         <p className="library__empty">
-          Nothing stored yet. Files you add stay on this device.
+          {background.type === 'slideshow'
+            ? 'Add some pictures for the slideshow to turn between. They stay on this device.'
+            : 'Nothing stored yet. Files you add stay on this device.'}
         </p>
       ) : (
         <ul className="library__grid">
@@ -161,10 +174,13 @@ export function MediaLibrary() {
                 (background.type === 'image' && background.image.blobId === item.id) ||
                 (background.type === 'video' && background.video.blobId === item.id)
               }
+              // Ringed for what the wallpaper is actually using now, not for a
+              // blob id left behind by a type that is no longer showing.
               active={
-                background.image.blobId === item.id ||
-                background.video.blobId === item.id ||
-                inSlideshow.has(item.id)
+                background.type === 'slideshow'
+                  ? inSlideshow.has(item.id)
+                  : (background.type === 'image' && background.image.blobId === item.id) ||
+                    (background.type === 'video' && background.video.blobId === item.id)
               }
               inSlideshow={inSlideshow.has(item.id)}
               slideshowRunning={background.type === 'slideshow'}
@@ -221,10 +237,10 @@ function MediaCard({
             <Icon name="video" />
           </span>
         ) : null}
-        {current ? (
+        {/* Only the single wallpaper needs marking; the button below says the
+            rest, and a badge on every card marks nothing. */}
+        {current && !slideshowRunning ? (
           <span className="media__badge media__badge--use">In use</span>
-        ) : slideshowRunning && inSlideshow ? (
-          <span className="media__badge media__badge--use">In slideshow</span>
         ) : null}
       </div>
 
@@ -238,27 +254,27 @@ function MediaCard({
         </span>
       </div>
 
+      {/* One job per mode: picking slides while a slideshow runs, choosing the
+          one wallpaper otherwise. Both at once is a choice nobody has to make. */}
       <div className="media__row">
-        {isVideo ? (
-          <Button variant="ghost" icon="video" onClick={onUseVideo} disabled={current}>
-            Use
+        {slideshowRunning && !isVideo ? (
+          <Button
+            variant={inSlideshow ? 'primary' : 'ghost'}
+            icon={inSlideshow ? 'check' : 'add'}
+            onClick={onToggleSlideshow}
+            title={inSlideshow ? 'Take out of the slideshow' : 'Add to the slideshow'}
+          >
+            {inSlideshow ? 'Included' : 'Include'}
           </Button>
         ) : (
-          <>
-            <Button variant="ghost" icon="image" onClick={onUseStill} disabled={current}>
-              Use
-            </Button>
-            <Button
-              variant={inSlideshow ? 'primary' : 'ghost'}
-              icon={inSlideshow ? 'check' : 'add'}
-              onClick={onToggleSlideshow}
-              title={
-                inSlideshow ? 'Take out of the slideshow' : 'Add this picture to the slideshow'
-              }
-            >
-              {inSlideshow ? 'In slideshow' : 'Slideshow'}
-            </Button>
-          </>
+          <Button
+            variant="ghost"
+            icon={isVideo ? 'video' : 'image'}
+            onClick={isVideo ? onUseVideo : onUseStill}
+            disabled={current}
+          >
+            {current ? 'In use' : 'Use'}
+          </Button>
         )}
         <Button variant="ghost" icon="remove" onClick={onRemove} title={`Delete ${item.name}`} />
       </div>
