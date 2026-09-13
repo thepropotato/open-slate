@@ -3,15 +3,13 @@ import { isExtension, localStore } from '@/core/platform/browser'
 import { useAsyncValue } from '@/core/hooks'
 import { mediaStore } from '@/core/storage/blobStore'
 import type { Background } from '@/core/settings/schema'
-import { pickForTab } from './slideshow'
+import { CURSOR_KEY, pickForTab } from './slideshow'
 
 export interface BackgroundSource {
   kind: 'none' | 'image' | 'video'
   /** Resolved `blob:` or remote URL, or null while still loading. */
   src: string | null
 }
-
-const CURSOR_KEY = 'slideshowCursor'
 
 /**
  * Which media the background shows right now. Slideshow position lives in

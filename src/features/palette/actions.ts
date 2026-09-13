@@ -3,6 +3,7 @@ import { isExtension, openOptions } from '@/core/platform/browser'
 import type { Settings } from '@/core/settings/schema'
 import type { SettingsActions } from '@/core/settings/SettingsProvider'
 import type { Suggestion } from '@/features/search/providers'
+import { advanceNow, slideCount } from '@/features/background/advance'
 
 // Commands the palette can run, as data so one list feeds matching, keyboard
 // navigation and the default view.
@@ -112,6 +113,17 @@ export function buildActions(
       run: () => reset(),
     },
   ]
+
+  // Only worth offering when there is more than one picture to move between.
+  if (settings.background.type === 'slideshow' && slideCount(settings) > 1) {
+    list.splice(-1, 0, {
+      id: 'wallpaper:shuffle',
+      title: 'Next wallpaper',
+      icon: 'image',
+      keywords: 'slideshow shuffle change picture background skip next',
+      run: () => advanceNow(settings),
+    })
+  }
 
   if (isExtension()) {
     list.push({

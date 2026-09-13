@@ -106,7 +106,15 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   truthy('slideshow: zero is every new tab', interval(0).success)
   check('slideshow: negative is not an interval', interval(-1).success, false)
 
-  const { pickForTab } = await load('features/background/slideshow.ts')
+  const { pickForTab, nextSlide } = await load('features/background/slideshow.ts')
+  check('slideshow: next in order', nextSlide(1, 4, false), 2)
+  check('slideshow: next wraps', nextSlide(3, 4, false), 0)
+  check('slideshow: one image has no next', nextSlide(0, 1, true), 0)
+  truthy(
+    'slideshow: a shuffled next is never the one on screen',
+    Array.from({ length: 50 }, () => nextSlide(2, 5, true)).every((i) => i !== 2 && i >= 0 && i < 5),
+  )
+
   check('slideshow: ordered tab steps the stored cursor', pickForTab(2, 5, false), 3)
   check('slideshow: ordered tab wraps', pickForTab(4, 5, false), 0)
   check('slideshow: ordered tab starts from nothing', pickForTab(null, 5, false), 1)

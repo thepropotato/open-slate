@@ -33,6 +33,10 @@ so it is written for the people who use the extension rather than for the diff.
 - A wallpaper slideshow can change on every new tab, rather than only on a
   timer with a floor of a minute. Shuffled, tabs opened together each get their
   own picture; in order, each new tab takes the next one.
+- "Next wallpaper" in the command palette, for when the one on screen is not
+  the one you want and you would rather not wait for the timer. It offers
+  itself only when a slideshow with more than one picture is running, and every
+  open tab follows.
 
 ### Changed
 
