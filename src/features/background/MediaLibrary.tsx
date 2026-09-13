@@ -3,7 +3,7 @@ import { Icon } from '@/core/icons'
 import { useAsyncValue } from '@/core/hooks'
 import { Button } from '@/core/ui'
 import { measureMedia, mediaStore, type MediaMeta } from '@/core/storage/blobStore'
-import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
+import { useDraftSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { uid } from '@/core/util/id'
 import './MediaLibrary.css'
 
@@ -16,7 +16,10 @@ const LARGE_FILE_BYTES = 60 * 1024 * 1024
  * background type.
  */
 export function MediaLibrary() {
-  const { background } = useSettings()
+  // The draft, not the saved settings: the type switch above is a staged edit,
+  // so reading what is saved would go on offering slideshow buttons after the
+  // reader has already switched to a single image.
+  const { background } = useDraftSettings()
   const { update } = useSettingsActions()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
