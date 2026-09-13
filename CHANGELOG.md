@@ -26,8 +26,37 @@ so it is written for the people who use the extension rather than for the diff.
   work without any setting up. Applying one replaces your widgets and the shape
   of the page, leaves your tiles, notes and tasks alone, and asks before it does.
 
+- Icons as an alternative to tiles: a round favicon with the title underneath,
+  the shape a browser's own new tab uses. The settings that only describe a
+  plate - its colour, its proportions, where the title sits on it - step aside
+  while icons are on, rather than staying there doing nothing.
+- A wallpaper slideshow can change on every new tab, rather than only on a
+  timer with a floor of a minute. Shuffled, tabs opened together each get their
+  own picture; in order, each new tab takes the next one.
+
+### Changed
+
+- Arranging the page is now something you ask for, and the page is otherwise
+  left alone. Tiles and widgets carried a grip and a button in their corners
+  that appeared whenever the pointer crossed them, sitting on top of the favicon
+  or the first line of whatever a widget was drawing. Those are gone. Press the
+  grid button beside the settings cog, right-click and choose Arrange, or press
+  E, and everything loosens at once: drag a tile or a widget from anywhere on
+  it, resize from the corner, and press Done or Escape when you are finished.
+- Right-click now opens a menu wherever you are on the page, with what belongs
+  to the thing under the pointer first - open a tile in a new tab, edit it,
+  remove it, configure a widget - and adding, arranging and the settings below
+  it. Nothing needs to be scrolled to any more.
+- Widgets stay live until you arrange them. A widget's face answers clicks, so
+  a drag that started on it would have stolen them; arranging settles that by
+  holding the whole board still for as long as you are moving things.
+
 ### Fixed
 
+- The search box no longer shifts as you type. The shortcut hint, the Go chip
+  and the clear button used to appear and disappear around the input, changing
+  its width on the first keystroke and again once what you had typed looked like
+  a link. They now hold their places whether or not they are showing.
 - Choosing a wallpaper while settings are open now shows up straight away, on
   both the preview and the page behind it. It was being applied but left hidden
   behind the settings you had not saved yet, so a picture you had definitely
