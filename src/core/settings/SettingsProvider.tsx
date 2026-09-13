@@ -155,6 +155,8 @@ export function SettingsProvider({
           const next = setPath(current, path, value)
           lastWritten.current = JSON.stringify(next)
           saveSettings(next)
+          // As in `update`: an open draft still holds this path's old value.
+          setDraft((draft) => (draft ? rebase(current, draft, next) : draft))
           return next
         })
       },
@@ -182,11 +184,17 @@ export function SettingsProvider({
       dirty: changed.length > 0,
       save: () => {
         if (!draft) return
-        lastWritten.current = JSON.stringify(draft)
-        writeSettings(draft)
-        saveSettings(draft)
-        // Flush rather than wait out the debounce, so other tabs see it now.
-        void flushSettings()
+        // Only the edited paths: the whole draft would stamp its stale copy of
+        // every immediate value back over what landed while it was open.
+        writeSettings((current) => {
+          const base = current ?? draft
+          const next = changed.reduce((acc, path) => setPath(acc, path, getPath(draft, path)), base)
+          lastWritten.current = JSON.stringify(next)
+          saveSettings(next)
+          // Flush rather than wait out the debounce, so other tabs see it now.
+          void flushSettings()
+          return next
+        })
         setDraft(null)
       },
       discard: () => setDraft(null),
