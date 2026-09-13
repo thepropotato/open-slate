@@ -46,7 +46,8 @@ so it is written for the people who use the extension rather than for the diff.
   or the first line of whatever a widget was drawing. Those are gone. Press the
   grid button beside the settings cog, right-click and choose Arrange, or press
   E, and everything loosens at once: drag a tile or a widget from anywhere on
-  it, resize from the corner, and press Done or Escape when you are finished.
+  it, resize from the corner, and press the same button again - or Escape - when
+  you are finished.
 - Right-click now opens a menu wherever you are on the page, with what belongs
   to the thing under the pointer first - open a tile in a new tab, edit it,
   remove it, configure a widget - and adding, arranging and the settings below
@@ -54,6 +55,11 @@ so it is written for the people who use the extension rather than for the diff.
 - Widgets stay live until you arrange them. A widget's face answers clicks, so
   a drag that started on it would have stolen them; arranging settles that by
   holding the whole board still for as long as you are moving things.
+- Each picture in the wallpaper library asks one question rather than offering
+  everything at once. Running a slideshow, that is whether the picture is in it;
+  otherwise, whether it is the wallpaper. The unlabelled plus that added a
+  picture to a slideshow says so now, and the buttons no longer spill outside
+  the card they belong to.
 
 ### Fixed
 
@@ -66,6 +72,13 @@ so it is written for the people who use the extension rather than for the diff.
   pulled from another device replaced everything, unsaved edits included, so
   with sync on the settings panel could reset itself at any moment. A pull now
   keeps your edits and brings the rest.
+- A settings change no longer occasionally undoes itself. Writes are held back
+  a moment before being stored, so more than one can be waiting at once, and a
+  tab could mistake its own earlier write for another tab's and snap back to it.
+- The wallpaper library follows the type you have just picked. Choosing Image
+  while a slideshow was set left every picture still offering to join the
+  slideshow, because the library was reading what was saved rather than what you
+  had changed.
 - Settings changed while the panel is open no longer undo work done beside
   them. Saving wrote the whole panel back, including its copy of things it does
   not edit, so a picture added to the slideshow could vanish the moment an
