@@ -150,12 +150,20 @@
   background: var(--accent);
 }
 
-.page__settings,
-.page__arrange {
+/* One column, so the page's fixed controls read as a set and the bottom
+   edge stays clear. */
+.page__tools {
   position: fixed;
   right: 16px;
   bottom: 16px;
   z-index: var(--z-overlay);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.page__settings,
+.page__arrange {
   --icon-btn: 38px;
   border-radius: var(--radius-sm);
   color: var(--fg-muted);
@@ -166,14 +174,17 @@
   transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease);
 }
 
-/* Left of the cog, where the Done pill takes over once arranging. */
-.page__arrange {
-  right: 62px;
-}
-
 .page__arrange:hover {
   opacity: 1;
   color: var(--fg);
+}
+
+/* The one lit control while arranging: it is the way out. */
+.page__arrange[data-active='true'] {
+  opacity: 1;
+  color: var(--accent-fg);
+  background: var(--accent);
+  border-color: transparent;
 }
 
 /* Rotate the cog, not the button - the button carries the border and blur plate. */
@@ -191,13 +202,11 @@
 }
 
 /* Zen mode hides the chrome until the pointer moves. */
-[data-zen='true'] .page__settings,
-.page__settings[data-zen='true'],
-.page__arrange[data-zen='true'] {
+.page__tools[data-zen='true'] {
   opacity: 0;
+  transition: opacity var(--dur) var(--ease);
 }
 
-.page:hover .page__settings[data-zen='true'],
-.page:hover .page__arrange[data-zen='true'] {
-  opacity: 0.35;
+.page:hover .page__tools[data-zen='true'] {
+  opacity: 1;
 }
