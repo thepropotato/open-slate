@@ -16,21 +16,15 @@ export function FolderView({
   folder,
   items,
   settings,
-  editing,
   onReorder,
   onRemoveFromFolder,
-  onEdit,
-  onRemove,
   onClose,
 }: {
   folder: TileModel | null
   items: TileModel[]
   settings: TilesSettings
-  editing: boolean
   onReorder: (next: TileModel[]) => void
   onRemoveFromFolder: (id: string) => void
-  onEdit: (id: string) => void
-  onRemove: (id: string) => void
   onClose: () => void
 }) {
   if (!folder) return null
@@ -46,18 +40,15 @@ export function FolderView({
     '--tile-fit': settings.imageFit,
   } as React.CSSProperties
 
-  // No drag plumbing: the normal path, and the Arrange fallback.
-  const plainTiles = (arranging: boolean) =>
+  // Shown until the drag chunk arrives.
+  const plainTiles = () =>
     children.map((tile, index) => (
       <Tile
         key={tile.id}
         tile={tile}
         index={index}
         settings={settings}
-        editing={arranging}
         showHint={false}
-        onEdit={onEdit}
-        onRemove={onRemove}
       />
     ))
 
@@ -65,8 +56,7 @@ export function FolderView({
     <Modal title={folder.title || 'Folder'} width={680} onClose={onClose}>
       {children.length === 0 ? (
         <p className="folder__empty">
-          <Icon name="info" /> This folder is empty. In Arrange mode, drag a tile onto it to file
-          it here.
+          <Icon name="info" /> This folder is empty. Drag a tile onto it to file it here.
         </p>
       ) : (
         <div
@@ -74,27 +64,22 @@ export function FolderView({
           data-label-vis="always"
           data-hover={settings.hoverEffect}
           data-plate={settings.plateStyle}
+          // Opening the folder is already the deliberate act.
+          data-arranging="true"
           style={gridStyle}
         >
-          {editing ? (
-            // Plain tiles stand in while the drag chunk loads.
-            <Suspense fallback={plainTiles(true)}>
-              <SortableTiles
-                items={children}
-                settings={settings}
-                showHint={false}
-                onReorder={onReorder}
-                onEdit={onEdit}
-                onRemove={onRemove}
-              />
-            </Suspense>
-          ) : (
-            plainTiles(false)
-          )}
+          <Suspense fallback={plainTiles()}>
+            <SortableTiles
+              items={children}
+              settings={settings}
+              showHint={false}
+              onReorder={onReorder}
+            />
+          </Suspense>
         </div>
       )}
 
-      {editing && children.length > 0 ? (
+      {children.length > 0 ? (
         <ul className="folder__manage">
           {children.map((tile) => (
             <li key={tile.id}>

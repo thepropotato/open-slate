@@ -6,8 +6,8 @@ import { useTileVisual, type TileArt } from './useTileVisual'
 
 /**
  * One speed-dial tile. Presentational only: the sortable wrapper passes drag
- * plumbing in through `drag`, keeping the drag library off the page until
- * Arrange mode.
+ * plumbing in through `drag`, keeping the drag library off the page until the
+ * reader arranges. Absent `drag`, the tile has no chrome and cannot be moved.
  */
 export interface TileDrag {
   ref: Ref<HTMLDivElement>
@@ -22,38 +22,35 @@ export function Tile({
   tile,
   settings,
   index,
-  editing,
   showHint,
   drag,
   childUrls,
   onOpenFolder,
-  onEdit,
-  onRemove,
 }: {
   tile: TileModel
   settings: TilesSettings
   index: number
-  editing: boolean
   showHint: boolean
   drag?: TileDrag
   /** URLs inside this folder, for its preview grid. */
   childUrls?: string[]
   onOpenFolder?: (id: string) => void
-  onEdit: (id: string) => void
-  onRemove: (id: string) => void
 }) {
   const visual = useTileVisual(tile, settings, childUrls)
   const isFolder = tile.kind === 'folder'
-  const placement = tile.labelPlacement ?? settings.labelPlacement
+  // A label inside an icon would be text floating over a transparent square, so
+  // that style takes the name underneath and ignores both placement settings.
+  const placement =
+    settings.style === 'icon' ? 'below' : tile.labelPlacement ?? settings.labelPlacement
 
   return (
     <div
       className="tile"
       ref={drag?.ref}
       style={drag?.style}
+      data-tile-id={tile.id}
       data-dragging={drag?.dragging}
       data-drop-target={drag?.dropTarget}
-      {...(drag?.handleProps ?? {})}
     >
       {/* An anchor, so middle-click and "copy link address" work; a folder has
           no address, so it is a button. */}
@@ -61,10 +58,12 @@ export function Tile({
         isFolder={isFolder}
         url={tile.url}
         title={visual.title}
-        // In Arrange mode the plate stops navigating, so a drag ending short of
-        // the threshold cannot fire off to the site.
-        inert={editing}
-        style={{ background: visual.plate ?? 'transparent', color: visual.ink }}
+        // An icon has no plate to colour, and the background is inline, so it
+        // has to be dropped here rather than in the stylesheet.
+        style={{
+          background: settings.style === 'icon' ? 'transparent' : visual.plate ?? 'transparent',
+          color: visual.ink,
+        }}
         onActivate={() => (isFolder ? onOpenFolder?.(tile.id) : openUrl(tile.url, settings.openIn))}
       >
         <TileArtwork art={visual.art} title={visual.title} />
@@ -81,27 +80,14 @@ export function Tile({
         ) : null}
       </Plate>
 
-      {editing ? (
-        <div className="tile__actions">
-          <button
-            type="button"
-            className="tile__action is-icon-btn"
-            title="Edit tile"
-            aria-label={`Edit ${visual.title}`}
-            onClick={() => onEdit(tile.id)}
-          >
-            <Icon name="edit" />
-          </button>
-          <button
-            type="button"
-            className="tile__action is-icon-btn"
-            title="Remove tile"
-            aria-label={`Remove ${visual.title}`}
-            onClick={() => onRemove(tile.id)}
-          >
-            <Icon name="close" />
-          </button>
-        </div>
+      {/* The whole tile, not a corner chip: at rest there is no chrome at all. */}
+      {drag ? (
+        <span
+          className="tile__grip"
+          title="Drag to move"
+          aria-label={`Move ${visual.title}`}
+          {...drag.handleProps}
+        />
       ) : null}
 
       {placement === 'below' ? (
@@ -116,7 +102,6 @@ function Plate({
   url,
   title,
   style,
-  inert,
   onActivate,
   children,
 }: {
@@ -124,8 +109,6 @@ function Plate({
   url: string
   title: string
   style: CSSProperties
-  /** Arrange mode: draw the plate, but do not let it lead anywhere. */
-  inert: boolean
   onActivate: () => void
   children: ReactNode
 }) {
@@ -133,17 +116,7 @@ function Plate({
   // click: otherwise it still takes focus, hovers and fires on Enter.
   if (isFolder) {
     return (
-      <button
-        type="button"
-        className="tile__plate"
-        style={style}
-        title={title}
-        data-inert={inert}
-        tabIndex={inert ? -1 : undefined}
-        aria-hidden={inert || undefined}
-        onMouseDown={inert ? (event) => event.preventDefault() : undefined}
-        onClick={inert ? undefined : onActivate}
-      >
+      <button type="button" className="tile__plate" style={style} title={title} onClick={onActivate}>
         {children}
       </button>
     )
@@ -153,18 +126,12 @@ function Plate({
       className="tile__plate"
       // Without an href this is no longer a link, so cmd-click, middle-click and
       // the browser's own link drag all stop competing with the reorder drag.
-      href={inert ? undefined : url}
+      href={url}
       style={style}
       title={title}
-      data-inert={inert}
-      tabIndex={inert ? -1 : undefined}
-      aria-hidden={inert || undefined}
-      onMouseDown={inert ? (event) => event.preventDefault() : undefined}
+      // The browser's own link-drag would race the reordering one.
+      draggable={false}
       onClick={(event) => {
-        if (inert) {
-          event.preventDefault()
-          return
-        }
         // Let the browser handle modified clicks natively.
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return
         event.preventDefault()
