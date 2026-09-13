@@ -135,6 +135,17 @@
   overflow: hidden;
 }
 
+/* Says what the file is when this mode cannot show it. */
+.media__idle {
+  min-width: 0;
+  overflow: hidden;
+  padding-inline: 4px;
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .media__row > .ctl-btn:not(.ctl-btn--icon) > span {
   overflow: hidden;
   text-overflow: ellipsis;

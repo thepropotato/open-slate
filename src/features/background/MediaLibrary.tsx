@@ -187,6 +187,12 @@ export function MediaLibrary() {
               }
               inSlideshow={inSlideshow.has(item.id)}
               slideshowRunning={background.type === 'slideshow'}
+              // Video plays videos; every other type shows a still.
+              usable={
+                background.type === 'video'
+                  ? item.type.startsWith('video/')
+                  : !item.type.startsWith('video/')
+              }
               onUseStill={() => pickStill(item.id)}
               onUseVideo={() => pickVideo(item.id)}
               onToggleSlideshow={() => toggleInSlideshow(item.id)}
@@ -205,6 +211,7 @@ function MediaCard({
   current,
   inSlideshow,
   slideshowRunning,
+  usable,
   onUseStill,
   onUseVideo,
   onToggleSlideshow,
@@ -217,6 +224,8 @@ function MediaCard({
   inSlideshow: boolean
   /** Whether the slideshow is the active background type at all. */
   slideshowRunning: boolean
+  /** Whether this file is the kind the current type can show. */
+  usable: boolean
   onUseStill: () => void
   onUseVideo: () => void
   onToggleSlideshow: () => void
@@ -257,8 +266,8 @@ function MediaCard({
         </span>
       </div>
 
-      {/* One job per mode: picking slides while a slideshow runs, choosing the
-          one wallpaper otherwise. Both at once is a choice nobody has to make. */}
+      {/* Only what this mode can show: using a still while the type is video
+          would switch the type out from under the reader. */}
       <div className="media__row">
         {slideshowRunning && !isVideo ? (
           <Button
@@ -269,7 +278,7 @@ function MediaCard({
           >
             {inSlideshow ? 'Included' : 'Include'}
           </Button>
-        ) : (
+        ) : usable ? (
           <Button
             variant="ghost"
             icon={isVideo ? 'video' : 'image'}
@@ -278,6 +287,8 @@ function MediaCard({
           >
             {current ? 'In use' : 'Use'}
           </Button>
+        ) : (
+          <span className="media__idle">{isVideo ? 'A video' : 'A picture'}</span>
         )}
         <Button variant="ghost" icon="remove" onClick={onRemove} title={`Delete ${item.name}`} />
       </div>
