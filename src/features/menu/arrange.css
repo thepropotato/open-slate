@@ -1,0 +1,18 @@
+/* Beside the settings cog, which is the page's other fixed control. */
+.arrangedone {
+  position: fixed;
+  right: 62px;
+  bottom: 16px;
+  z-index: var(--z-overlay);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 34%);
+}

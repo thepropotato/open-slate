@@ -11,6 +11,8 @@ const CommandPalette = lazyChunk(() =>
 const SettingsOverlay = lazyChunk(() =>
   import('@/features/settings-ui/SettingsOverlay').then((m) => ({ default: m.SettingsOverlay })),
 )
+import { ArrangeProvider, useArrange } from '@/features/menu/ArrangeContext'
+import { ArrangeDone, useArrangeEscape } from '@/features/menu/arrange'
 import { derivePanes, PageShell } from './PageShell'
 import './App.css'
 
@@ -20,6 +22,14 @@ import './App.css'
  * cog, the palette, and the remembered pane.
  */
 export function App() {
+  return (
+    <ArrangeProvider>
+      <NewTab />
+    </ArrangeProvider>
+  )
+}
+
+function NewTab() {
   const settings = useSettings()
   const { layout, appearance, behavior, widgets, tiles } = settings
   const { update } = useSettingsActions()
@@ -27,6 +37,7 @@ export function App() {
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const contentRef = useRef<HTMLElement>(null)
+  const arrange = useArrange()
 
   // Gates the pane entrance animation on a real switch. A timer cannot work: panes
   // mount only once settings load, by which point a "first paint" flag has expired.
@@ -87,6 +98,14 @@ export function App() {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const modifier = event.metaKey || event.ctrlKey
+
+      // Entry cost is what sank the old arrange mode, so it gets a bare key.
+      if (!modifier && !event.altKey && event.key.toLowerCase() === 'e' && !isTyping(event.target)) {
+        event.preventDefault()
+        arrange.start()
+        return
+      }
+
       if (!modifier) return
       if (event.key === ',') {
         event.preventDefault()
@@ -107,7 +126,9 @@ export function App() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [paletteEnabled, panes, showPane])
+  }, [paletteEnabled, panes, showPane, arrange])
+
+  useArrangeEscape(arrange.arranging, arrange.stop)
 
   return (
     <PageShell
@@ -130,6 +151,8 @@ export function App() {
         <Icon name="settings" />
       </button>
 
+      {arrange.arranging ? <ArrangeDone label="Done" onDone={arrange.stop} /> : null}
+
       {/* Mounted only while open, so its state starts fresh every time. */}
       {paletteEnabled && paletteOpen ? (
         <Suspense fallback={null}>
@@ -148,4 +171,12 @@ export function App() {
       ) : null}
     </PageShell>
   )
+}
+
+/** A bare letter shortcut must not steal the key from anything taking text. */
+function isTyping(target: EventTarget | null): boolean {
+  const element = target as HTMLElement | null
+  if (!element?.tagName) return false
+  const tag = element.tagName.toLowerCase()
+  return tag === 'input' || tag === 'textarea' || tag === 'select' || element.isContentEditable
 }
