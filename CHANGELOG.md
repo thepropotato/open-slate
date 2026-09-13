@@ -5,7 +5,7 @@ Notable changes to Open Slate, newest first. Versions follow
 GitHub release, the website and the store listing's "What's new" all read from,
 so it is written for the people who use the extension rather than for the diff.
 
-## [Unreleased]
+## [1.3.0]
 
 ### Added
 
@@ -25,7 +25,6 @@ so it is written for the people who use the extension rather than for the diff.
   Focus, Dashboard, Reading and Minimal each arrange a handful of widgets that
   work without any setting up. Applying one replaces your widgets and the shape
   of the page, leaves your tiles, notes and tasks alone, and asks before it does.
-
 - Icons as an alternative to tiles: a round favicon with the title underneath,
   the shape a browser's own new tab uses. The settings that only describe a
   plate - its colour, its proportions, where the title sits on it - step aside
@@ -176,6 +175,7 @@ First public release.
   prices, and your own browser data.
 - Settings sync, and an export and import of everything stored.
 
-[1.2.0]: https://github.com/thepropotato/open-slate/compare/v1.1.0...HEAD
+[1.3.0]: https://github.com/thepropotato/open-slate/compare/v1.2.0...v1.3.0
+[1.2.0]: https://github.com/thepropotato/open-slate/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/thepropotato/open-slate/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/thepropotato/open-slate/releases/tag/v1.0.0
