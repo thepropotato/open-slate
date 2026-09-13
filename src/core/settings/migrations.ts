@@ -141,13 +141,56 @@ export function migrate(raw: unknown): SettingsType {
   return Settings.parse(salvage(data))
 }
 
-/** Drops only the top-level sections that fail validation. */
+/**
+ * Drops the smallest failing part it can. A whole section would take working
+ * settings down with one bad leaf - a bad slideshow interval should not cost
+ * the reader the pictures they uploaded - so a failing section is retried field
+ * by field before being given up on.
+ */
 function salvage(data: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = { version: SETTINGS_VERSION }
-  const shape = Settings.shape as Record<string, { safeParse(v: unknown): { success: boolean } }>
+  const shape = Settings.shape as Record<string, ZodLike>
   for (const key of Object.keys(shape)) {
     if (key === 'version' || !(key in data)) continue
     if (shape[key].safeParse(data[key]).success) out[key] = data[key]
+    else {
+      const kept = salvageSection(shape[key], data[key])
+      if (kept) out[key] = kept
+    }
   }
   return out
+}
+
+interface ZodLike {
+  safeParse(v: unknown): { success: boolean }
+  shape?: Record<string, ZodLike>
+  unwrap?: () => ZodLike
+}
+
+/** `.prefault({})` and friends wrap the object, putting `shape` out of reach. */
+function shapeOf(schema: ZodLike): Record<string, ZodLike> | undefined {
+  let current: ZodLike | undefined = schema
+  for (let depth = 0; current && depth < 5; depth += 1) {
+    if (current.shape) return current.shape
+    current = current.unwrap?.()
+  }
+  return undefined
+}
+
+/** Keeps the fields of one section that still parse, dropping only the rest. */
+function salvageSection(section: ZodLike, value: unknown): Record<string, unknown> | null {
+  const shape = shapeOf(section)
+  if (!shape || value === null || typeof value !== 'object') return null
+
+  const source = value as Record<string, unknown>
+  const out: Record<string, unknown> = {}
+  for (const key of Object.keys(shape)) {
+    if (!(key in source)) continue
+    if (shape[key].safeParse(source[key]).success) out[key] = source[key]
+    else {
+      const kept = salvageSection(shape[key], source[key])
+      if (kept) out[key] = kept
+    }
+  }
+  return section.safeParse(out).success ? out : null
 }
