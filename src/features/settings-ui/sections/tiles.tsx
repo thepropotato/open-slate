@@ -67,6 +67,19 @@ export const tilesSection: Section = {
       when: (s) => s.tiles.enabled,
       fields: [
         {
+          path: 'tiles.style',
+          label: 'Style',
+          help: 'Tiles are plates with the title on them; icons are round marks with the title underneath.',
+          control: {
+            kind: 'segmented',
+            options: [
+              { value: 'plate', label: 'Tiles' },
+              { value: 'icon', label: 'Icons' },
+            ],
+          },
+          keywords: 'plate favicon circle chrome default shortcut',
+        },
+        {
           path: 'tiles.columns',
           label: 'Columns',
           help: 'A row of this many, filling the width. Zero fits as many as the tile width allows.',
@@ -83,6 +96,8 @@ export const tilesSection: Section = {
           path: 'tiles.aspect',
           label: 'Shape',
           help: 'Ratio of width to height. 1.0 is a square.',
+          // Icons are round, so there is no ratio to set.
+          when: (s) => s.tiles.style === 'plate',
           control: { kind: 'slider', min: 0.5, max: 3, step: 0.05, format: (v) => `${v.toFixed(2)}:1` },
         },
         {
@@ -115,6 +130,8 @@ export const tilesSection: Section = {
           path: 'tiles.plateStyle',
           label: 'Plate colour',
           help: 'Brand paints the tile in the site colour; neutral keeps the theme surface.',
+          // Nothing to colour without a plate.
+          when: (s) => s.tiles.style === 'plate',
           control: {
             kind: 'segmented',
             options: [
@@ -165,6 +182,9 @@ export const tilesSection: Section = {
         {
           path: 'tiles.labelPlacement',
           label: 'Title position',
+          // An icon's name always sits underneath: inside a plate that is not
+          // drawn, it would be text floating over the wallpaper.
+          when: (s) => s.tiles.style === 'plate',
           control: {
             kind: 'select',
             options: [
@@ -186,7 +206,7 @@ export const tilesSection: Section = {
               { value: 'never', label: 'Never' },
             ],
           },
-          when: (s) => s.tiles.labelPlacement !== 'none',
+          when: (s) => s.tiles.style === 'icon' || s.tiles.labelPlacement !== 'none',
         },
         {
           path: 'tiles.labelAlign',
@@ -199,7 +219,7 @@ export const tilesSection: Section = {
               { value: 'end', label: 'Right' },
             ],
           },
-          when: (s) => s.tiles.labelPlacement !== 'none',
+          when: (s) => s.tiles.style === 'icon' || s.tiles.labelPlacement !== 'none',
         },
       ],
     },
