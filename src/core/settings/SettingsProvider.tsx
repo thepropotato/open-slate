@@ -53,8 +53,9 @@ export function SettingsProvider({
   const [settings, setSettings] = useState<Settings | null>(null)
   // Unsaved edits to staged paths; `null` when there are none.
   const [draft, setDraft] = useState<Settings | null>(null)
-  // Our own last write, so we can ignore the echo.
-  const lastWritten = useRef<string>('')
+  // Every write of ours still awaiting its echo: writes are debounced, so one
+  // slot would let a tab mistake its own earlier write for someone else's.
+  const ourWrites = useRef<Set<string>>(new Set())
   // Mirrors `settings` so a staged write can read what is saved without making
   // `actions` depend on it. Kept in step by `writeSettings`, the single writer.
   const savedRef = useRef<Settings | null>(null)
@@ -74,24 +75,32 @@ export function SettingsProvider({
     [],
   )
 
+  /** Remembers a write of ours so its echo can be told from a real one. */
+  const mine = useCallback((value: Settings) => {
+    ourWrites.current.add(JSON.stringify(value))
+    // A write that changed nothing never echoes; don't hold its entry forever.
+    if (ourWrites.current.size > 20) {
+      ourWrites.current = new Set([...ourWrites.current].slice(-10))
+    }
+  }, [])
+
   useEffect(() => {
     let alive = true
     void loadSettings().then((loaded) => {
       if (!alive) return
-      lastWritten.current = JSON.stringify(loaded)
+      mine(loaded)
       writeSettings(loaded)
     })
     return () => {
       alive = false
     }
-  }, [writeSettings])
+  }, [writeSettings, mine])
 
   // Keep every open tab and the options page in step.
   useEffect(() => {
     const unsubscribe = subscribeSettings((incoming) => {
       const serialised = JSON.stringify(incoming)
-      if (serialised === lastWritten.current) return
-      lastWritten.current = serialised
+      if (ourWrites.current.delete(serialised)) return
       // Read the outgoing values before replacing them; the rebase needs both.
       const previous = savedRef.current
       writeSettings(incoming)
@@ -114,12 +123,12 @@ export function SettingsProvider({
   }, [])
 
   const commit = useCallback((next: Settings) => {
-    lastWritten.current = JSON.stringify(next)
+    mine(next)
     writeSettings(next)
     saveSettings(next)
     // A wholesale replacement is the new truth; a draft against the old one is meaningless.
     setDraft(null)
-  }, [writeSettings])
+  }, [writeSettings, mine])
 
   const actions = useMemo<SettingsActions>(
     () => ({
@@ -128,7 +137,7 @@ export function SettingsProvider({
         writeSettings((current) => {
           if (!current) return current
           const next = recipe(current)
-          lastWritten.current = JSON.stringify(next)
+          mine(next)
           saveSettings(next)
           // An open draft still holds the pre-commit value of every staged path,
           // and `effective` prefers the draft - so a recipe touching one (picking
@@ -153,7 +162,7 @@ export function SettingsProvider({
         writeSettings((current) => {
           if (!current) return current
           const next = setPath(current, path, value)
-          lastWritten.current = JSON.stringify(next)
+          mine(next)
           saveSettings(next)
           // As in `update`: an open draft still holds this path's old value.
           setDraft((draft) => (draft ? rebase(current, draft, next) : draft))
@@ -162,13 +171,13 @@ export function SettingsProvider({
       },
       reset: async () => {
         const fresh = await resetSettings()
-        lastWritten.current = JSON.stringify(fresh)
+        mine(fresh)
         writeSettings(fresh)
         setDraft(null)
       },
       replace: commit,
     }),
-    [commit, writeSettings],
+    [commit, writeSettings, mine],
   )
 
   const effective = draft ?? settings
@@ -189,7 +198,7 @@ export function SettingsProvider({
         writeSettings((current) => {
           const base = current ?? draft
           const next = changed.reduce((acc, path) => setPath(acc, path, getPath(draft, path)), base)
-          lastWritten.current = JSON.stringify(next)
+          mine(next)
           saveSettings(next)
           // Flush rather than wait out the debounce, so other tabs see it now.
           void flushSettings()
@@ -205,7 +214,7 @@ export function SettingsProvider({
           return stagedDiff(settings, next).length === 0 ? null : next
         }),
     }),
-    [changed, draft, settings, writeSettings],
+    [changed, draft, settings, writeSettings, mine],
   )
 
   if (!settings || !effective) return <>{fallback}</>
