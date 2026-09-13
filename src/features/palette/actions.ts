@@ -65,13 +65,6 @@ export function buildActions(
       run: () => set('appearance.radius', settings.appearance.radius === 0 ? 16 : 0),
     },
     {
-      id: 'widgets:arrange',
-      title: settings.widgets.locked ? 'Rearrange widgets' : 'Lock the widget layout',
-      icon: settings.widgets.locked ? 'unlock' : 'lock',
-      keywords: 'move resize dashboard grid',
-      run: () => set('widgets.locked', !settings.widgets.locked),
-    },
-    {
       id: 'pane:widgets',
       title: 'Show the widgets',
       icon: 'layers',

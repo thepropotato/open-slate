@@ -9,12 +9,6 @@ export const widgetsSection: Section = {
       id: 'general',
       fields: [
         { path: 'widgets.enabled', label: 'Show widgets', control: { kind: 'toggle' } },
-        {
-          path: 'widgets.locked',
-          label: 'Lock the layout',
-          help: 'Unlock to drag and resize. Widgets stay interactive either way.',
-          control: { kind: 'toggle' },
-        },
       ],
     },
     {

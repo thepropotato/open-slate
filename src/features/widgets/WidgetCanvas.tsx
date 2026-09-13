@@ -24,6 +24,9 @@ import {
 import type { AnyWidgetDefinition } from '@/core/widgets/types'
 import { setPath } from '@/core/util/path'
 import { uid } from '@/core/util/id'
+import { useContextMenu } from '@/features/menu/useContextMenu'
+import { useArrange } from '@/features/menu/ArrangeContext'
+import type { MenuItem } from '@/features/menu/ContextMenu'
 import { WidgetFrame } from './WidgetFrame'
 
 // Lazy: the config dialog pulls in the settings-UI field renderer, which would
@@ -55,9 +58,6 @@ const STACK_WIDTH = 0.86
 // this a one-column band would make every widget as tall as the window is wide.
 const STACK_ROW = 0.52
 
-// Empty rows kept below the last widget while unlocked, as a drop target.
-const EDIT_ROOM_ROWS = 1
-
 const COMPACTORS = {
   vertical: verticalCompactor,
   horizontal: horizontalCompactor,
@@ -85,7 +85,9 @@ export function WidgetCanvas() {
     return () => cancelAnimationFrame(frame)
   }, [])
 
-  const editing = !widgets.locked
+  // Transient and page-wide; `widgets.locked` stays in the schema unread, so
+  // no migration is needed.
+  const arrange = useArrange()
 
   const cols = widgets.columns
 
@@ -96,8 +98,7 @@ export function WidgetCanvas() {
 
   const cellAt = (columns: number) => (width - widgets.margin * (columns - 1)) / columns
 
-  // Arranging never stacks: a drag has to land in the cell under the cursor.
-  const stacked = !editing && width > 0 && width < MIN_BOARD
+  const stacked = width > 0 && width < MIN_BOARD
 
   const activeCols = stacked ? 1 : cols
 
@@ -145,7 +146,7 @@ export function WidgetCanvas() {
     [layout],
   )
 
-  const stageHeight = (rows + EDIT_ROOM_ROWS) * (rowHeight + widgets.margin) - widgets.margin
+  const stageHeight = rows * (rowHeight + widgets.margin) - widgets.margin
 
   // Resizing snaps to the widget's declared standard sizes, not single cells.
   const constraints = useMemo<LayoutConstraint[]>(
@@ -171,7 +172,7 @@ export function WidgetCanvas() {
       // The grid re-emits a layout on every re-measure, a window resize
       // included; storing those would persist the stacked column. A derived
       // layout is never written back (`stacked` is redundant but states the rule).
-      if (!editing || stacked) return
+      if (stacked) return
 
       // Store only the geometry, dropping the library's transient item flags.
       const geometry = next.map(({ i, x, y, w, h }) => ({ i, x, y, w, h }))
@@ -182,7 +183,7 @@ export function WidgetCanvas() {
         return { ...current, widgets: { ...current.widgets, layout: normalized } }
       })
     },
-    [update, normalize, editing, stacked],
+    [update, normalize, stacked],
   )
 
   const addWidget = (definition: AnyWidgetDefinition) => {
@@ -192,22 +193,73 @@ export function WidgetCanvas() {
       widgets: {
         ...current.widgets,
         instances: [...current.widgets.instances, instance],
-        // Unlock so the newly added widget can be placed straight away.
-        locked: false,
       },
     }))
     setPicking(false)
   }
 
-  const removeWidget = (id: string) =>
-    update((current) => ({
-      ...current,
-      widgets: {
-        ...current.widgets,
-        instances: current.widgets.instances.filter((i) => i.id !== id),
-        layout: current.widgets.layout.filter((item) => item.i !== id),
-      },
-    }))
+  const removeWidget = useCallback(
+    (id: string) =>
+      update((current) => ({
+        ...current,
+        widgets: {
+          ...current.widgets,
+          instances: current.widgets.instances.filter((i) => i.id !== id),
+          layout: current.widgets.layout.filter((item) => item.i !== id),
+        },
+      })),
+    [update],
+  )
+
+  const buildMenu = useCallback(
+    (event: React.MouseEvent): MenuItem[] => {
+      const id = (event.target as HTMLElement).closest<HTMLElement>('[data-widget-id]')?.dataset
+        .widgetId
+
+      const forWidget: MenuItem[] = id
+        ? [
+            {
+              id: 'configure',
+              label: 'Configure',
+              icon: 'settings',
+              onSelect: () => setConfiguring(id),
+            },
+            {
+              id: 'remove',
+              label: 'Remove',
+              icon: 'remove',
+              danger: true,
+              onSelect: () => removeWidget(id),
+            },
+          ]
+        : []
+
+      return [
+        ...forWidget,
+        {
+          id: 'add',
+          label: 'Add a widget',
+          icon: 'add',
+          separatorBefore: forWidget.length > 0,
+          onSelect: () => setPicking(true),
+        },
+        ...(arrange.arranging
+          ? []
+          : [
+              {
+                id: 'arrange',
+                label: 'Arrange',
+                icon: 'drag' as const,
+                separatorBefore: true,
+                onSelect: arrange.start,
+              },
+            ]),
+      ]
+    },
+    [removeWidget, arrange],
+  )
+
+  const canvasMenu = useContextMenu(buildMenu)
 
   // Growing a widget moves its neighbours, which is what `normalize` handles.
   const resizeInstance = (id: string, name: WidgetSizeName) =>
@@ -241,11 +293,16 @@ export function WidgetCanvas() {
   const configuringSize = sizeNameOf(configuringInstance, configuringDefinition, widgets.layout)
 
   return (
-    <div className="canvas" data-editing={editing} data-settling={settling}>
+    <div
+      className="canvas"
+      data-settling={settling}
+      data-arranging={arrange.arranging}
+      onContextMenu={canvasMenu.onContextMenu}
+    >
       <div
         className="canvas__stage"
         ref={containerRef}
-        style={{ minHeight: editing ? stageHeight : undefined }}
+        style={{ minHeight: stageHeight }}
       >
       <GridSlots cell={rowHeight} gutter={widgets.margin} radius={appearance.radius} />
       {mounted ? (
@@ -263,26 +320,26 @@ export function WidgetCanvas() {
         }}
         compactor={COMPACTORS[widgets.compact]}
         constraints={constraints}
-        // The whole widget is the drag handle. `.wframe__live` marks content
-        // that must stay scrollable while arranging, so it is excluded.
+        // The whole widget is the handle, safe only because arranging has made
+        // its face inert. Off while stacked: that layout is never stored.
         dragConfig={{
-          enabled: editing,
+          enabled: arrange.arranging && !stacked,
           handle: '.wframe',
-          cancel: '.wframe__tool, .wframe__live, .react-resizable-handle',
           bounded: false,
           threshold: 3,
         }}
-        resizeConfig={{ enabled: editing, handles: ['se'], handleComponent: resizeGrabber }}
+        resizeConfig={{
+          enabled: arrange.arranging && !stacked,
+          handles: ['se'],
+          handleComponent: resizeGrabber,
+        }}
         onLayoutChange={onLayoutChange}
       >
         {widgets.instances.map((instance) => (
-          <div key={instance.id}>
+          <div key={instance.id} data-widget-id={instance.id}>
             <WidgetHost
               instance={instance}
               settings={settings}
-              editing={editing}
-              onConfigure={() => setConfiguring(instance.id)}
-              onRemove={() => removeWidget(instance.id)}
               onConfigChange={(path, value) =>
                 patchInstance(instance.id, (current) => ({
                   ...current,
@@ -296,32 +353,7 @@ export function WidgetCanvas() {
       ) : null}
       </div>
 
-      <div className="canvas__toolbar">
-        <button
-          type="button"
-          className="canvas__btn"
-          onClick={() => setPicking(true)}
-          title="Add a widget"
-        >
-          <Icon name="add" />
-          <span>Widget</span>
-        </button>
-        <button
-          type="button"
-          className="canvas__btn"
-          aria-pressed={editing}
-          onClick={() =>
-            update((current) => ({
-              ...current,
-              widgets: { ...current.widgets, locked: !current.widgets.locked },
-            }))
-          }
-          title={editing ? 'Lock the layout' : 'Rearrange widgets'}
-        >
-          <Icon name={editing ? 'lock' : 'unlock'} />
-          <span>{editing ? 'Done' : 'Arrange'}</span>
-        </button>
-      </div>
+      {canvasMenu.menu}
 
       {picking ? (
         <Suspense fallback={null}>
@@ -351,10 +383,14 @@ export function WidgetCanvas() {
         </Suspense>
       ) : null}
 
+      {/* The only affordance on an empty canvas: the menu that would offer this
+          is invisible until right-clicked. */}
       {widgets.instances.length === 0 && !picking ? (
-        <p className="canvas__empty">
-          No widgets yet. Add a clock, the weather, or whatever else belongs on your dashboard.
-        </p>
+        <button type="button" className="canvas__empty" onClick={() => setPicking(true)}>
+          <Icon name="add" />
+          <span>Add a widget</span>
+          <small>A clock, the weather, or whatever else belongs on your dashboard</small>
+        </button>
       ) : null}
 
     </div>
@@ -364,31 +400,17 @@ export function WidgetCanvas() {
 function WidgetHost({
   instance,
   settings,
-  editing,
-  onConfigure,
-  onRemove,
   onConfigChange,
 }: {
   instance: WidgetInstance
   settings: Settings
-  editing: boolean
-  onConfigure: () => void
-  onRemove: () => void
   onConfigChange: (path: string, value: unknown) => void
 }) {
   const definition = getWidget(instance.type)
 
   if (!definition) {
     return (
-      <WidgetFrame
-        title="Unknown widget"
-        icon="warning"
-        surface={instance.surface ?? settings.appearance.surface}
-        editing={editing}
-        hasConfig={false}
-        onConfigure={onConfigure}
-        onRemove={onRemove}
-      >
+      <WidgetFrame surface={instance.surface ?? settings.appearance.surface}>
         <p className="wframe__missing">
           This widget type (<code>{instance.type}</code>) is not available in this version.
         </p>
@@ -401,15 +423,7 @@ function WidgetHost({
   const size = sizeOf(sizeName)
 
   return (
-    <WidgetFrame
-      title={definition.name}
-      icon={definition.icon}
-      surface={instance.surface ?? settings.appearance.surface}
-      editing={editing}
-      hasConfig={Boolean(definition.fields?.length)}
-      onConfigure={onConfigure}
-      onRemove={onRemove}
-    >
+    <WidgetFrame surface={instance.surface ?? settings.appearance.surface}>
       <definition.Component
         config={config as never}
         setConfig={(changes) => {
