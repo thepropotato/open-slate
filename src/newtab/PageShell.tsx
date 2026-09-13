@@ -29,13 +29,17 @@ export function PageShell({
   /** Page-level chrome the new tab adds and the preview does not. */
   children?: ReactNode
 }) {
-  const { layout, widgets, tiles } = useSettings()
+  const { layout, widgets, tiles, search } = useSettings()
 
   const panes = derivePanes({ layout, widgets, tiles })
   const tabbed = layout.viewMode === 'tabs'
   const showSwitch = tabbed && panes.length > 1
   const bands = orderBands(layout.order)
   const firstPane = bands.find((band) => band !== 'search')
+
+  // Reserving the tallest pane's height costs empty space below a short one;
+  // only worth it when there is a search box above to hold still.
+  const reserve = bands[0] === 'search' && search.enabled
 
   return (
     <div
@@ -82,7 +86,7 @@ export function PageShell({
                  * to thirty tiles would otherwise resize the centred column and
                  * walk the search bar up the page.
                  */
-                <div className="page__panes">
+                <div className="page__panes" data-reserve={reserve}>
                   {panes.map((pane) => (
                     <SwitchablePane key={pane} name={pane} active={active === pane} tabbed first>
                       <Band name={pane} />
