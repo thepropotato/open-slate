@@ -41,11 +41,13 @@ async function readSettings(): Promise<SlideshowSettings> {
 async function syncSlideshowAlarm(): Promise<void> {
   const settings = await readSettings()
   const active = settings.background?.type === 'slideshow'
-  if (!active) {
+  const interval = settings.background?.slideshow?.intervalMinutes ?? 30
+  // Zero: the page picks as it opens, so there is nothing to wake up for.
+  if (!active || interval === 0) {
     await chrome.alarms.clear(SLIDESHOW_ALARM)
     return
   }
-  const minutes = Math.max(1, settings.background?.slideshow?.intervalMinutes ?? 30)
+  const minutes = Math.max(1, interval)
   const existing = await chrome.alarms.get(SLIDESHOW_ALARM)
   if (existing && existing.periodInMinutes === minutes) return
   await chrome.alarms.create(SLIDESHOW_ALARM, { periodInMinutes: minutes, delayInMinutes: minutes })

@@ -119,12 +119,17 @@ export const backgroundSection: Section = {
       fields: [
         {
           path: 'background.slideshow.intervalMinutes',
-          label: 'Change every',
+          label: 'Change',
           control: {
             kind: 'slider',
-            min: 1,
+            min: 0,
             max: 1440,
-            format: (v) => (v < 60 ? `${v} min` : `${Math.round((v / 60) * 10) / 10} h`),
+            format: (v) =>
+              v === 0
+                ? 'on every new tab'
+                : v < 60
+                  ? `every ${v} min`
+                  : `every ${Math.round((v / 60) * 10) / 10} h`,
           },
         },
         { path: 'background.slideshow.shuffle', label: 'Shuffle', control: { kind: 'toggle' } },
