@@ -252,8 +252,12 @@ function MediaCard({
               variant={inSlideshow ? 'primary' : 'ghost'}
               icon={inSlideshow ? 'check' : 'add'}
               onClick={onToggleSlideshow}
-              title="Include in the slideshow"
-            />
+              title={
+                inSlideshow ? 'Take out of the slideshow' : 'Add this picture to the slideshow'
+              }
+            >
+              {inSlideshow ? 'In slideshow' : 'Slideshow'}
+            </Button>
           </>
         )}
         <Button variant="ghost" icon="remove" onClick={onRemove} title={`Delete ${item.name}`} />
