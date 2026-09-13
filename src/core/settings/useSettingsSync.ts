@@ -30,7 +30,8 @@ export function useSettingsSync(): void {
     const result = await pullSettings(latest.current)
     if (!result || result.at <= state.lastLocalChangeAt) return
     lastSeen.current = JSON.stringify(result.settings)
-    replace(result.settings)
+    // A pull arrives on its own schedule; it must not discard edits in progress.
+    replace(result.settings, { keepDraft: true })
   }, [replace])
 
   // Pull on load, and whenever another device pushes.
