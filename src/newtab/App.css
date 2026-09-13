@@ -53,20 +53,24 @@
 }
 
 /*
- * Tabbed panes share one cell, so the stack is as tall as the tallest pane and
- * the centred column stops resizing as you switch. Without this, moving from a
- * pane of two widgets to one of thirty tiles walks the search bar up the page.
+ * Panes share one cell so the stack is as tall as the tallest, and switching
+ * from two widgets to thirty tiles cannot walk the search bar up the page.
  */
-.page__panes {
+.page__panes[data-reserve='true'] {
   display: grid;
 }
 
-.page__panes > .pane {
+.page__panes[data-reserve='true'] > .pane {
   grid-area: 1 / 1;
 }
 
-.page__panes > .pane[aria-hidden='true'] {
+.page__panes[data-reserve='true'] > .pane[aria-hidden='true'] {
   visibility: hidden;
+}
+
+/* Nothing above to hold still, so the stack shrinks to the shown pane. */
+.page__panes[data-reserve='false'] > .pane[aria-hidden='true'] {
+  display: none;
 }
 
 /* Cross-fade only after the page has entered; on first paint there is nothing to read against. */
@@ -146,7 +150,8 @@
   background: var(--accent);
 }
 
-.page__settings {
+.page__settings,
+.page__arrange {
   position: fixed;
   right: 16px;
   bottom: 16px;
@@ -159,6 +164,16 @@
   backdrop-filter: blur(10px);
   opacity: 0.35;
   transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+/* Left of the cog, where the Done pill takes over once arranging. */
+.page__arrange {
+  right: 62px;
+}
+
+.page__arrange:hover {
+  opacity: 1;
+  color: var(--fg);
 }
 
 /* Rotate the cog, not the button - the button carries the border and blur plate. */
@@ -177,10 +192,12 @@
 
 /* Zen mode hides the chrome until the pointer moves. */
 [data-zen='true'] .page__settings,
-.page__settings[data-zen='true'] {
+.page__settings[data-zen='true'],
+.page__arrange[data-zen='true'] {
   opacity: 0;
 }
 
-.page:hover .page__settings[data-zen='true'] {
+.page:hover .page__settings[data-zen='true'],
+.page:hover .page__arrange[data-zen='true'] {
   opacity: 0.35;
 }
