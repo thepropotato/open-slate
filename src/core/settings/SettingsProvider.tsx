@@ -24,7 +24,8 @@ export interface SettingsActions {
   /** Set a single dot-path, e.g. `set('tiles.radius', 0)`. */
   set: (path: string, value: unknown) => void
   reset: () => Promise<void>
-  replace: (next: Settings) => void
+  /** Swaps the whole object, discarding unsaved edits unless `keepDraft`. */
+  replace: (next: Settings, options?: { keepDraft?: boolean }) => void
 }
 
 /** Editing a staged draft: what the settings UI and its preview work against. */
@@ -122,13 +123,21 @@ export function SettingsProvider({
     }
   }, [])
 
-  const commit = useCallback((next: Settings) => {
-    mine(next)
-    writeSettings(next)
-    saveSettings(next)
-    // A wholesale replacement is the new truth; a draft against the old one is meaningless.
-    setDraft(null)
-  }, [writeSettings, mine])
+  const commit = useCallback(
+    (next: Settings, options?: { keepDraft?: boolean }) => {
+      const previous = savedRef.current
+      mine(next)
+      writeSettings(next)
+      saveSettings(next)
+      if (!options?.keepDraft) {
+        setDraft(null)
+        return
+      }
+      // Arrived on its own, so it must not throw away edits in progress.
+      setDraft((current) => (current && previous ? rebase(previous, current, next) : current))
+    },
+    [writeSettings, mine],
+  )
 
   const actions = useMemo<SettingsActions>(
     () => ({

@@ -1245,6 +1245,18 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   const base = Settings.parse({})
   check('diff: nothing changed', stagedDiff(base, base), [])
 
+  // A sync pull replaces the whole object while the panel may be open. It
+  // arrives on its own schedule, so it rebases rather than discarding.
+  {
+    const saved = Settings.parse({})
+    const draft = setPath(saved, 'background.dim', 0.8)
+    const pulled = setPath(saved, 'tiles.gap', 30)
+
+    const kept = rebase(saved, draft, pulled)
+    check('sync: an edit in progress survives a pull', kept?.background.dim, 0.8)
+    check('sync: and the pulled value lands', kept?.tiles.gap, 30)
+  }
+
   // Writes are debounced, so several can be in flight at once. One remembered
   // string is not enough: the tab sees its own earlier write come back, takes
   // it for someone else's and rebases the open draft onto it.

@@ -57,6 +57,10 @@ so it is written for the people who use the extension rather than for the diff.
 
 ### Fixed
 
+- Sync no longer throws away what you are in the middle of changing. A copy
+  pulled from another device replaced everything, unsaved edits included, so
+  with sync on the settings panel could reset itself at any moment. A pull now
+  keeps your edits and brings the rest.
 - Settings changed while the panel is open no longer undo work done beside
   them. Saving wrote the whole panel back, including its copy of things it does
   not edit, so a picture added to the slideshow could vanish the moment an
