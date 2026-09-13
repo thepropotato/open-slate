@@ -123,15 +123,15 @@
   display: flex;
   align-items: center;
   gap: 3px;
-  /* A grid track is narrower than these buttons want to be; without this they
-     refuse to shrink and spill out past the card's own border. */
+  /* The gap goes between the two, not around each: a stretched button is all
+     padding and no shape. `min-width` lets them shrink instead of spilling
+     out past the card's own border. */
+  justify-content: space-between;
   min-width: 0;
 }
 
-/* The labelled button takes the room that is left; the bin keeps its size. */
 .media__row > .ctl-btn:not(.ctl-btn--icon) {
   min-width: 0;
-  flex: 1;
   overflow: hidden;
 }
 
