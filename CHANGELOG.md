@@ -57,6 +57,11 @@ so it is written for the people who use the extension rather than for the diff.
 
 ### Fixed
 
+- Using a picture while the wallpaper is a video no longer switches the type.
+  Every file offered "Use" whatever the type was, so choosing a still in video
+  mode quietly moved you to a single image - and the accent colour, which
+  follows the wallpaper, changed with it. A file the current type cannot show
+  now says what it is instead of offering to be used.
 - Sync no longer throws away what you are in the middle of changing. A copy
   pulled from another device replaced everything, unsaved edits included, so
   with sync on the settings panel could reset itself at any moment. A pull now
