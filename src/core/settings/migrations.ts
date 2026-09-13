@@ -13,6 +13,23 @@ const migrations: Record<number, Migration> = {
   1: toStandardWidgetSizes,
   2: separateOverlappingWidgets,
   3: toSingleLayout,
+  5: slideshowOnNewTabIsItsOwnSwitch,
+}
+
+// 5 -> 6: "every new tab" was the zero end of the interval slider, and zero is
+// no longer a valid interval.
+function slideshowOnNewTabIsItsOwnSwitch(raw: Record<string, unknown>): Record<string, unknown> {
+  const background = (raw.background ?? {}) as Record<string, unknown>
+  const slideshow = background.slideshow as Record<string, unknown> | undefined
+  if (!slideshow || slideshow.intervalMinutes !== 0) return raw
+
+  return {
+    ...raw,
+    background: {
+      ...background,
+      slideshow: { ...slideshow, intervalMinutes: 30, onNewTab: true },
+    },
+  }
 }
 
 // 1 -> 2: a fine 24-column grid becomes square cells with standard sizes. Positions
@@ -141,12 +158,7 @@ export function migrate(raw: unknown): SettingsType {
   return Settings.parse(salvage(data))
 }
 
-/**
- * Drops the smallest failing part it can. A whole section would take working
- * settings down with one bad leaf - a bad slideshow interval should not cost
- * the reader the pictures they uploaded - so a failing section is retried field
- * by field before being given up on.
- */
+/** Drops the smallest failing part it can, so one bad leaf costs one leaf. */
 function salvage(data: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = { version: SETTINGS_VERSION }
   const shape = Settings.shape as Record<string, ZodLike>
@@ -167,7 +179,7 @@ interface ZodLike {
   unwrap?: () => ZodLike
 }
 
-/** `.prefault({})` and friends wrap the object, putting `shape` out of reach. */
+/** `.prefault({})` wraps the object, putting `shape` out of reach. */
 function shapeOf(schema: ZodLike): Record<string, ZodLike> | undefined {
   let current: ZodLike | undefined = schema
   for (let depth = 0; current && depth < 5; depth += 1) {

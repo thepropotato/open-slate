@@ -7,7 +7,7 @@ import { z } from 'zod'
  */
 
 export const SETTINGS_KEY = 'settings'
-export const SETTINGS_VERSION = 5
+export const SETTINGS_VERSION = 6
 
 const hex = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/)
 const unit = z.number().min(0).max(1)
