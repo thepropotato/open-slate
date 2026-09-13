@@ -5,6 +5,7 @@
 
 import { CHATGPT } from '@/features/widgets/llm/chatgpt'
 import { CLAUDE } from '@/features/widgets/llm/claude'
+import { nextSlide } from '@/features/background/slideshow'
 
 const SLIDESHOW_ALARM = 'wallpaper-slideshow'
 
@@ -62,16 +63,9 @@ async function advanceSlideshow(): Promise<void> {
 
   const { slideshowCursor = 0 } = await chrome.storage.local.get('slideshowCursor')
   const current = typeof slideshowCursor === 'number' ? slideshowCursor : 0
-  const next = slideshow?.shuffle
-    ? pickDifferent(current, count)
-    : (current + 1) % count
-  await chrome.storage.local.set({ slideshowCursor: next })
-}
-
-function pickDifferent(current: number, count: number): number {
-  if (count < 2) return 0
-  const offset = 1 + Math.floor(Math.random() * (count - 1))
-  return (current + offset) % count
+  await chrome.storage.local.set({
+    slideshowCursor: nextSlide(current, count, Boolean(slideshow?.shuffle)),
+  })
 }
 
 /* LLM usage reader */
