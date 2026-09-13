@@ -56,7 +56,7 @@ function resolveTarget(background: Background, cursor: number): Target {
 
 function useSlideshowCursor(background: Background): number {
   const active = background.type === 'slideshow'
-  const perTab = background.slideshow.intervalMinutes === 0
+  const perTab = background.slideshow.onNewTab
   const intervalMs = Math.max(1, background.slideshow.intervalMinutes) * 60_000
 
   const count = background.slideshow.blobIds.length + background.slideshow.urls.length

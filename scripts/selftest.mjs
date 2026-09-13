@@ -102,9 +102,30 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('settings: version', defaults.version, SETTINGS_VERSION)
   truthy('settings: round-trips through JSON', Settings.safeParse(JSON.parse(JSON.stringify(defaults))).success)
 
+  check(
+    'slideshow: turning with the tab is off by default',
+    Settings.parse({}).background.slideshow.onNewTab,
+    false,
+  )
   const interval = (v) => Settings.safeParse({ background: { slideshow: { intervalMinutes: v } } })
-  truthy('slideshow: zero is every new tab', interval(0).success)
-  check('slideshow: negative is not an interval', interval(-1).success, false)
+  check('slideshow: zero is not an interval', interval(0).success, false)
+
+  // One bad leaf must not cost the reader the pictures they uploaded.
+  {
+    const hurt = migrate({
+      version: SETTINGS_VERSION,
+      background: {
+        type: 'slideshow',
+        slideshow: { blobIds: ['keep-me'], intervalMinutes: 0, shuffle: false },
+      },
+    })
+    check('salvage: the pictures survive a bad interval', hurt.background.slideshow.blobIds, [
+      'keep-me',
+    ])
+    check('salvage: the bad interval falls back', hurt.background.slideshow.intervalMinutes, 30)
+    check('salvage: its neighbours survive', hurt.background.slideshow.shuffle, false)
+    check('salvage: the section is kept', hurt.background.type, 'slideshow')
+  }
 
   const { pickForTab, nextSlide } = await load('features/background/slideshow.ts')
   check('slideshow: next in order', nextSlide(1, 4, false), 2)
@@ -1212,6 +1233,22 @@ const truthy = (name, value) => check(name, Boolean(value), true)
 
   const base = Settings.parse({})
   check('diff: nothing changed', stagedDiff(base, base), [])
+
+  // Saving writes the edited paths, not the whole draft: a picture added while
+  // the panel was open must not be undone by saving an unrelated knob.
+  {
+    const saved = Settings.parse({})
+    const draft = setPath(saved, 'background.slideshow.shuffle', false)
+
+    const committed = setPath(saved, 'background.slideshow.blobIds', ['a', 'b'])
+
+    const edited = stagedDiff(saved, draft)
+    check('save: only the edited path is pending', edited, ['background.slideshow.shuffle'])
+
+    const savedNow = edited.reduce((acc, p) => setPath(acc, p, getPath(draft, p)), committed)
+    check('save: the edit lands', savedNow.background.slideshow.shuffle, false)
+    check('save: the pictures survive', savedNow.background.slideshow.blobIds, ['a', 'b'])
+  }
 
   /*
    * A staged write must be a pure state updater. React replays the updater queue,

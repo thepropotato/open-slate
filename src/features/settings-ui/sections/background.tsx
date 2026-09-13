@@ -118,18 +118,20 @@ export const backgroundSection: Section = {
       when: (s) => s.background.type === 'slideshow',
       fields: [
         {
+          path: 'background.slideshow.onNewTab',
+          label: 'Change on every new tab',
+          help: 'A fresh picture each time you open a tab, rather than on a timer.',
+          control: { kind: 'toggle' },
+        },
+        {
           path: 'background.slideshow.intervalMinutes',
-          label: 'Change',
+          label: 'Change every',
+          when: (s) => !s.background.slideshow.onNewTab,
           control: {
             kind: 'slider',
-            min: 0,
+            min: 1,
             max: 1440,
-            format: (v) =>
-              v === 0
-                ? 'on every new tab'
-                : v < 60
-                  ? `every ${v} min`
-                  : `every ${Math.round((v / 60) * 10) / 10} h`,
+            format: (v) => (v < 60 ? `${v} min` : `${Math.round((v / 60) * 10) / 10} h`),
           },
         },
         { path: 'background.slideshow.shuffle', label: 'Shuffle', control: { kind: 'toggle' } },
