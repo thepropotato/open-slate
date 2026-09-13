@@ -1,0 +1,52 @@
+.cmenu__catch {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-overlay);
+}
+
+.cmenu {
+  position: fixed;
+  z-index: calc(var(--z-overlay) + 1);
+  min-width: 190px;
+  padding: 5px;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  background: rgb(var(--surface-base) / 88%);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 44px rgb(0 0 0 / 42%);
+  outline: none;
+}
+
+.cmenu__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+  text-align: start;
+  white-space: nowrap;
+}
+
+.cmenu__item[data-active] {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 12%);
+}
+
+/* No danger token in the palette; this reads against both themes' surfaces. */
+.cmenu__item[data-danger] {
+  color: #f2777a;
+}
+
+.cmenu__item[data-sep] {
+  margin-block-start: 5px;
+  border-block-start: 1px solid var(--line);
+  padding-block-start: 10px;
+}
+
+/* Keeps labels in line with those that have an icon. */
+.cmenu__gap {
+  width: 1em;
+}
