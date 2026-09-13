@@ -1245,6 +1245,35 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   const base = Settings.parse({})
   check('diff: nothing changed', stagedDiff(base, base), [])
 
+  // Writes are debounced, so several can be in flight at once. One remembered
+  // string is not enough: the tab sees its own earlier write come back, takes
+  // it for someone else's and rebases the open draft onto it.
+  {
+    const track = (useSet) => {
+      let one = ''
+      const set = new Set()
+      const remember = (v) => (useSet ? set.add(JSON.stringify(v)) : (one = JSON.stringify(v)))
+      const isOurs = (v) =>
+        useSet ? set.delete(JSON.stringify(v)) : JSON.stringify(v) === one
+
+      let saved = Settings.parse({})
+      remember(saved)
+      const echoes = []
+      const write = (value) => {
+        const next = setPath(saved, 'background.slideshow.blobIds', value)
+        remember(next)
+        saved = next
+        echoes.push(next)
+      }
+      write(['a'])
+      write(['a', 'b'])
+      return echoes.filter((e) => !isOurs(e)).length
+    }
+
+    check('echo: one slot mistakes an earlier write for a stranger', track(false), 1)
+    check('echo: every write of ours is recognised', track(true), 0)
+  }
+
   // Saving writes the edited paths, not the whole draft: a picture added while
   // the panel was open must not be undone by saving an unrelated knob.
   {
