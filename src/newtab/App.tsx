@@ -151,7 +151,22 @@ function NewTab() {
         <Icon name="settings" />
       </button>
 
-      {arrange.arranging ? <ArrangeDone label="Done" onDone={arrange.stop} /> : null}
+      {/* Right-click and the E key are both invisible; this is the one way in
+          that can be seen. It sits where the Done pill will replace it. */}
+      {arrange.arranging ? (
+        <ArrangeDone label="Done" onDone={arrange.stop} />
+      ) : (
+        <button
+          type="button"
+          className="page__arrange is-icon-btn"
+          onClick={arrange.start}
+          title="Arrange the page"
+          aria-label="Arrange the page"
+          data-zen={appearance.zenMode}
+        >
+          <Icon name="layout" />
+        </button>
+      )}
 
       {/* Mounted only while open, so its state starts fresh every time. */}
       {paletteEnabled && paletteOpen ? (
