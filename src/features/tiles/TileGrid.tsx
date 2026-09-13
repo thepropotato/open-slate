@@ -17,12 +17,15 @@ import {
 } from './folders'
 import { seedTilesFromBrowser } from './seed'
 import { useGridArrows } from './useGridArrows'
+import { useContextMenu } from '@/features/menu/useContextMenu'
+import { useArrange } from '@/features/menu/ArrangeContext'
+import type { MenuItem } from '@/features/menu/ContextMenu'
 import './tiles.css'
 
 // Lazy: the editor carries the brand picker and the media store.
 const TileEditor = lazyChunk(() => import('./TileEditor').then((m) => ({ default: m.TileEditor })))
 
-// Lazy: the drag library is only needed in Arrange mode.
+// Lazy: the drag library is only needed while arranging.
 const SortableTiles = lazyChunk(() =>
   import('./SortableTiles').then((m) => ({ default: m.SortableTiles })),
 )
@@ -37,13 +40,13 @@ const FolderView = lazyChunk(() => import('./FolderView').then((m) => ({ default
 export function TileGrid() {
   const { tiles, behavior } = useSettings()
   const { update } = useSettingsActions()
-  const [editing, setEditing] = useState(false)
   const [editorId, setEditorId] = useState<string | null>(null)
   const [creating, setCreating] = useState<{ kind: 'link' | 'folder' } | null>(null)
   const [hints, setHints] = useState(false)
   const [pageId, setPageId] = useState<string>(ROOT)
   const [openFolder, setOpenFolder] = useState<string | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
+  const arrange = useArrange()
 
   useGridArrows(gridRef, 'a.tile__plate, button.tile__plate')
 
@@ -117,22 +120,90 @@ export function TileGrid() {
     return () => window.removeEventListener('keydown', onKey)
   }, [visible, tiles.openIn, shortcuts])
 
-  const remove = (id: string) => write(removeTile(items, id))
+  const remove = useCallback(
+    (id: string) => write(removeTile(items, id)),
+    [items, write],
+  )
 
-  // No drag plumbing: the normal path, and the Arrange fallback.
-  const plainTiles = (arranging: boolean) =>
+  const buildMenu = useCallback(
+    (event: React.MouseEvent): MenuItem[] => {
+      const id = (event.target as HTMLElement).closest<HTMLElement>('.tile')?.dataset.tileId
+      const tile = id ? items.find((item) => item.id === id) : undefined
+
+      const forTile: MenuItem[] = !tile
+        ? []
+        : [
+            // A folder has no address to open.
+            ...(tile.kind === 'folder'
+              ? []
+              : [
+                  {
+                    id: 'open-new',
+                    label: 'Open in a new tab',
+                    icon: 'external' as const,
+                    onSelect: () => openUrl(tile.url, 'newTab'),
+                  },
+                ]),
+            {
+              id: 'edit',
+              label: tile.kind === 'folder' ? 'Rename' : 'Edit',
+              icon: 'edit',
+              onSelect: () => setEditorId(tile.id),
+            },
+            {
+              id: 'remove',
+              label: 'Remove',
+              icon: 'remove',
+              danger: true,
+              onSelect: () => remove(tile.id),
+            },
+          ]
+
+      return [
+        ...forTile,
+        {
+          id: 'add',
+          label: 'Add a tile',
+          icon: 'add',
+          separatorBefore: forTile.length > 0,
+          onSelect: () => setCreating({ kind: 'link' }),
+        },
+        {
+          id: 'folder',
+          label: 'New folder',
+          icon: 'folder',
+          onSelect: () => setCreating({ kind: 'folder' }),
+        },
+        ...(arrange.arranging
+          ? []
+          : [
+              {
+                id: 'arrange',
+                label: 'Arrange',
+                icon: 'drag' as const,
+                separatorBefore: true,
+                onSelect: arrange.start,
+              },
+            ]),
+      ]
+    },
+    [items, remove, arrange],
+  )
+
+  const tileMenu = useContextMenu(buildMenu)
+
+  // The resting grid, and the fallback until the drag chunk arrives; `null`
+  // would blink the row away.
+  const plainTiles = () =>
     visible.map((tile, index) => (
       <Tile
         key={tile.id}
         tile={tile}
         index={index}
         settings={tiles}
-        editing={arranging}
         showHint={shortcuts}
         childUrls={tile.kind === 'folder' ? childUrlsFor(tile.id) : undefined}
         onOpenFolder={setOpenFolder}
-        onEdit={setEditorId}
-        onRemove={remove}
       />
     ))
 
@@ -140,7 +211,8 @@ export function TileGrid() {
 
   const gridStyle = {
     '--tile-w': `${tiles.width}px`,
-    '--tile-aspect': tiles.aspect,
+    // Icons are round, so the ratio is not the reader's to set here.
+    '--tile-aspect': tiles.style === 'icon' ? 1 : tiles.aspect,
     '--tile-gap': `${tiles.gap}px`,
     '--tile-radius': tiles.radius === null ? 'var(--radius)' : `${tiles.radius}px`,
     '--tile-pad': `${tiles.imagePadding}px`,
@@ -157,20 +229,20 @@ export function TileGrid() {
   } as React.CSSProperties
 
   return (
-    <div className="tiles-band">
+    <div className="tiles-band" onContextMenu={tileMenu.onContextMenu}>
       <div
         className="tiles"
         ref={gridRef}
         data-label-vis={tiles.labelVisibility}
         data-hover={tiles.hoverEffect}
         data-plate={tiles.plateStyle}
+        data-style={tiles.style}
         data-hints={hints}
+        data-arranging={arrange.arranging}
         style={gridStyle}
       >
-        {editing ? (
-          // The same band, frozen: `null` would blink the row away while the
-          // drag chunk loads.
-          <Suspense fallback={plainTiles(true)}>
+        {arrange.arranging ? (
+          <Suspense fallback={plainTiles()}>
             <SortableTiles
               items={visible}
               settings={tiles}
@@ -179,12 +251,10 @@ export function TileGrid() {
               onReorder={(next) => write(reorderWithin(items, next))}
               onMoveToFolder={(tileId, folderId) => write(moveToFolder(items, tileId, folderId))}
               onOpenFolder={setOpenFolder}
-              onEdit={setEditorId}
-              onRemove={remove}
             />
           </Suspense>
         ) : (
-          plainTiles(false)
+          plainTiles()
         )}
 
         {tiles.showAddButton ? (
@@ -199,6 +269,15 @@ export function TileGrid() {
           </button>
         ) : null}
       </div>
+
+      {/* The right-click menu is invisible, so an empty page has to say so. */}
+      {visible.length === 0 ? (
+        <button type="button" className="tiles-empty" onClick={() => setCreating({ kind: 'link' })}>
+          <Icon name="add" />
+          <span>Add a tile</span>
+          <small>or right-click for more</small>
+        </button>
+      ) : null}
 
       {tiles.pages.length > 0 && tiles.pageSwitcher !== 'hidden' ? (
         <nav className="tiles-pages" data-style={tiles.pageSwitcher} aria-label="Tile pages">
@@ -217,29 +296,7 @@ export function TileGrid() {
         </nav>
       ) : null}
 
-      <div className="tiles-band__toolbar">
-        <button
-          type="button"
-          className="tiles-band__toggle"
-          aria-pressed={editing}
-          onClick={() => setEditing((on) => !on)}
-          title={editing ? 'Done arranging' : 'Arrange tiles, and drag one onto a folder to file it'}
-        >
-          <Icon name={editing ? 'check' : 'drag'} />
-          <span>{editing ? 'Done' : 'Arrange'}</span>
-        </button>
-        {editing ? (
-          <button
-            type="button"
-            className="tiles-band__toggle"
-            onClick={() => setCreating({ kind: 'folder' })}
-            title="Add a folder"
-          >
-            <Icon name="folder" />
-            <span>Folder</span>
-          </button>
-        ) : null}
-      </div>
+      {tileMenu.menu}
 
       {openFolder ? (
         <Suspense fallback={null}>
@@ -247,14 +304,8 @@ export function TileGrid() {
             folder={items.find((tile) => tile.id === openFolder) ?? null}
             items={items}
             settings={tiles}
-            editing={editing}
             onReorder={(next) => write(reorderWithin(items, next))}
             onRemoveFromFolder={(id) => write(moveToFolder(items, id, ROOT))}
-            onEdit={(id) => {
-              setOpenFolder(null)
-              setEditorId(id)
-            }}
-            onRemove={remove}
             onClose={() => setOpenFolder(null)}
           />
         </Suspense>

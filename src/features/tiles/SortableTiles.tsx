@@ -19,7 +19,7 @@ import { CSS } from '@dnd-kit/utilities'
 import type { Tile as TileModel, Tiles as TilesSettings } from '@/core/settings/schema'
 import { Tile } from './Tile'
 
-// Drag-to-reorder, loaded only in Arrange mode: the drag library is a
+// Drag-to-reorder, mounted only while arranging: the drag library is a
 // meaningful share of the new tab's bundle.
 export function SortableTiles({
   items,
@@ -29,8 +29,6 @@ export function SortableTiles({
   onReorder,
   onMoveToFolder,
   onOpenFolder,
-  onEdit,
-  onRemove,
 }: {
   items: TileModel[]
   settings: TilesSettings
@@ -40,8 +38,6 @@ export function SortableTiles({
   /** Called when a tile is dropped onto a folder. */
   onMoveToFolder?: (tileId: string, folderId: string) => void
   onOpenFolder?: (id: string) => void
-  onEdit: (id: string) => void
-  onRemove: (id: string) => void
 }) {
   const sensors = useSensors(
     // A short distance threshold keeps clicks clicking and drags dragging.
@@ -88,8 +84,6 @@ export function SortableTiles({
             showHint={showHint}
             childUrls={childUrlsFor?.(tile.id)}
             onOpenFolder={onOpenFolder}
-            onEdit={onEdit}
-            onRemove={onRemove}
           />
         ))}
       </SortableContext>
@@ -104,8 +98,6 @@ function SortableTile({
   showHint,
   childUrls,
   onOpenFolder,
-  onEdit,
-  onRemove,
 }: {
   tile: TileModel
   index: number
@@ -113,8 +105,6 @@ function SortableTile({
   showHint: boolean
   childUrls?: string[]
   onOpenFolder?: (id: string) => void
-  onEdit: (id: string) => void
-  onRemove: (id: string) => void
 }) {
   const { setNodeRef, transform, transition, isDragging, isOver, attributes, listeners } =
     useSortable({ id: tile.id })
@@ -124,12 +114,9 @@ function SortableTile({
       tile={tile}
       index={index}
       settings={settings}
-      editing
       showHint={showHint}
       childUrls={childUrls}
       onOpenFolder={onOpenFolder}
-      onEdit={onEdit}
-      onRemove={onRemove}
       drag={{
         ref: setNodeRef,
         handleProps: { ...attributes, ...listeners },
