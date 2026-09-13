@@ -110,6 +110,17 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   const interval = (v) => Settings.safeParse({ background: { slideshow: { intervalMinutes: v } } })
   check('slideshow: zero is not an interval', interval(0).success, false)
 
+  // The old zero-interval "every new tab" becomes the switch, not a lost setting.
+  {
+    const old = migrate({
+      version: 5,
+      background: { type: 'slideshow', slideshow: { blobIds: ['a'], intervalMinutes: 0 } },
+    })
+    truthy('migrate: zero interval becomes the switch', old.background.slideshow.onNewTab)
+    check('migrate: and a real interval', old.background.slideshow.intervalMinutes, 30)
+    check('migrate: pictures kept', old.background.slideshow.blobIds, ['a'])
+  }
+
   // One bad leaf must not cost the reader the pictures they uploaded.
   {
     const hurt = migrate({
