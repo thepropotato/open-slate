@@ -102,6 +102,20 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('settings: version', defaults.version, SETTINGS_VERSION)
   truthy('settings: round-trips through JSON', Settings.safeParse(JSON.parse(JSON.stringify(defaults))).success)
 
+  const interval = (v) => Settings.safeParse({ background: { slideshow: { intervalMinutes: v } } })
+  truthy('slideshow: zero is every new tab', interval(0).success)
+  check('slideshow: negative is not an interval', interval(-1).success, false)
+
+  const { pickForTab } = await load('features/background/slideshow.ts')
+  check('slideshow: ordered tab steps the stored cursor', pickForTab(2, 5, false), 3)
+  check('slideshow: ordered tab wraps', pickForTab(4, 5, false), 0)
+  check('slideshow: ordered tab starts from nothing', pickForTab(null, 5, false), 1)
+  check('slideshow: one image never moves', pickForTab(0, 1, true), 0)
+  truthy(
+    'slideshow: a shuffled tab stays in range',
+    Array.from({ length: 50 }, () => pickForTab(null, 4, true)).every((i) => i >= 0 && i < 4),
+  )
+
   check('migrate: empty gives defaults', migrate(undefined).appearance.mode, 'auto')
   check('migrate: null gives defaults', migrate(null).tiles.labelVisibility, 'hover')
   check('migrate: unknown fields are dropped', migrate({ nonsense: true }).version, SETTINGS_VERSION)

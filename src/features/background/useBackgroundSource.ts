@@ -3,6 +3,7 @@ import { isExtension, localStore } from '@/core/platform/browser'
 import { useAsyncValue } from '@/core/hooks'
 import { mediaStore } from '@/core/storage/blobStore'
 import type { Background } from '@/core/settings/schema'
+import { pickForTab } from './slideshow'
 
 export interface BackgroundSource {
   kind: 'none' | 'image' | 'video'
@@ -56,12 +57,36 @@ function resolveTarget(background: Background, cursor: number): Target {
 }
 
 function useSlideshowCursor(background: Background): number {
-  const [cursor, setCursor] = useState(0)
   const active = background.type === 'slideshow'
+  const perTab = background.slideshow.intervalMinutes === 0
   const intervalMs = Math.max(1, background.slideshow.intervalMinutes) * 60_000
 
+  const count = background.slideshow.blobIds.length + background.slideshow.urls.length
+  const shuffle = background.slideshow.shuffle
+
+  // Drawn once at mount rather than in an effect, so the first paint is already
+  // this tab's slide and no second render follows.
+  const [cursor, setCursor] = useState(() =>
+    active && perTab && shuffle ? pickForTab(null, count, true) : 0,
+  )
+
+  // Uncoordinated on purpose: tabs opened together should differ.
   useEffect(() => {
-    if (!active) return
+    if (!active || !perTab || shuffle || count <= 1) return
+    let alive = true
+    void localStore.get<number>(CURSOR_KEY).then((stored) => {
+      if (!alive) return
+      const next = pickForTab(typeof stored === 'number' ? stored : null, count, false)
+      setCursor(next)
+      void localStore.set(CURSOR_KEY, next)
+    })
+    return () => {
+      alive = false
+    }
+  }, [active, perTab, shuffle, count])
+
+  useEffect(() => {
+    if (!active || perTab) return
     let alive = true
     void localStore.get<number>(CURSOR_KEY).then((stored) => {
       if (alive && typeof stored === 'number') setCursor(stored)
@@ -73,14 +98,14 @@ function useSlideshowCursor(background: Background): number {
       alive = false
       unsubscribe()
     }
-  }, [active])
+  }, [active, perTab])
 
   // Dev fallback: no service worker means no alarm, so drive it from the page.
   useEffect(() => {
-    if (!active || isExtension()) return
+    if (!active || perTab || isExtension()) return
     const timer = setInterval(() => setCursor((c) => c + 1), intervalMs)
     return () => clearInterval(timer)
-  }, [active, intervalMs])
+  }, [active, perTab, intervalMs])
 
   return cursor
 }
