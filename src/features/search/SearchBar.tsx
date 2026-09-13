@@ -125,7 +125,9 @@ export function SearchBar() {
   return (
     <div className="searchband">
       <div className="search" style={{ maxWidth: search.width }}>
-        <div className="search__row surface" style={{ minHeight: search.height }}>
+        {/* A fixed height, not a floor: a chip taller than the setting would
+            grow the row and nudge whatever sits under it. */}
+        <div className="search__row surface" style={{ height: search.height }}>
           <Icon name="search" className="search__icon" />
 
           <input
@@ -144,37 +146,47 @@ export function SearchBar() {
             enterKeyHint="search"
           />
 
-          {behavior.commandPalette && !value ? (
-            <span
-              className="search__hint"
-              title={`Press / to jump here, ${modifierLabel()}K for everything`}
-              aria-hidden="true"
-            >
-              <kbd>/</kbd>
-              <kbd>{modifierLabel()}K</kbd>
-            </span>
-          ) : null}
+          {/*
+           * The hint and the Go chip take turns - one wants an empty box, the
+           * other a URL - so they share a slot the stylesheet sizes. Swapping
+           * them by mounting would hand the input a different width on the
+           * first keystroke, and again the moment the text parsed as a link.
+           */}
+          <span className="search__slot">
+            {behavior.commandPalette ? (
+              <span
+                className="search__hint"
+                data-shown={!value}
+                title={`Press / to jump here, ${modifierLabel()}K for everything`}
+                aria-hidden="true"
+              >
+                <kbd>/</kbd>
+                <kbd>{modifierLabel()}K</kbd>
+              </span>
+            ) : null}
 
-          {destination ? (
-            <span className="search__chip">
+            <span className="search__chip" data-shown={!!destination} aria-hidden={!destination}>
               <Icon name="link" /> Go
             </span>
-          ) : null}
+          </span>
 
-          {value ? (
-            <button
-              type="button"
-              className="search__clear is-icon-btn"
-              onClick={() => {
-                setValue('')
-                inputRef.current?.focus()
-              }}
-              title="Clear"
-              aria-label="Clear the search box"
-            >
-              <Icon name="close" />
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="search__clear is-icon-btn"
+            data-shown={!!value}
+            onClick={() => {
+              setValue('')
+              inputRef.current?.focus()
+            }}
+            /* Kept in the row so clearing does not resize the input; out of
+               reach while there is nothing to clear. */
+            disabled={!value}
+            aria-hidden={!value}
+            title="Clear"
+            aria-label="Clear the search box"
+          >
+            <Icon name="close" />
+          </button>
         </div>
 
         {maths || suggestions.length > 0 ? (

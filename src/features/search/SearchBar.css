@@ -45,6 +45,7 @@
   --icon-btn: 24px;
   border-radius: var(--radius-sm);
   color: var(--fg-subtle);
+  flex: none;
 }
 
 .search__clear:hover {
@@ -52,6 +53,29 @@
   background: rgb(var(--surface-tint) / 12%);
 }
 
+/*
+ * The hint and the chip are stacked here rather than laid out, and the width is
+ * the stylesheet's rather than either child's: with the palette switched off the
+ * hint never renders, and a slot measured from its contents would collapse and
+ * let the chip shift the input after all.
+ */
+.search__slot {
+  position: relative;
+  flex: none;
+  min-width: 4.6rem;
+  align-self: stretch;
+}
+
+/* Pinned to the slot's trailing edge and vertically centred, so neither child
+   sizes the slot nor stretches to it. */
+.search__slot > * {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+/* Sized by its text, not stretched to the slot, so the pill keeps its shape. */
 .search__chip {
   display: inline-flex;
   align-items: center;
@@ -64,6 +88,20 @@
   font-weight: 600;
   white-space: nowrap;
   flex: none;
+}
+
+/* Anything that comes and goes inside the row fades: the row's width is fixed. */
+.search__chip,
+.search__clear {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
+}
+
+.search__chip[data-shown='true'],
+.search__clear[data-shown='true'] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Results */
@@ -162,8 +200,10 @@
   transition: opacity var(--dur) var(--ease);
 }
 
-.search__row:hover .search__hint,
-.search__row:focus-within .search__hint {
+/* Only worth showing while the box is empty - once there is a query the chip
+   has the slot, and the shortcuts no longer apply. */
+.search__row:hover .search__hint[data-shown='true'],
+.search__row:focus-within .search__hint[data-shown='true'] {
   opacity: 1;
 }
 
