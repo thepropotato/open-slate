@@ -30,7 +30,13 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 interface SlideshowSettings {
   background?: {
     type?: string
-    slideshow?: { intervalMinutes?: number; shuffle?: boolean; blobIds?: string[]; urls?: string[] }
+    slideshow?: {
+      intervalMinutes?: number
+      onNewTab?: boolean
+      shuffle?: boolean
+      blobIds?: string[]
+      urls?: string[]
+    }
   }
 }
 
@@ -42,13 +48,12 @@ async function readSettings(): Promise<SlideshowSettings> {
 async function syncSlideshowAlarm(): Promise<void> {
   const settings = await readSettings()
   const active = settings.background?.type === 'slideshow'
-  const interval = settings.background?.slideshow?.intervalMinutes ?? 30
-  // Zero: the page picks as it opens, so there is nothing to wake up for.
-  if (!active || interval === 0) {
+  // Turning with the tab: the page picks as it opens, nothing to wake up for.
+  if (!active || settings.background?.slideshow?.onNewTab) {
     await chrome.alarms.clear(SLIDESHOW_ALARM)
     return
   }
-  const minutes = Math.max(1, interval)
+  const minutes = Math.max(1, settings.background?.slideshow?.intervalMinutes ?? 30)
   const existing = await chrome.alarms.get(SLIDESHOW_ALARM)
   if (existing && existing.periodInMinutes === minutes) return
   await chrome.alarms.create(SLIDESHOW_ALARM, { periodInMinutes: minutes, delayInMinutes: minutes })

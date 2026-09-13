@@ -130,8 +130,9 @@ export const Background = z.object({
   slideshow: z.object({
     blobIds: z.array(z.string()).default([]),
     urls: z.array(z.string()).default([]),
-    // Zero is not a duration: it means the wallpaper turns with the tab.
-    intervalMinutes: z.number().min(0).max(1440).default(30),
+    intervalMinutes: z.number().min(1).max(1440).default(30),
+    // Turns with the tab instead of the clock; the interval then does nothing.
+    onNewTab: z.boolean().default(false),
     shuffle: z.boolean().default(true),
     crossfade: z.boolean().default(true),
   }).prefault({}),

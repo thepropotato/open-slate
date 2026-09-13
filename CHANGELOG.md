@@ -31,8 +31,8 @@ so it is written for the people who use the extension rather than for the diff.
   plate - its colour, its proportions, where the title sits on it - step aside
   while icons are on, rather than staying there doing nothing.
 - A wallpaper slideshow can change on every new tab, rather than only on a
-  timer with a floor of a minute. Shuffled, tabs opened together each get their
-  own picture; in order, each new tab takes the next one.
+  timer. Shuffled, tabs opened together each get their own picture; in order,
+  each new tab takes the next one. It is its own switch above the interval.
 - "Next wallpaper" in the command palette, for when the one on screen is not
   the one you want and you would rather not wait for the timer. It offers
   itself only when a slideshow with more than one picture is running, and every
@@ -57,6 +57,13 @@ so it is written for the people who use the extension rather than for the diff.
 
 ### Fixed
 
+- Settings changed while the panel is open no longer undo work done beside
+  them. Saving wrote the whole panel back, including its copy of things it does
+  not edit, so a picture added to the slideshow could vanish the moment an
+  unrelated switch was saved. Only what you actually changed is written now.
+- A wallpaper that cannot be read no longer costs you the rest of the section.
+  One bad value used to discard everything about the background, uploaded
+  pictures included; now only the value itself falls back to its default.
 - The search box no longer shifts as you type. The shortcut hint, the Go chip
   and the clear button used to appear and disappear around the input, changing
   its width on the first keystroke and again once what you had typed looked like
