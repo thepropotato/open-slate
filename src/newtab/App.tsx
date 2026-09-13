@@ -12,7 +12,7 @@ const SettingsOverlay = lazyChunk(() =>
   import('@/features/settings-ui/SettingsOverlay').then((m) => ({ default: m.SettingsOverlay })),
 )
 import { ArrangeProvider, useArrange } from '@/features/menu/ArrangeContext'
-import { ArrangeDone, useArrangeEscape } from '@/features/menu/arrange'
+import { useArrangeEscape } from '@/features/menu/arrange'
 import { derivePanes, PageShell } from './PageShell'
 import './App.css'
 
@@ -137,36 +137,34 @@ function NewTab() {
       switched={switched}
       contentRef={contentRef}
     >
-      <button
-        type="button"
-        className="page__settings is-icon-btn"
-        onClick={() => setSettingsOpen(true)}
-        // A pointer on its way to the cog is the last chance to beat the click.
-        onPointerEnter={() => SettingsOverlay.preload()}
-        onFocus={() => SettingsOverlay.preload()}
-        title="Settings"
-        aria-label="Settings"
-        data-zen={appearance.zenMode}
-      >
-        <Icon name="settings" />
-      </button>
-
-      {/* Right-click and the E key are both invisible; this is the one way in
-          that can be seen. It sits where the Done pill will replace it. */}
-      {arrange.arranging ? (
-        <ArrangeDone label="Done" onDone={arrange.stop} />
-      ) : (
+      <div className="page__tools" data-zen={appearance.zenMode}>
+        {/* Right-click and the E key are both invisible; this is the one way
+            in that can be seen, and the same button is the way back out. */}
         <button
           type="button"
           className="page__arrange is-icon-btn"
-          onClick={arrange.start}
-          title="Arrange the page"
-          aria-label="Arrange the page"
-          data-zen={appearance.zenMode}
+          onClick={arrange.arranging ? arrange.stop : arrange.start}
+          title={arrange.arranging ? 'Done arranging' : 'Arrange the page'}
+          aria-label={arrange.arranging ? 'Done arranging' : 'Arrange the page'}
+          aria-pressed={arrange.arranging}
+          data-active={arrange.arranging}
         >
-          <Icon name="layout" />
+          <Icon name={arrange.arranging ? 'check' : 'layout'} />
         </button>
-      )}
+
+        <button
+          type="button"
+          className="page__settings is-icon-btn"
+          onClick={() => setSettingsOpen(true)}
+          // A pointer on its way to the cog is the last chance to beat the click.
+          onPointerEnter={() => SettingsOverlay.preload()}
+          onFocus={() => SettingsOverlay.preload()}
+          title="Settings"
+          aria-label="Settings"
+        >
+          <Icon name="settings" />
+        </button>
+      </div>
 
       {/* Mounted only while open, so its state starts fresh every time. */}
       {paletteEnabled && paletteOpen ? (
