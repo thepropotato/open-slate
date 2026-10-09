@@ -22,5 +22,55 @@
 
 .settings-overlay::backdrop {
   background: rgb(0 0 0 / 52%);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(4px);
+  animation: settings-backdrop-in var(--dur) var(--ease);
+}
+
+@keyframes settings-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes settings-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+}
+
+@keyframes settings-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes settings-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.settings-overlay[data-closing='true'] {
+  animation: settings-out 0.16s var(--ease) forwards;
+  pointer-events: none;
+}
+
+.settings-overlay[data-closing='true']::backdrop {
+  animation: settings-backdrop-out 0.16s var(--ease) forwards;
 }

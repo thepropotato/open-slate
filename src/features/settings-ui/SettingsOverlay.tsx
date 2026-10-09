@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useClosing } from '@/core/hooks'
 import { SettingsPanel } from './SettingsPanel'
 import './SettingsOverlay.css'
 
@@ -10,16 +11,23 @@ import './SettingsOverlay.css'
  * `options.html` still mounts the same `SettingsPanel` directly: Chrome's own
  * "Extension options" menu can only open a page.
  */
-export function SettingsOverlay({ onClose }: { onClose: () => void }) {
+export function SettingsOverlay({
+  initialSection,
+  onClose,
+}: {
+  initialSection?: string
+  onClose: () => void
+}) {
+  const { closing, handleClose } = useClosing(onClose, 160)
   const ref = useRef<HTMLDialogElement>(null)
 
   // Read through a ref: the caller passes a fresh closure on every render, and
   // this effect closes the dialog on cleanup, so depending on it would blink the
   // panel shut and open again on each edit.
-  const close = useRef(onClose)
+  const close = useRef(handleClose)
   useEffect(() => {
-    close.current = onClose
-  }, [onClose])
+    close.current = handleClose
+  }, [handleClose])
 
   // Opens once, on mount, and closes once, on unmount.
   useEffect(() => {
@@ -41,12 +49,13 @@ export function SettingsOverlay({ onClose }: { onClose: () => void }) {
     <dialog
       className="settings-overlay"
       ref={ref}
+      data-closing={closing || undefined}
       onClick={(event) => {
         // Clicks on the backdrop land on the dialog element itself.
-        if (event.target === ref.current) onClose()
+        if (event.target === ref.current) handleClose()
       }}
     >
-      <SettingsPanel onClose={onClose} />
+      <SettingsPanel initialSection={initialSection} onClose={handleClose} />
     </dialog>
   )
 }
