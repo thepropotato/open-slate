@@ -50,6 +50,12 @@ export function TileGrid() {
 
   useGridArrows(gridRef, 'a.tile__plate, button.tile__plate')
 
+  useEffect(() => {
+    const onAdd = () => setCreating({ kind: 'link' })
+    window.addEventListener('open-slate:add-tile', onAdd)
+    return () => window.removeEventListener('open-slate:add-tile', onAdd)
+  }, [])
+
   const items = tiles.items
   const pages = useMemo(() => pageIds(tiles.pages), [tiles.pages])
 

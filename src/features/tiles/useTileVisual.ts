@@ -6,6 +6,7 @@ import { usePalette } from '@/core/theme/ThemeProvider'
 import { ensureContrast, mix, readableOn } from '@/core/theme/color'
 import type { Tile, Tiles as TilesSettings } from '@/core/settings/schema'
 import { faviconTint, hostOf, monogram, resolveBrand } from './brand'
+import { formatHostTitle } from './title'
 
 export type TileArt =
   | { kind: 'brand'; path: string; colour: string }
@@ -68,7 +69,7 @@ export function useTileVisual(
   const childKey = childUrls.join('|')
 
   return useMemo(() => {
-    const title = tile.title || brand?.title || host
+    const title = tile.title || brand?.title || formatHostTitle(host) || host
     const brandColour = tile.background ?? brand?.hex ?? tint ?? null
 
     let plate: string | null
