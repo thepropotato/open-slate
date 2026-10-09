@@ -13,7 +13,10 @@ const SettingsOverlay = lazyChunk(() =>
 )
 import { ArrangeProvider, useArrange } from '@/features/menu/ArrangeContext'
 import { useArrangeEscape } from '@/features/menu/arrange'
+import { useContextMenu } from '@/features/menu/useContextMenu'
+import type { MenuItem } from '@/features/menu/ContextMenu'
 import { derivePanes, PageShell } from './PageShell'
+import { TopAddButton } from './TopAddButton'
 import './App.css'
 
 /**
@@ -36,8 +39,14 @@ function NewTab() {
   useSettingsSync()
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsSection, setSettingsSection] = useState<string | undefined>(undefined)
   const contentRef = useRef<HTMLElement>(null)
   const arrange = useArrange()
+
+  const openSettings = useCallback((section?: string) => {
+    setSettingsSection(section)
+    setSettingsOpen(true)
+  }, [])
 
   // Gates the pane entrance animation on a real switch. A timer cannot work: panes
   // mount only once settings load, by which point a "first paint" flag has expired.
@@ -130,14 +139,78 @@ function NewTab() {
 
   useArrangeEscape(arrange.arranging, arrange.stop)
 
+  const buildPageMenu = useCallback(
+    (event: React.MouseEvent): MenuItem[] => {
+      if (event.defaultPrevented) return []
+      const target = event.target as HTMLElement | null
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return []
+
+      return [
+        {
+          id: 'arrange',
+          label: arrange.arranging ? 'Done arranging' : 'Arrange the page',
+          icon: arrange.arranging ? 'check' : 'drag',
+          onSelect: arrange.arranging ? arrange.stop : arrange.start,
+        },
+        {
+          id: 'wallpaper',
+          label: 'Change wallpaper',
+          icon: 'image',
+          separatorBefore: true,
+          onSelect: () => openSettings('background'),
+        },
+        ...(paletteEnabled
+          ? [
+              {
+                id: 'palette',
+                label: 'Command palette',
+                icon: 'search' as const,
+                onSelect: () => setPaletteOpen(true),
+              },
+            ]
+          : []),
+        {
+          id: 'settings',
+          label: 'Settings',
+          icon: 'settings',
+          onSelect: () => openSettings(),
+        },
+      ]
+    },
+    [arrange, openSettings, paletteEnabled],
+  )
+
+  const pageMenu = useContextMenu(buildPageMenu)
+
+  // Ensure Chrome's default context menu is never shown anywhere on the new tab page,
+  // except when interacting directly with editable text fields.
+  useEffect(() => {
+    const onWindowContext = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return
+      e.preventDefault()
+    }
+    window.addEventListener('contextmenu', onWindowContext)
+    return () => window.removeEventListener('contextmenu', onWindowContext)
+  }, [])
+
   return (
     <PageShell
       active={active}
       onSelectPane={showPane}
       switched={switched}
       contentRef={contentRef}
+      onContextMenu={pageMenu.onContextMenu}
     >
       <div className="page__tools" data-zen={appearance.zenMode}>
+        <TopAddButton
+          active={active}
+          panes={panes}
+          viewMode={layout.viewMode}
+          direction="up"
+          onSelectPane={showPane}
+        />
+
         {/* Right-click and the E key are both invisible; this is the one way
             in that can be seen, and the same button is the way back out. */}
         <button
@@ -149,13 +222,13 @@ function NewTab() {
           aria-pressed={arrange.arranging}
           data-active={arrange.arranging}
         >
-          <Icon name={arrange.arranging ? 'check' : 'layout'} />
+          <Icon name={arrange.arranging ? 'check' : 'drag'} />
         </button>
 
         <button
           type="button"
           className="page__settings is-icon-btn"
-          onClick={() => setSettingsOpen(true)}
+          onClick={() => openSettings()}
           // A pointer on its way to the cog is the last chance to beat the click.
           onPointerEnter={() => SettingsOverlay.preload()}
           onFocus={() => SettingsOverlay.preload()}
@@ -166,12 +239,15 @@ function NewTab() {
         </button>
       </div>
 
+      {pageMenu.menu}
+
       {/* Mounted only while open, so its state starts fresh every time. */}
       {paletteEnabled && paletteOpen ? (
         <Suspense fallback={null}>
           <CommandPalette
             onClose={() => setPaletteOpen(false)}
-            onOpenSettings={() => setSettingsOpen(true)}
+            onOpenSettings={() => openSettings()}
+            onArrange={arrange.start}
           />
         </Suspense>
       ) : null}
@@ -179,7 +255,13 @@ function NewTab() {
       {/* Mounted only while open, so the draft starts clean every time. */}
       {settingsOpen ? (
         <Suspense fallback={null}>
-          <SettingsOverlay onClose={() => setSettingsOpen(false)} />
+          <SettingsOverlay
+            initialSection={settingsSection}
+            onClose={() => {
+              setSettingsOpen(false)
+              setSettingsSection(undefined)
+            }}
+          />
         </Suspense>
       ) : null}
     </PageShell>
