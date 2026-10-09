@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react'
+import { Fragment, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { BackgroundLayer } from '@/features/background/BackgroundLayer'
 import { SearchBar } from '@/features/search/SearchBar'
@@ -6,6 +6,7 @@ import { TileGrid } from '@/features/tiles/TileGrid'
 import { WidgetCanvas } from '@/features/widgets'
 import type { Pane } from '@/core/settings/schema'
 import { PaneSwitch } from './PaneSwitch'
+import { TopAddButton } from './TopAddButton'
 import './App.css'
 
 /**
@@ -18,6 +19,7 @@ export function PageShell({
   onSelectPane,
   switched = false,
   contentRef,
+  onContextMenu,
   children,
 }: {
   active: Pane
@@ -26,10 +28,11 @@ export function PageShell({
   /** Whether a real tab switch has happened; gates the entrance animation. */
   switched?: boolean
   contentRef?: React.Ref<HTMLElement>
+  onContextMenu?: (event: React.MouseEvent) => void
   /** Page-level chrome the new tab adds and the preview does not. */
   children?: ReactNode
 }) {
-  const { layout, widgets, tiles, search } = useSettings()
+  const { layout, widgets, tiles } = useSettings()
 
   const panes = derivePanes({ layout, widgets, tiles })
   const tabbed = layout.viewMode === 'tabs'
@@ -37,16 +40,84 @@ export function PageShell({
   const bands = orderBands(layout.order)
   const firstPane = bands.find((band) => band !== 'search')
 
-  // Reserving the tallest pane's height costs empty space below a short one;
-  // only worth it when there is a search box above to hold still.
-  const reserve = bands[0] === 'search' && search.enabled
+  const pageRef = useRef<HTMLDivElement>(null)
+  const panesRef = useRef<HTMLDivElement>(null)
+
+  // In tabs mode, we anchor the top margin to the tallest pane so that switching
+  // between tabs keeps the search bar and switcher at the exact same position.
+  // The shorter tab's container only takes its own height, eliminating phantom
+  // scrollbars and dead vertical space.
+  useLayoutEffect(() => {
+    const page = pageRef.current
+    const content = page?.querySelector<HTMLElement>('.page__content')
+    const panesEl = panesRef.current
+    if (!page || !content) return
+
+    if (!tabbed || panes.length <= 1) {
+      content.style.marginTop = ''
+      content.style.marginBottom = ''
+      return
+    }
+
+    const updateAlignment = () => {
+      let maxPaneHeight = 0
+      if (panesEl) {
+        const paneEls = panesEl.querySelectorAll<HTMLElement>('.pane')
+        paneEls.forEach((el) => {
+          const isInactive = el.getAttribute('aria-hidden') === 'true'
+          const h = isInactive ? el.scrollHeight : el.getBoundingClientRect().height
+          if (h > maxPaneHeight) maxPaneHeight = h
+        })
+      }
+
+      const offsetTop = panesEl ? panesEl.offsetTop : 0
+      const paddingBottom = layout.paddingY
+      const tallerTotal = offsetTop + maxPaneHeight + paddingBottom
+      const viewportH = page.clientHeight || window.innerHeight
+
+      if (layout.align === 'center') {
+        const topMargin = Math.max(0, (viewportH - tallerTotal) / 2)
+        content.style.marginTop = `${topMargin}px`
+        content.style.marginBottom = 'auto'
+      } else if (layout.align === 'bottom') {
+        const topMargin = Math.max(0, viewportH - tallerTotal)
+        content.style.marginTop = `${topMargin}px`
+        content.style.marginBottom = '0px'
+      } else {
+        content.style.marginTop = '0px'
+        content.style.marginBottom = 'auto'
+      }
+    }
+
+    updateAlignment()
+
+    const ro = new ResizeObserver(() => {
+      updateAlignment()
+    })
+
+    ro.observe(page)
+    if (panesEl) {
+      ro.observe(panesEl)
+      for (const child of panesEl.children) {
+        ro.observe(child)
+      }
+    }
+
+    window.addEventListener('resize', updateAlignment)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', updateAlignment)
+    }
+  }, [tabbed, panes.length, layout.align, layout.paddingY, active, widgets, tiles])
 
   return (
     <div
       className="page"
+      ref={pageRef}
       data-align={layout.align}
       data-view={layout.viewMode}
       data-switched={switched}
+      onContextMenu={onContextMenu}
     >
       <BackgroundLayer />
 
@@ -76,17 +147,18 @@ export function PageShell({
               {band === firstPane && showSwitch ? (
                 <div className="page__switch">
                   <PaneSwitch active={active} panes={panes} onSelect={onSelectPane} />
+                  <TopAddButton
+                    active={active}
+                    panes={panes}
+                    viewMode="tabs"
+                    direction="down"
+                    onSelectPane={onSelectPane}
+                  />
                 </div>
               ) : null}
 
               {tabbed ? (
-                /*
-                 * One grid cell holds every pane, so the column is as tall as the
-                 * tallest of them whichever is showing. Switching from two widgets
-                 * to thirty tiles would otherwise resize the centred column and
-                 * walk the search bar up the page.
-                 */
-                <div className="page__panes" data-reserve={reserve}>
+                <div className="page__panes" ref={panesRef}>
                   {panes.map((pane) => (
                     <SwitchablePane key={pane} name={pane} active={active === pane} tabbed first>
                       <Band name={pane} />
@@ -163,10 +235,8 @@ function SwitchablePane({
       data-active={active}
       data-first={first}
       /*
-       * Hidden by visibility rather than `hidden`, so the pane keeps its grid
-       * cell and goes on contributing height. A display:none pane also reports
-       * no width, which left the widget grid measuring its columns against
-       * nothing until it was next looked at.
+       * Inactive pane stays mounted so drafts, timers, and component state live on.
+       * In tabs mode, CSS removes it from normal height flow while keeping full width.
        */
       inert={away || undefined}
       aria-hidden={away}
