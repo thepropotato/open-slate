@@ -5,6 +5,42 @@ Notable changes to Open Slate, newest first. Versions follow
 GitHub release, the website and the store listing's "What's new" all read from,
 so it is written for the people who use the extension rather than for the diff.
 
+## [1.4.0]
+
+### Added
+
+- Procedural background patterns: dot grid, blueprint grid, diagonal lines,
+  isometric perspective, contour waves, and ambient mesh. Each adapts to your
+  theme palette with configurable scale and intensity, with zero network downloads.
+- Direct widget controls in arrange mode: top drag handles, instant size
+  switcher pills (S/M/L), and configure and remove buttons right on each card.
+- Top add button: a dedicated `+` icon button at the top of the page in tabbed mode,
+  and a quick floating add button in scrolling mode, to insert widgets or tiles
+  instantly without extra vertical whitespace.
+- Quotes and daily wisdom in the greeting widget: switch between traditional
+  greetings, curated quotes across craft, wisdom, and stoicism with author attributions,
+  or your own custom quote, updating on every new tab, hourly, or daily.
+- Manual refresh buttons on the crypto and weather widgets.
+- "Arrange the page" action in the command palette.
+
+### Changed
+
+- Widget rearrangement no longer vibrates cards with a continuous jiggle; it
+  presents a calm, elevated edit surface with clear drag handles and size pills.
+- Arrange toolbar toggle button uses an intuitive multi-directional move icon
+  instead of the grid icon.
+- Scrolling over a widget now cascades smoothly to the whole page once it reaches
+  the widget boundary, avoiding stuck scrolling on single-page layouts.
+- Notes widget now features a quiet, centered prompt rather than a persistent
+  header placeholder, focusing cleanly on click.
+- Tile titles automatically format and capitalize domain names (turning
+  addresses like linear.com into "Linear") when a site has no curated brand logo.
+- Right-clicking anywhere on the new tab page - including empty side gutters,
+  wallpaper, and corners - opens Open Slate's own menu, keeping Chrome's browser menu
+  from leaking through on blank space.
+- Claude and ChatGPT usage meter refresh buttons now share the same button and
+  icon scale as other widgets.
+
 ## [1.3.0]
 
 ### Added
@@ -175,6 +211,7 @@ First public release.
   prices, and your own browser data.
 - Settings sync, and an export and import of everything stored.
 
+[1.4.0]: https://github.com/thepropotato/open-slate/compare/v1.3.0...v1.4.0
 [1.3.0]: https://github.com/thepropotato/open-slate/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/thepropotato/open-slate/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/thepropotato/open-slate/compare/v1.0.0...v1.1.0
