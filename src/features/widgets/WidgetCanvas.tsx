@@ -85,6 +85,12 @@ export function WidgetCanvas() {
     return () => cancelAnimationFrame(frame)
   }, [])
 
+  useEffect(() => {
+    const onAdd = () => setPicking(true)
+    window.addEventListener('open-slate:add-widget', onAdd)
+    return () => window.removeEventListener('open-slate:add-widget', onAdd)
+  }, [])
+
   // Transient and page-wide; `widgets.locked` stays in the schema unread, so
   // no migration is needed.
   const arrange = useArrange()
@@ -325,6 +331,7 @@ export function WidgetCanvas() {
         dragConfig={{
           enabled: arrange.arranging && !stacked,
           handle: '.wframe',
+          cancel: '.wframe__overlay-actions, .wframe__sizes, button, input',
           bounded: false,
           threshold: 3,
         }}
@@ -340,6 +347,10 @@ export function WidgetCanvas() {
             <WidgetHost
               instance={instance}
               settings={settings}
+              arranging={arrange.arranging && !stacked}
+              onConfigure={() => setConfiguring(instance.id)}
+              onRemove={() => removeWidget(instance.id)}
+              onResize={(size) => resizeInstance(instance.id, size)}
               onConfigChange={(path, value) =>
                 patchInstance(instance.id, (current) => ({
                   ...current,
@@ -397,13 +408,29 @@ export function WidgetCanvas() {
   )
 }
 
+const SIZE_LABELS: Record<WidgetSizeName, string> = {
+  small: 'S',
+  medium: 'M',
+  large: 'L',
+  wide: 'W',
+  xlarge: 'XL',
+}
+
 function WidgetHost({
   instance,
   settings,
+  arranging,
+  onConfigure,
+  onRemove,
+  onResize,
   onConfigChange,
 }: {
   instance: WidgetInstance
   settings: Settings
+  arranging: boolean
+  onConfigure: () => void
+  onRemove: () => void
+  onResize: (size: WidgetSizeName) => void
   onConfigChange: (path: string, value: unknown) => void
 }) {
   const definition = getWidget(instance.type)
@@ -421,9 +448,68 @@ function WidgetHost({
   const config = parseWidgetConfig(definition, instance.config)
   const sizeName = sizeNameOf(instance, definition, settings.widgets.layout)
   const size = sizeOf(sizeName)
+  const availableSizes = definition.sizes ?? DEFAULT_SIZES
+
+  const overlay = arranging ? (
+    <div className="wframe__overlay">
+      <div className="wframe__overlay-top">
+        <div className="wframe__drag-pill">
+          <Icon name={definition.icon} />
+          <span>{definition.name}</span>
+        </div>
+        <div className="wframe__overlay-actions">
+          <button
+            type="button"
+            className="wframe__action-btn"
+            onClick={(e) => {
+              e.stopPropagation()
+              onConfigure()
+            }}
+            title="Configure widget"
+            aria-label="Configure widget"
+          >
+            <Icon name="settings" />
+          </button>
+          <button
+            type="button"
+            className="wframe__action-btn wframe__action-btn--remove"
+            onClick={(e) => {
+              e.stopPropagation()
+              onRemove()
+            }}
+            title="Remove widget"
+            aria-label="Remove widget"
+          >
+            <Icon name="remove" />
+          </button>
+        </div>
+      </div>
+      {availableSizes.length > 1 ? (
+        <div className="wframe__overlay-bottom">
+          <div className="wframe__sizes">
+            {availableSizes.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className="wframe__size-pill"
+                data-active={name === sizeName}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onResize(name)
+                }}
+                title={`Resize to ${name}`}
+              >
+                {SIZE_LABELS[name] ?? name[0].toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  ) : null
 
   return (
-    <WidgetFrame surface={instance.surface ?? settings.appearance.surface}>
+    <WidgetFrame surface={instance.surface ?? settings.appearance.surface} overlay={overlay}>
       <definition.Component
         config={config as never}
         setConfig={(changes) => {
@@ -472,12 +558,12 @@ const resizeGrabber = (axis: string, ref: Ref<HTMLElement>) => (
     className={`react-resizable-handle react-resizable-handle-${axis} wgrab`}
     title="Drag to resize"
   >
-    <svg viewBox="0 0 10 10" width="9" height="9" aria-hidden="true">
+    <svg viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
       <path
         d="M9 1 1 9M9 5 5 9"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.4"
+        strokeWidth="1.6"
         strokeLinecap="round"
       />
     </svg>
