@@ -12,8 +12,6 @@ so it is written for the people who use the extension rather than for the diff.
 - Procedural background patterns: dot grid, blueprint grid, diagonal lines,
   isometric perspective, contour waves, and ambient mesh. Each adapts to your
   theme palette with configurable scale and intensity, with zero network downloads.
-- Direct widget controls in arrange mode: top drag handles, instant size
-  switcher pills (S/M/L), and configure and remove buttons right on each card.
 - Top add button: a dedicated `+` icon button at the top of the page in tabbed mode,
   and a quick floating add button in scrolling mode, to insert widgets or tiles
   instantly without extra vertical whitespace.
@@ -25,8 +23,6 @@ so it is written for the people who use the extension rather than for the diff.
 
 ### Changed
 
-- Widget rearrangement no longer vibrates cards with a continuous jiggle; it
-  presents a calm, elevated edit surface with clear drag handles and size pills.
 - Arrange toolbar toggle button uses an intuitive multi-directional move icon
   instead of the grid icon.
 - Scrolling over a widget now cascades smoothly to the whole page once it reaches
