@@ -1,10 +1,10 @@
-/* The page is the scroller, not the capped content column, so the gutters scroll too. */
 .page {
   position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: none;
   /* Anchoring would scroll the reader off their band when a widget finishes loading. */
   overflow-anchor: none;
@@ -53,35 +53,46 @@
 }
 
 /*
- * Panes share one cell so the stack is as tall as the tallest, and switching
- * from two widgets to thirty tiles cannot walk the search bar up the page.
+ * In tabs mode, the container naturally hugs the active pane's height so a short
+ * tab never takes the tall tab's height or scrolls into empty space.
+ * The inactive pane is taken out of flow (position: absolute) and clipped to height 0,
+ * but keeps full width (left: 0, right: 0) and remains mounted so widget column
+ * measurements and component state remain intact.
  */
-.page__panes[data-reserve='true'] {
-  display: grid;
+.page__panes {
+  position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
-.page__panes[data-reserve='true'] > .pane {
-  grid-area: 1 / 1;
+.page__panes > .pane[data-active='true'] {
+  display: flex;
+  position: relative;
 }
 
-.page__panes[data-reserve='true'] > .pane[aria-hidden='true'] {
+.page__panes > .pane[aria-hidden='true'] {
   visibility: hidden;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  max-height: 0;
+  overflow: hidden;
 }
 
-/* Nothing above to hold still, so the stack shrinks to the shown pane. */
-.page__panes[data-reserve='false'] > .pane[aria-hidden='true'] {
-  display: none;
-}
-
-/* Cross-fade only after the page has entered; on first paint there is nothing to read against. */
+/* Smooth slide when switching panes in tabs mode; no opacity on .pane so backdrop-filter blurs continuously */
 .page[data-switched='true'][data-view='tabs'] .pane[data-active='true'] {
   animation: pane-in var(--dur) var(--ease);
 }
 
 @keyframes pane-in {
   from {
-    opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(12px);
+  }
+  to {
+    transform: translateY(0);
   }
 }
 
@@ -115,6 +126,8 @@
 .page__switch {
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
 
 .paneswitch {
@@ -124,8 +137,10 @@
   padding: 3px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--line);
-  background: rgb(var(--surface-base) / 45%);
-  backdrop-filter: blur(10px);
+  background: rgb(var(--surface-base) / 75%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 18%);
 }
 
 .paneswitch__item {
@@ -137,17 +152,27 @@
   font-size: var(--text-xs);
   font-weight: 550;
   color: var(--fg-subtle);
-  transition: color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
 }
 
-.paneswitch__item:hover {
+.paneswitch__item:hover:not([aria-current='true']) {
   color: var(--fg);
-  background: rgb(var(--surface-tint) / 8%);
+  background: rgb(var(--surface-tint) / 10%);
+  transform: translateY(-1px);
+}
+
+.paneswitch__item:active {
+  transform: scale(0.96);
 }
 
 .paneswitch__item[aria-current='true'] {
   color: var(--accent-fg);
   background: var(--accent);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
 }
 
 /* One column, so the page's fixed controls read as a set and the bottom
@@ -166,17 +191,34 @@
 .page__arrange {
   --icon-btn: 38px;
   border-radius: var(--radius-sm);
-  color: var(--fg-muted);
-  background: rgb(var(--surface-base) / 45%);
+  color: var(--fg);
+  background: rgb(var(--surface-base) / 78%);
   border: 1px solid var(--line);
-  backdrop-filter: blur(10px);
-  opacity: 0.35;
-  transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 25%), 0 1px 3px rgb(0 0 0 / 12%);
+  opacity: 0.88;
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease),
+              color var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease),
+              border-color var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease);
 }
 
 .page__arrange:hover {
   opacity: 1;
   color: var(--fg);
+  background: rgb(var(--surface-base) / 95%);
+  border-color: var(--line-strong, var(--line));
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 32%), 0 2px 6px rgb(0 0 0 / 18%);
+}
+
+.page__arrange:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 22%);
 }
 
 /* The one lit control while arranging: it is the way out. */
@@ -185,28 +227,45 @@
   color: var(--accent-fg);
   background: var(--accent);
   border-color: transparent;
+  box-shadow: 0 4px 16px rgb(var(--accent-rgb, 0 0 0) / 40%);
+}
+
+.page__arrange[data-active='true']:hover {
+  transform: translateY(-2px) scale(1.05);
+  filter: brightness(1.08);
 }
 
 /* Rotate the cog, not the button - the button carries the border and blur plate. */
 .page__settings .icon {
-  transition: transform var(--dur) var(--ease);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .page__settings:hover {
   opacity: 1;
   color: var(--fg);
+  background: rgb(var(--surface-base) / 95%);
+  border-color: var(--line-strong, var(--line));
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 32%), 0 2px 6px rgb(0 0 0 / 18%);
 }
 
 .page__settings:hover .icon {
-  transform: rotate(30deg);
+  transform: rotate(60deg);
+}
+
+.page__settings:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 22%);
 }
 
 /* Zen mode hides the chrome until the pointer moves. */
 .page__tools[data-zen='true'] {
   opacity: 0;
+  pointer-events: none;
   transition: opacity var(--dur) var(--ease);
 }
 
 .page:hover .page__tools[data-zen='true'] {
   opacity: 1;
+  pointer-events: auto;
 }
