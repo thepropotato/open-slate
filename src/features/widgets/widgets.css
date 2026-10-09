@@ -108,140 +108,67 @@
   text-align: center;
 }
 
-/* Arranging State & Overlay */
+/* Arranging */
 
 .canvas[data-arranging='true'] .wframe {
   cursor: grab;
-  user-select: none;
 }
 
 .canvas[data-arranging='true'] .react-grid-item.react-draggable-dragging .wframe {
   cursor: grabbing;
-  box-shadow: 0 16px 36px rgb(0 0 0 / 35%);
-  z-index: 10;
 }
 
-/* The face goes quiet so the card drag doesn't trigger widget internal links */
+/* The face goes quiet and inert, so the whole widget can be a drag handle
+   without stealing clicks from the sixteen widgets that answer them. */
 .canvas[data-arranging='true'] .wframe__body {
-  opacity: 0.45;
+  opacity: 0.55;
   pointer-events: none;
   transition: opacity var(--dur) var(--ease);
 }
 
 .canvas[data-arranging='true'] .wframe__surface {
-  outline: 2px dashed rgb(var(--surface-tint) / 25%);
-  outline-offset: -2px;
+  outline: 1px dashed var(--line);
+  outline-offset: -1px;
 }
 
-.wframe__overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 8px;
-  pointer-events: none;
-  z-index: 5;
+/* On the frame, not the grid item: the grid owns that element's transform. */
+.canvas[data-arranging='true'] .wframe {
+  animation: wframe-jiggle 0.34s linear infinite;
 }
 
-.wframe__overlay-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  width: 100%;
+.canvas[data-arranging='true'] .react-grid-item:nth-child(even) .wframe {
+  animation-delay: -0.17s;
 }
 
-.wframe__drag-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 8px;
-  border-radius: var(--radius-pill);
-  background: rgb(var(--surface-base) / 88%);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(8px);
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--fg);
-  pointer-events: auto;
-  cursor: grab;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
+.canvas[data-arranging='true'] .react-grid-item:nth-child(3n) .wframe {
+  animation-duration: 0.3s;
 }
 
-.wframe__overlay-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  pointer-events: auto;
+.canvas[data-arranging='true'] .react-grid-item.react-draggable-dragging .wframe,
+.canvas[data-arranging='true'] .react-grid-item.resizing .wframe {
+  animation: none;
 }
 
-.wframe__action-btn {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-sm);
-  background: rgb(var(--surface-base) / 88%);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(8px);
-  color: var(--fg-muted);
-  font-size: 11px;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
-  transition: background var(--dur-fast), color var(--dur-fast), transform var(--dur-fast);
+@keyframes wframe-jiggle {
+  0%,
+  100% {
+    transform: rotate(-0.4deg) translate(-0.6px, -0.6px);
+  }
+  25% {
+    transform: rotate(0.4deg) translate(0.6px, 0.3px);
+  }
+  50% {
+    transform: rotate(-0.3deg) translate(0.3px, 0.6px);
+  }
+  75% {
+    transform: rotate(0.3deg) translate(-0.3px, -0.3px);
+  }
 }
 
-.wframe__action-btn:hover {
-  color: var(--fg);
-  background: rgb(var(--surface-tint) / 20%);
-  transform: scale(1.06);
-}
-
-.wframe__action-btn--remove:hover {
-  color: #ff5555;
-  background: rgb(255 85 85 / 20%);
-  border-color: rgb(255 85 85 / 40%);
-}
-
-.wframe__overlay-bottom {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.wframe__sizes {
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border-radius: var(--radius-pill);
-  background: rgb(var(--surface-base) / 88%);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(8px);
-  pointer-events: auto;
-  box-shadow: 0 2px 8px rgb(0 0 0 / 18%);
-}
-
-.wframe__size-pill {
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
-  font-size: 10px;
-  font-weight: 650;
-  color: var(--fg-subtle);
-  background: transparent;
-  cursor: pointer;
-  transition: background var(--dur-fast), color var(--dur-fast);
-}
-
-.wframe__size-pill:hover {
-  color: var(--fg);
-}
-
-.wframe__size-pill[data-active='true'] {
-  background: var(--accent);
-  color: var(--accent-fg);
+@media (prefers-reduced-motion: reduce) {
+  .canvas[data-arranging='true'] .wframe {
+    animation: none;
+  }
 }
 
 .canvas__empty {

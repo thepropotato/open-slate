@@ -331,7 +331,6 @@ export function WidgetCanvas() {
         dragConfig={{
           enabled: arrange.arranging && !stacked,
           handle: '.wframe',
-          cancel: '.wframe__overlay-actions, .wframe__sizes, button, input',
           bounded: false,
           threshold: 3,
         }}
@@ -347,10 +346,6 @@ export function WidgetCanvas() {
             <WidgetHost
               instance={instance}
               settings={settings}
-              arranging={arrange.arranging && !stacked}
-              onConfigure={() => setConfiguring(instance.id)}
-              onRemove={() => removeWidget(instance.id)}
-              onResize={(size) => resizeInstance(instance.id, size)}
               onConfigChange={(path, value) =>
                 patchInstance(instance.id, (current) => ({
                   ...current,
@@ -408,29 +403,13 @@ export function WidgetCanvas() {
   )
 }
 
-const SIZE_LABELS: Record<WidgetSizeName, string> = {
-  small: 'S',
-  medium: 'M',
-  large: 'L',
-  wide: 'W',
-  xlarge: 'XL',
-}
-
 function WidgetHost({
   instance,
   settings,
-  arranging,
-  onConfigure,
-  onRemove,
-  onResize,
   onConfigChange,
 }: {
   instance: WidgetInstance
   settings: Settings
-  arranging: boolean
-  onConfigure: () => void
-  onRemove: () => void
-  onResize: (size: WidgetSizeName) => void
   onConfigChange: (path: string, value: unknown) => void
 }) {
   const definition = getWidget(instance.type)
@@ -448,68 +427,9 @@ function WidgetHost({
   const config = parseWidgetConfig(definition, instance.config)
   const sizeName = sizeNameOf(instance, definition, settings.widgets.layout)
   const size = sizeOf(sizeName)
-  const availableSizes = definition.sizes ?? DEFAULT_SIZES
-
-  const overlay = arranging ? (
-    <div className="wframe__overlay">
-      <div className="wframe__overlay-top">
-        <div className="wframe__drag-pill">
-          <Icon name={definition.icon} />
-          <span>{definition.name}</span>
-        </div>
-        <div className="wframe__overlay-actions">
-          <button
-            type="button"
-            className="wframe__action-btn"
-            onClick={(e) => {
-              e.stopPropagation()
-              onConfigure()
-            }}
-            title="Configure widget"
-            aria-label="Configure widget"
-          >
-            <Icon name="settings" />
-          </button>
-          <button
-            type="button"
-            className="wframe__action-btn wframe__action-btn--remove"
-            onClick={(e) => {
-              e.stopPropagation()
-              onRemove()
-            }}
-            title="Remove widget"
-            aria-label="Remove widget"
-          >
-            <Icon name="remove" />
-          </button>
-        </div>
-      </div>
-      {availableSizes.length > 1 ? (
-        <div className="wframe__overlay-bottom">
-          <div className="wframe__sizes">
-            {availableSizes.map((name) => (
-              <button
-                key={name}
-                type="button"
-                className="wframe__size-pill"
-                data-active={name === sizeName}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onResize(name)
-                }}
-                title={`Resize to ${name}`}
-              >
-                {SIZE_LABELS[name] ?? name[0].toUpperCase()}
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  ) : null
 
   return (
-    <WidgetFrame surface={instance.surface ?? settings.appearance.surface} overlay={overlay}>
+    <WidgetFrame surface={instance.surface ?? settings.appearance.surface}>
       <definition.Component
         config={config as never}
         setConfig={(changes) => {
