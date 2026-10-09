@@ -19,25 +19,26 @@ export const backgroundSection: Section = {
             options: [
               { value: 'gradient', label: 'Gradient' },
               { value: 'solid', label: 'Solid' },
+              { value: 'pattern', label: 'Pattern' },
               { value: 'image', label: 'Image' },
               { value: 'video', label: 'Video' },
               { value: 'slideshow', label: 'Slideshow' },
             ],
           },
-          keywords: 'wallpaper background',
+          keywords: 'wallpaper background pattern',
         },
         {
           path: 'background.followTheme',
           label: 'Match the theme',
           help: 'Derives the colour or gradient from the palette, so light and dark agree.',
           control: { kind: 'toggle' },
-          when: (s) => s.background.type === 'solid' || s.background.type === 'gradient',
+          when: (s) => s.background.type === 'solid' || s.background.type === 'gradient' || s.background.type === 'pattern',
         },
         {
           path: 'background.color',
           label: 'Colour',
           control: { kind: 'color' },
-          when: (s) => s.background.type === 'solid' && !s.background.followTheme,
+          when: (s) => (s.background.type === 'solid' || s.background.type === 'pattern') && !s.background.followTheme,
         },
         {
           path: 'background.gradient.from',
@@ -60,6 +61,40 @@ export const backgroundSection: Section = {
       ],
     },
     {
+      id: 'pattern',
+      label: 'Pattern',
+      when: (s) => s.background.type === 'pattern',
+      fields: [
+        {
+          path: 'background.pattern.style',
+          label: 'Pattern style',
+          control: {
+            kind: 'select',
+            options: [
+              { value: 'dots', label: 'Dot grid' },
+              { value: 'grid', label: 'Blueprint grid' },
+              { value: 'stripes', label: 'Diagonal lines' },
+              { value: 'isometric', label: 'Isometric perspective' },
+              { value: 'waves', label: 'Contour waves' },
+              { value: 'mesh', label: 'Ambient mesh' },
+            ],
+          },
+          keywords: 'dots grid blueprint texture pattern mesh isometric',
+        },
+        {
+          path: 'background.pattern.spacing',
+          label: 'Scale / spacing',
+          control: { kind: 'slider', min: 14, max: 72, step: 2, unit: 'px' },
+          when: (s) => s.background.pattern.style !== 'mesh',
+        },
+        {
+          path: 'background.pattern.opacity',
+          label: 'Intensity',
+          control: { kind: 'slider', min: 0.02, max: 0.45, step: 0.01 },
+        },
+      ],
+    },
+    {
       id: 'library',
       label: 'Library',
       help: 'Stored in this browser only. Nothing is uploaded anywhere.',
@@ -67,7 +102,7 @@ export const backgroundSection: Section = {
       fields: [
         {
           label: 'Your media',
-          control: { kind: 'custom', render: () => <MediaLibrary />, stacked: true },
+          control: { kind: 'custom', bare: true, render: () => <MediaLibrary /> },
           keywords: 'upload wallpaper video image',
         },
       ],

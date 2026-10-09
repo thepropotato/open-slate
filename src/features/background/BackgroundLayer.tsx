@@ -4,10 +4,11 @@ import { accentStore } from '@/core/theme/accentStore'
 import { usePalette } from '@/core/theme/ThemeProvider'
 import { dominantColor, dominantColorOf, isDark, mix } from '@/core/theme/color'
 import { useBackgroundSource } from './useBackgroundSource'
+import { PatternLayer } from './PatternLayer'
 import './background.css'
 
 /**
- * Paints the wallpaper - colour, gradient, image, video or slideshow - plus its
+ * Paints the wallpaper - colour, gradient, pattern, image, video or slideshow - plus its
  * adjustment layers. Decoding stops while the tab is hidden, and nothing
  * animates under reduced motion.
  */
@@ -28,6 +29,10 @@ export function BackgroundLayer() {
   return (
     <div className="bg" aria-hidden="true">
       <div className="bg__base" style={{ background: baseFill(background, palette) }} />
+
+      {background.type === 'pattern' ? (
+        <PatternLayer background={background} palette={palette} />
+      ) : null}
 
       {source.kind === 'image' ? (
         <ImageLayer
