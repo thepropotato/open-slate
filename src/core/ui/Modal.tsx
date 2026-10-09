@@ -1,5 +1,6 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon } from '@/core/icons'
+import { useClosing } from '@/core/hooks'
 import './Modal.css'
 
 /** Native `<dialog>`, so focus trapping, the top layer and Escape come from the platform. */
@@ -16,15 +17,16 @@ export function Modal({
   onClose: () => void
   width?: number
 }) {
+  const { closing, handleClose } = useClosing(onClose, 150)
   const ref = useRef<HTMLDialogElement>(null)
 
   // Read through a ref: callers pass a fresh closure on every render, and this
   // effect closes the dialog on cleanup, so depending on it would blink the
   // modal shut and open again whenever the page behind it re-renders.
-  const close = useRef(onClose)
+  const close = useRef(handleClose)
   useEffect(() => {
-    close.current = onClose
-  }, [onClose])
+    close.current = handleClose
+  }, [handleClose])
 
   // Opens once, on mount, and closes once, on unmount.
   useEffect(() => {
@@ -47,14 +49,15 @@ export function Modal({
       className="modal"
       ref={ref}
       style={{ width }}
+      data-closing={closing || undefined}
       onClick={(event) => {
         // Clicks on the backdrop land on the dialog element itself.
-        if (event.target === ref.current) onClose()
+        if (event.target === ref.current) handleClose()
       }}
     >
       <header className="modal__head">
         <h2 className="modal__title">{title}</h2>
-        <button type="button" className="modal__close is-icon-btn" onClick={onClose} aria-label="Close">
+        <button type="button" className="modal__close is-icon-btn" onClick={handleClose} aria-label="Close">
           <Icon name="close" />
         </button>
       </header>

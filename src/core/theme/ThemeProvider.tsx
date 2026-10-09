@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react'
+import { useLayoutEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import type { Settings } from '@/core/settings/schema'
 import { accentStore } from './accentStore'
@@ -45,7 +45,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [appearance, palette, sampledAccent],
   )
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = document.documentElement
     const vars = themeVars(appearance, palette, accent)
     for (const [key, value] of Object.entries(vars)) root.style.setProperty(key, value)
