@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Icon } from '@/core/icons/Icon'
 import type { IconName } from '@/core/icons/registry'
+import { useClosing } from '@/core/hooks'
 import './ContextMenu.css'
 
 export type MenuItem = {
@@ -25,6 +26,7 @@ export function ContextMenu({
   items: MenuItem[]
   onClose: () => void
 }) {
+  const { closing, handleClose } = useClosing(onClose, 150)
   const ref = useRef<HTMLDivElement>(null)
   const [place, setPlace] = useState<{ left: number; top: number } | null>(null)
   const [active, setActive] = useState(0)
@@ -48,7 +50,7 @@ export function ContextMenu({
 
   // Anything that moves the page from under the menu dismisses it.
   useEffect(() => {
-    const away = () => onClose()
+    const away = () => handleClose()
     window.addEventListener('resize', away)
     window.addEventListener('blur', away)
     window.addEventListener('scroll', away, true)
@@ -57,7 +59,7 @@ export function ContextMenu({
       window.removeEventListener('blur', away)
       window.removeEventListener('scroll', away, true)
     }
-  }, [onClose])
+  }, [handleClose])
 
   const step = (by: number) =>
     setActive((current) => (current + by + items.length) % items.length)
@@ -69,11 +71,11 @@ export function ContextMenu({
         className="cmenu__catch"
         onPointerDown={(event) => {
           event.preventDefault()
-          onClose()
+          handleClose()
         }}
         onContextMenu={(event) => {
           event.preventDefault()
-          onClose()
+          handleClose()
         }}
       />
       <div
@@ -82,12 +84,14 @@ export function ContextMenu({
         role="menu"
         tabIndex={-1}
         aria-label="Actions"
+        data-placed={place ? 'true' : undefined}
+        data-closing={closing || undefined}
         // Hidden until placed, so it is never seen at the unflipped position.
-        style={{ left: place?.left ?? at.x, top: place?.top ?? at.y, opacity: place ? 1 : 0 }}
+        style={{ left: place?.left ?? at.x, top: place?.top ?? at.y }}
         onKeyDown={(event) => {
           if (event.key === 'Escape') {
             event.stopPropagation()
-            onClose()
+            handleClose()
           } else if (event.key === 'ArrowDown') {
             event.preventDefault()
             step(1)
@@ -103,7 +107,7 @@ export function ContextMenu({
           } else if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault()
             items[active]?.onSelect()
-            onClose()
+            handleClose()
           }
         }}
       >
@@ -119,7 +123,7 @@ export function ContextMenu({
             onPointerEnter={() => setActive(index)}
             onClick={() => {
               item.onSelect()
-              onClose()
+              handleClose()
             }}
           >
             {item.icon ? <Icon name={item.icon} /> : <span className="cmenu__gap" />}

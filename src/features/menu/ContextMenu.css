@@ -13,8 +13,10 @@
   border: 1px solid var(--line);
   background: rgb(var(--surface-base) / 88%);
   backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   box-shadow: 0 18px 44px rgb(0 0 0 / 42%);
   outline: none;
+  opacity: 0;
 }
 
 .cmenu__item {
@@ -28,11 +30,17 @@
   color: var(--fg-muted);
   text-align: start;
   white-space: nowrap;
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease);
 }
 
-.cmenu__item[data-active] {
+.cmenu__item[data-active],
+.cmenu__item:hover {
   color: var(--fg);
   background: rgb(var(--surface-tint) / 12%);
+  transform: translateX(2px);
 }
 
 /* No danger token in the palette; this reads against both themes' surfaces. */
@@ -49,4 +57,35 @@
 /* Keeps labels in line with those that have an icon. */
 .cmenu__gap {
   width: 1em;
+}
+
+@keyframes cmenu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes cmenu-out {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(-2px);
+  }
+}
+
+.cmenu[data-placed='true'] {
+  opacity: 1;
+  animation: cmenu-in 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top left;
+}
+.cmenu[data-closing='true'] {
+  animation: cmenu-out 0.12s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  pointer-events: none;
 }
