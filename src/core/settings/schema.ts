@@ -102,8 +102,17 @@ export const Tiles = z.object({
   showAddButton: z.boolean().default(true),
 }).prefault({})
 
+export const PatternStyle = z.enum(['dots', 'grid', 'stripes', 'isometric', 'waves', 'mesh'])
+export type PatternStyle = z.infer<typeof PatternStyle>
+
+export const BackgroundPattern = z.object({
+  style: PatternStyle.default('dots'),
+  spacing: z.number().min(12).max(80).default(28),
+  opacity: z.number().min(0.02).max(0.6).default(0.12),
+}).prefault({})
+
 export const Background = z.object({
-  type: z.enum(['solid', 'gradient', 'image', 'video', 'slideshow']).default('gradient'),
+  type: z.enum(['solid', 'gradient', 'pattern', 'image', 'video', 'slideshow']).default('gradient'),
   // Derives colour and gradient from the theme palette instead of the stored hexes,
   // so switching palette or light/dark changes the whole page.
   followTheme: z.boolean().default(true),
@@ -113,6 +122,7 @@ export const Background = z.object({
     to: hex.default('#05070a'),
     angle: z.number().min(0).max(360).default(160),
   }).prefault({}),
+  pattern: BackgroundPattern,
   // Either a blob id from the local media library or a remote URL.
   image: z.object({
     blobId: z.string().default(''),
