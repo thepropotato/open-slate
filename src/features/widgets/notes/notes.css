@@ -1,3 +1,32 @@
+.notes-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  cursor: text;
+}
+
+.notes-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  color: var(--fg-subtle);
+  font-size: var(--text-xs);
+  pointer-events: none;
+  user-select: none;
+}
+
+.notes-empty .icon {
+  font-size: 18px;
+  opacity: 0.5;
+}
+
 .notes {
   flex: 1;
   min-height: 0;
@@ -11,6 +40,11 @@
   color: var(--fg);
   scrollbar-width: thin;
   scrollbar-color: var(--fg-subtle) transparent;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.notes[data-empty='true'] {
+  opacity: 0;
 }
 
 .notes::placeholder {

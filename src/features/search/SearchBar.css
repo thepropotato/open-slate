@@ -4,6 +4,7 @@
   align-items: center;
   gap: var(--space-xs);
   width: 100%;
+  margin-block-start: clamp(36px, 6.5vh, 76px);
 }
 
 .search {

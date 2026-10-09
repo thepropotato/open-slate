@@ -25,3 +25,47 @@
 .greeting[data-size='l'] .greeting__line {
   font-size: clamp(20px, min(64cqh, 11cqw), 76px);
 }
+
+.greeting--quote {
+  padding-block: var(--space-xs);
+  cursor: pointer;
+  user-select: none;
+}
+
+.greeting--quote .greeting__line {
+  line-height: 1.35;
+  font-weight: 350;
+  letter-spacing: -0.01em;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.greeting--quote[data-size='s'] .greeting__line {
+  font-size: clamp(12px, min(24cqh, 4.5cqw), 18px);
+}
+
+.greeting--quote[data-size='m'] .greeting__line {
+  font-size: clamp(14px, min(30cqh, 6cqw), 24px);
+}
+
+.greeting--quote[data-size='l'] .greeting__line {
+  font-size: clamp(16px, min(38cqh, 7.5cqw), 30px);
+}
+
+.greeting__author {
+  margin-top: 0;
+  font-size: var(--text-xs);
+  color: var(--fg-muted);
+  font-weight: 550;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+  transition: color var(--dur-fast), opacity var(--dur-fast);
+}
+
+.greeting--quote:hover .greeting__author {
+  color: var(--fg);
+  opacity: 1;
+}
+

@@ -1,4 +1,6 @@
+import { useState, useRef } from 'react'
 import { z } from 'zod'
+import { Icon } from '@/core/icons'
 import { registerWidget } from '@/core/widgets/registry'
 import type { WidgetProps } from '@/core/widgets/types'
 import './notes.css'
@@ -8,7 +10,7 @@ import './notes.css'
 
 const NotesConfig = z.object({
   text: z.string().default(''),
-  placeholder: z.string().default('Notes'),
+  placeholder: z.string().default('Take a note...'),
   font: z.enum(['sans', 'mono', 'serif']).default('sans'),
   scale: z.number().min(0.75).max(1.6).default(1),
   wrap: z.boolean().default(true),
@@ -17,18 +19,34 @@ const NotesConfig = z.object({
 type NotesConfig = z.infer<typeof NotesConfig>
 
 function NotesWidget({ config, setConfig }: WidgetProps<NotesConfig>) {
+  const [focused, setFocused] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const isEmpty = !config.text.trim()
+
   return (
-    <textarea
-      className="notes"
-      data-font={config.font}
-      style={{ fontSize: `calc(var(--text-sm) * ${config.scale})` }}
-      value={config.text}
-      placeholder={config.placeholder}
-      onChange={(event) => setConfig({ text: event.target.value })}
-      spellCheck
-      wrap={config.wrap ? 'soft' : 'off'}
-      aria-label="Notes"
-    />
+    <div className="notes-wrap" onClick={() => textareaRef.current?.focus()}>
+      {isEmpty && !focused ? (
+        <div className="notes-empty">
+          <Icon name="notes" />
+          <span>Write a note...</span>
+        </div>
+      ) : null}
+      <textarea
+        ref={textareaRef}
+        className="notes"
+        data-font={config.font}
+        data-empty={isEmpty && !focused}
+        style={{ fontSize: `calc(var(--text-sm) * ${config.scale})` }}
+        value={config.text}
+        placeholder={focused ? (config.placeholder || 'Take a note...') : ''}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        onChange={(event) => setConfig({ text: event.target.value })}
+        spellCheck
+        wrap={config.wrap ? 'soft' : 'off'}
+        aria-label="Notes"
+      />
+    </div>
   )
 }
 

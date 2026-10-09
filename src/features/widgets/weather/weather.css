@@ -71,12 +71,37 @@
   white-space: nowrap;
 }
 
+.weather__place-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .weather__place {
   font-weight: 600;
   color: var(--fg-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 14ch;
+}
+
+.weather__refresh {
+  --icon-btn: 18px;
+  font-size: 10px;
+  border-radius: var(--radius-sm);
+  color: var(--fg-subtle);
+  opacity: 0;
+  transition: opacity var(--dur-fast), color var(--dur-fast), background var(--dur-fast);
+}
+
+.weather:hover .weather__refresh,
+.weather__refresh:focus-visible {
+  opacity: 1;
+}
+
+.weather__refresh:hover {
+  color: var(--fg);
+  background: rgb(var(--surface-tint) / 10%);
 }
 
 .weather__strip {

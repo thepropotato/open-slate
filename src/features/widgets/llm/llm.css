@@ -57,6 +57,7 @@
 
 .usage__refresh {
   --icon-btn: 22px;
+  font-size: 11px;
   margin-left: auto;
   margin-right: -4px;
   border: none;
