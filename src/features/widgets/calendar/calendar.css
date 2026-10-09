@@ -562,7 +562,7 @@
   gap: var(--space-sm);
   justify-content: flex-start;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   padding-right: 2px;
 }
 

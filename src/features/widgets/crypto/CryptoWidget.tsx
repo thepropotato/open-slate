@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { z } from 'zod'
 import { Icon } from '@/core/icons'
 import { useAsyncValue } from '@/core/hooks'
@@ -30,10 +31,11 @@ type CryptoConfig = z.infer<typeof CryptoConfig>
 function CryptoWidget({ config }: WidgetProps<CryptoConfig>) {
   const { behavior } = useSettings()
   const locale = resolveLocale(behavior.locale)
+  const [revision, setRevision] = useState(0)
 
   const granted = useAsyncValue('crypto-access', hasCryptoAccess)
   const quotes = useAsyncValue(
-    granted ? `crypto:${config.coins.join(',')}:${config.currency}` : null,
+    granted ? `crypto:${config.coins.join(',')}:${config.currency}:${revision}` : null,
     () => fetchQuotes(config.coins, config.currency),
   )
 
@@ -77,28 +79,42 @@ function CryptoWidget({ config }: WidgetProps<CryptoConfig>) {
   })
 
   return (
-    <ul className="crypto scroll-y" data-layout={config.layout}>
-      {quotes.map((quote) => {
-        const up = quote.changePercent >= 0
-        return (
-          <li key={quote.id} className="crypto__row">
-            <span className="crypto__symbol">{quote.symbol}</span>
-            {config.showName && config.layout === 'rows' ? (
-              <span className="crypto__name">{quote.name}</span>
-            ) : null}
-            <span className="crypto__price">
-              {quote.price >= 1 ? money.format(quote.price) : smallMoney.format(quote.price)}
-            </span>
-            {config.showChange ? (
-              <span className="crypto__change" data-up={up}>
-                <Icon name={up ? 'chevronUp' : 'chevronDown'} />
-                {Math.abs(quote.changePercent).toFixed(1)}%
+    <div className="crypto scroll-y" data-layout={config.layout}>
+      <header className="crypto__head">
+        <span className="crypto__title">Crypto</span>
+        <button
+          type="button"
+          className="crypto__refresh is-icon-btn"
+          onClick={() => setRevision((r) => r + 1)}
+          title="Refresh prices"
+          aria-label="Refresh prices"
+        >
+          <Icon name="reset" />
+        </button>
+      </header>
+      <ul className="crypto__list">
+        {quotes.map((quote) => {
+          const up = quote.changePercent >= 0
+          return (
+            <li key={quote.id} className="crypto__row">
+              <span className="crypto__symbol">{quote.symbol}</span>
+              {config.showName && config.layout === 'rows' ? (
+                <span className="crypto__name">{quote.name}</span>
+              ) : null}
+              <span className="crypto__price">
+                {quote.price >= 1 ? money.format(quote.price) : smallMoney.format(quote.price)}
               </span>
-            ) : null}
-          </li>
-        )
-      })}
-    </ul>
+              {config.showChange ? (
+                <span className="crypto__change" data-up={up}>
+                  <Icon name={up ? 'chevronUp' : 'chevronDown'} />
+                  {Math.abs(quote.changePercent).toFixed(1)}%
+                </span>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
 

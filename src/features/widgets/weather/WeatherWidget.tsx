@@ -44,8 +44,10 @@ function WeatherWidget({ config, setConfig }: WidgetProps<WeatherConfig>) {
   const locale = resolveLocale(behavior.locale)
   const configured = Boolean(config.place.name)
 
+  const [revision, setRevision] = useState(0)
+
   const weather = useAsyncValue(
-    configured ? `weather:${config.place.latitude},${config.place.longitude},${config.units}` : null,
+    configured ? `weather:${config.place.latitude},${config.place.longitude},${config.units}:${revision}` : null,
     () => fetchWeather(config.place as Place, config.units),
   )
 
@@ -78,8 +80,19 @@ function WeatherWidget({ config, setConfig }: WidgetProps<WeatherConfig>) {
           <span className="weather__label">{look.label}</span>
         </div>
         <div className="weather__meta">
-          <span className="weather__place" title={weather.place}>
-            {weather.place.split(',')[0]}
+          <span className="weather__place-wrap">
+            <span className="weather__place" title={weather.place}>
+              {weather.place.split(',')[0]}
+            </span>
+            <button
+              type="button"
+              className="weather__refresh is-icon-btn"
+              onClick={() => setRevision((r) => r + 1)}
+              title="Refresh weather"
+              aria-label="Refresh weather"
+            >
+              <Icon name="reset" />
+            </button>
           </span>
           {config.showFeelsLike ? (
             <span>Feels {Math.round(weather.current.apparent)}&deg;</span>
