@@ -290,16 +290,23 @@
   aspect-ratio: var(--tile-aspect);
   border-radius: var(--tile-radius);
   border: 1px dashed var(--line);
+  background: rgb(var(--surface-base) / 45%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
   color: var(--fg-subtle);
   font-size: var(--text-lg);
   transition: color var(--dur) var(--ease), border-color var(--dur) var(--ease),
-    background var(--dur) var(--ease);
+    background var(--dur) var(--ease), transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease);
 }
 
 .tile-add:hover {
   color: var(--fg);
   border-color: var(--accent);
-  background: rgb(var(--surface-tint) / 6%);
+  background: rgb(var(--surface-base) / 65%);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 36px rgb(0 0 0 / 32%);
 }
 
 /* Keyboard hints */

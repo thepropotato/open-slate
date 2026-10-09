@@ -7,6 +7,7 @@ import { useSettings } from '@/core/settings/SettingsProvider'
 import { Tile as TileSchema, type Tile as TileModel } from '@/core/settings/schema'
 import { uid } from '@/core/util/id'
 import { allBrands, hostOf, resolveBrand, type Brand } from './brand'
+import { formatHostTitle } from './title'
 import { ROOT, foldersIn, pageIds, pageName } from './folders'
 import { useTileVisual } from './useTileVisual'
 import './TileEditor.css'
@@ -199,7 +200,7 @@ export function TileEditor({
                 <TextInput
                   value={draft.title}
                   onChange={(title) => patch({ title })}
-                  placeholder="Auto"
+                  placeholder={autoBrand?.title || formatHostTitle(hostOf(normalisedUrl)) || 'Auto'}
                 />
               </Row>
             </>

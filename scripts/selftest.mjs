@@ -282,6 +282,18 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('brand: monogram from a host', monogram('https://github.com'), 'GI')
 }
 
+/* ------------------------------------------------------------- tile titles */
+
+{
+  const { formatHostTitle } = await load('features/tiles/title.ts')
+  check('title: clean domain', formatHostTitle('linear.com'), 'Linear')
+  check('title: clean subdomain', formatHostTitle('app.linear.com'), 'Linear')
+  check('title: compound tld', formatHostTitle('my-site.co.uk'), 'My Site')
+  check('title: hyphenated domain', formatHostTitle('super-cool-tool.io'), 'Super Cool Tool')
+  check('title: uppercase acronym', formatHostTitle('my-api.dev'), 'My API')
+  check('title: empty', formatHostTitle(''), '')
+}
+
 /* ----------------------------------------------------- standard widget sizes */
 
 {
