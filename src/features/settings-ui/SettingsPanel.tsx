@@ -14,18 +14,22 @@ import './SettingsPanel.css'
 // navigates here rather than sliding a narrower second copy over the page.
 export function SettingsPanel({
   sections = allSections,
+  initialSection,
   onClose,
   footer,
   preview = true,
 }: {
   sections?: Section[]
+  initialSection?: string
   onClose?: () => void
   footer?: React.ReactNode
   /** Shows the live preview column. Dropped on a narrow window by the stylesheet. */
   preview?: boolean
 }) {
   const settings = useDraftSettings()
-  const [activeId, setActiveId] = useState(sections[0]?.id ?? '')
+  const [activeId, setActiveId] = useState(
+    () => (initialSection && sections.some((s) => s.id === initialSection) ? initialSection : sections[0]?.id ?? ''),
+  )
   const [query, setQuery] = useState('')
 
   useEffect(() => {
