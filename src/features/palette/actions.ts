@@ -22,6 +22,7 @@ export function buildActions(
   actions: SettingsActions,
   /** Opens settings in place; falls back to the options page when absent. */
   onOpenSettings?: () => void,
+  onArrange?: () => void,
 ): PaletteAction[] {
   const { update, set, reset } = actions
 
@@ -35,6 +36,17 @@ export function buildActions(
   })
 
   const list: PaletteAction[] = [
+    ...(onArrange
+      ? [
+          {
+            id: 'arrange:toggle',
+            title: 'Arrange the page',
+            icon: 'drag' as const,
+            keywords: 'arrange layout widgets tiles move reorder edit customize',
+            run: onArrange,
+          },
+        ]
+      : []),
     {
       id: 'settings',
       title: 'Open settings',

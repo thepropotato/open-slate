@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Icon } from '@/core/icons'
-import { useAsyncValue } from '@/core/hooks'
+import { useAsyncValue, useClosing } from '@/core/hooks'
 import { openUrl, searchDefault } from '@/core/platform/browser'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { asDestination } from '@/features/search/destination'
@@ -15,11 +15,14 @@ import './CommandPalette.css'
 export function CommandPalette({
   onClose,
   onOpenSettings,
+  onArrange,
 }: {
   onClose: () => void
   /** Opens settings in place; falls back to the options page when absent. */
   onOpenSettings?: () => void
+  onArrange?: () => void
 }) {
+  const { closing, handleClose } = useClosing(onClose, 150)
   const settings = useSettings()
   const actions = useSettingsActions()
   const [query, setQuery] = useState('')
@@ -30,8 +33,8 @@ export function CommandPalette({
   const needle = query.trim().toLowerCase()
 
   const commands = useMemo(
-    () => buildActions(settings, actions, onOpenSettings),
-    [settings, actions, onOpenSettings],
+    () => buildActions(settings, actions, onOpenSettings, onArrange),
+    [settings, actions, onOpenSettings, onArrange],
   )
 
   const local = useAsyncValue(needle.length > 0 ? `palette:${needle}` : null, () =>
@@ -79,7 +82,7 @@ export function CommandPalette({
   const commit = (index: number) => {
     const item = results[index]
     if (!item) return
-    onClose()
+    handleClose()
     void item.run()
   }
 
@@ -95,12 +98,12 @@ export function CommandPalette({
       commit(active)
     } else if (event.key === 'Escape') {
       event.preventDefault()
-      onClose()
+      handleClose()
     }
   }
 
   return (
-    <div className="palette__scrim" onClick={onClose} role="presentation">
+    <div className="palette__scrim" onClick={handleClose} role="presentation" data-closing={closing || undefined}>
       <div
         className="palette surface"
         role="dialog"
