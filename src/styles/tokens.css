@@ -172,21 +172,26 @@ video {
   background: var(--surface);
   border: var(--surface-border);
   box-shadow: var(--shadow);
+  backdrop-filter: blur(var(--surface-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(160%);
 }
 
 [data-surface='glass'] .surface {
   backdrop-filter: blur(var(--surface-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(160%);
 }
 
 [data-surface='solid'] .surface {
   background: var(--bg-elevated);
   backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 [data-surface='outline'] .surface {
   background: rgb(var(--surface-base) / 15%);
   box-shadow: none;
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 [data-surface='none'] .surface {
@@ -194,6 +199,7 @@ video {
   border: 0;
   box-shadow: none;
   backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* Per-element overrides. Same specificity as the ancestor rules, so must stay after them. */
@@ -202,6 +208,7 @@ video {
   border: var(--surface-border);
   box-shadow: var(--shadow);
   backdrop-filter: blur(var(--surface-blur)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(160%);
 }
 
 .surface[data-scope='solid'] {
@@ -209,6 +216,7 @@ video {
   border: var(--surface-border);
   box-shadow: var(--shadow);
   backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 .surface[data-scope='outline'] {
@@ -216,6 +224,7 @@ video {
   border: var(--surface-border);
   box-shadow: none;
   backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .surface[data-scope='none'] {
@@ -223,6 +232,7 @@ video {
   border: 0;
   box-shadow: none;
   backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* `overflow-x` must be stated: the spec promotes a `visible` axis to `auto` beside an `auto` one. */
@@ -231,7 +241,7 @@ video {
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--fg-subtle) transparent;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
 }
 
 .sr-only {

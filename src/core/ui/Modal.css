@@ -34,14 +34,23 @@
 }
 
 .modal__close {
-  --icon-btn: 26px;
+  --icon-btn: 28px;
   color: var(--fg-subtle);
   border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--dur-fast) var(--ease),
+              background var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease);
 }
 
 .modal__close:hover {
   color: var(--fg);
-  background: rgb(var(--surface-tint) / 10%);
+  background: rgb(var(--surface-tint) / 12%);
+  transform: scale(1.08);
+}
+
+.modal__close:active {
+  transform: scale(0.94);
 }
 
 .modal__body {
@@ -66,4 +75,63 @@
   font-size: var(--text-sm);
   color: var(--fg-muted);
   line-height: 1.5;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+}
+
+@keyframes modal-backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-backdrop-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.modal {
+  animation: modal-in var(--dur) var(--ease);
+}
+
+.modal::backdrop {
+  background: rgb(0 0 0 / 52%);
+  backdrop-filter: blur(4px);
+  animation: modal-backdrop-in var(--dur) var(--ease);
+}
+
+.modal[data-closing='true'] {
+  animation: modal-out 0.15s var(--ease) forwards;
+  pointer-events: none;
+}
+
+.modal[data-closing='true']::backdrop {
+  animation: modal-backdrop-out 0.15s var(--ease) forwards;
 }
