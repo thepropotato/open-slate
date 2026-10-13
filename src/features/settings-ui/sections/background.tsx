@@ -1,5 +1,23 @@
 import { MediaLibrary } from '@/features/background/MediaLibrary'
+import { WallpaperPresets } from '@/features/background/WallpaperPresets'
+import { presetIdOf } from '@/features/background/presets'
+import { useSetting } from '@/core/settings/SettingsProvider'
+import { TextInput } from '@/core/ui'
 import type { Section } from '../types'
+
+/** The address box stays available over a built-in wallpaper; it just starts empty. */
+function ImageAddress() {
+  const [url, setUrl] = useSetting<string>('background.image.url')
+  const builtIn = presetIdOf(url) !== null
+  return (
+    <TextInput
+      value={builtIn ? '' : url}
+      onChange={setUrl}
+      placeholder={builtIn ? 'Using a built-in wallpaper. Paste a link for your own.' : 'https://…/photo.jpg'}
+      wide
+    />
+  )
+}
 
 const usesMedia = (type: string) => type === 'image' || type === 'video' || type === 'slideshow'
 
@@ -8,6 +26,18 @@ export const backgroundSection: Section = {
   label: 'Wallpaper',
   icon: 'image',
   groups: [
+    {
+      id: 'presets',
+      label: 'Built-in',
+      help: 'Drawn for Open Slate. They ship with the extension, so nothing is downloaded.',
+      fields: [
+        {
+          label: 'Wallpapers',
+          control: { kind: 'custom', bare: true, render: () => <WallpaperPresets /> },
+          keywords: 'wallpaper preset built-in dawn dusk night mist landscape',
+        },
+      ],
+    },
     {
       id: 'source',
       fields: [
@@ -113,10 +143,10 @@ export const backgroundSection: Section = {
       when: (s) => s.background.type === 'image' || s.background.type === 'video',
       fields: [
         {
-          path: 'background.image.url',
           label: 'Image address',
-          help: 'Takes priority over a library selection.',
-          control: { kind: 'text', placeholder: 'https://…/photo.jpg', wide: true },
+          help: 'Takes priority over a library selection and replaces a built-in wallpaper.',
+          control: { kind: 'custom', stacked: true, render: () => <ImageAddress /> },
+          keywords: 'image url link address photo remote',
           when: (s) => s.background.type === 'image',
         },
         {

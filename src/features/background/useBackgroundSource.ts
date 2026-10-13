@@ -3,6 +3,8 @@ import { isExtension, localStore } from '@/core/platform/browser'
 import { useAsyncValue } from '@/core/hooks'
 import { mediaStore } from '@/core/storage/blobStore'
 import type { Background } from '@/core/settings/schema'
+import { useResolvedMode } from '@/core/theme/ThemeProvider'
+import { resolveWallpaperUrl } from '@/core/wallpapers'
 import { CURSOR_KEY, pickForTab } from './slideshow'
 
 export interface BackgroundSource {
@@ -18,8 +20,9 @@ export interface BackgroundSource {
  */
 export function useBackgroundSource(background: Background): BackgroundSource {
   const cursor = useSlideshowCursor(background)
+  const mode = useResolvedMode()
 
-  const target = useMemo(() => resolveTarget(background, cursor), [background, cursor])
+  const target = useMemo(() => resolveTarget(background, cursor, mode), [background, cursor, mode])
 
   const blobUrl = useAsyncValue(target.blobId ? `bg:${target.blobId}` : null, () =>
     mediaStore.url(target.blobId),
@@ -35,9 +38,9 @@ interface Target {
   blobId: string
 }
 
-function resolveTarget(background: Background, cursor: number): Target {
+function resolveTarget(background: Background, cursor: number, mode: 'light' | 'dark'): Target {
   if (background.type === 'image') {
-    return { kind: 'image', url: background.image.url, blobId: background.image.blobId }
+    return { kind: 'image', url: resolveWallpaperUrl(background.image.url, mode), blobId: background.image.blobId }
   }
   if (background.type === 'video') {
     return { kind: 'video', url: background.video.url, blobId: background.video.blobId }
@@ -45,7 +48,7 @@ function resolveTarget(background: Background, cursor: number): Target {
   if (background.type === 'slideshow') {
     const slides = [
       ...background.slideshow.blobIds.map((id) => ({ blobId: id, url: '' })),
-      ...background.slideshow.urls.map((url) => ({ blobId: '', url })),
+      ...background.slideshow.urls.map((url) => ({ blobId: '', url: resolveWallpaperUrl(url, mode) })),
     ]
     if (slides.length === 0) return { kind: 'none', url: '', blobId: '' }
     const slide = slides[((cursor % slides.length) + slides.length) % slides.length]
