@@ -13,6 +13,14 @@
   "chrome_url_overrides": {
     "newtab": "newtab.html"
   },
+  "action": {
+    "default_title": "Add this page to Open Slate",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
   "options_page": "options.html",
   "background": {
     "service_worker": "background.js",
@@ -24,6 +32,7 @@
     "favicon",
     "alarms",
     "topSites",
+    "activeTab",
     "identity",
     "search"
   ],
@@ -60,5 +69,13 @@
       ],
       "extension_ids": []
     }
-  ]
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+S"
+      },
+      "description": "Add this page as a tile"
+    }
+  }
 }

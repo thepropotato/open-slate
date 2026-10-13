@@ -9,7 +9,7 @@ const FALLBACK: Array<[url: string, title: string]> = [
   ['https://mail.google.com', 'Gmail'],
   ['https://www.youtube.com', 'YouTube'],
   ['https://github.com', 'GitHub'],
-  ['https://www.google.com/maps', 'Maps'],
+  ['https://maps.google.com', 'Maps'],
   ['https://calendar.google.com', 'Calendar'],
   ['https://drive.google.com', 'Drive'],
   ['https://www.reddit.com', 'Reddit'],
