@@ -14,6 +14,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { footer, nav, pageHead } from './site-shell.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -111,83 +112,33 @@ function toHtmlSection({ version, body }) {
   return out.join('\n    ')
 }
 
-/**
- * Renders the whole changelog as a page, borrowing the privacy page's own
- * stylesheet so the two cannot drift apart.
- */
+/** Renders the whole changelog as a page. */
 function renderPage(sections) {
-  const privacy = readFileSync(join(root, 'marketing/site/privacy.html'), 'utf8')
-  const style = privacy.slice(privacy.indexOf('<style>'), privacy.indexOf('</style>') + 8)
-
   const released = sections.filter((s) => s.version !== 'Unreleased')
   const latest = released[0]?.version ?? ''
 
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Open Slate: changelog</title>
-<meta name="description" content="What changed in each release of the Open Slate Chrome extension.">
-<link rel="canonical" href="https://openslate.byvenu.com/changelog">
-<meta name="robots" content="index, follow">
-
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://openslate.byvenu.com/changelog">
-<meta property="og:title" content="Open Slate: changelog">
-<meta property="og:description" content="What changed in each release of the Open Slate Chrome extension.">
-<meta property="og:image" content="https://openslate.byvenu.com/img/og.png">
-<meta property="og:site_name" content="Open Slate">
-<meta name="twitter:card" content="summary_large_image">
-
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-${style}
-<style>
-/* The version headings carry the weight here, so they are larger than the
-   uppercase section labels the privacy page styles its headings as. */
-main h2{
-  font:400 clamp(1.5rem,4vw,1.875rem)/1.2 var(--serif);text-transform:none;
-  letter-spacing:-.01em;color:var(--head);
-  border-top:1px solid var(--border);padding-top:1.5rem;
-  margin:clamp(2.25rem,6vw,3rem) 0 .25rem;
-}
-main h2:first-child{border-top:0;padding-top:0;margin-top:1rem}
-main h3{
-  font:600 .8125rem/1.3 var(--sans);text-transform:uppercase;letter-spacing:.08em;
-  color:var(--muted);margin:1.375rem 0 .5rem;
-}
-code{
-  font-size:.9em;background:var(--accent-soft);color:var(--head);
-  padding:.1em .35em;border-radius:.3rem;
-}
-</style>
-</head>
-<body>
-
-<div class="wrap">
-  <header>
-    <a class="back" href="/">&larr; Open Slate</a>
+  return `${pageHead({
+    title: 'Open Slate: changelog',
+    description: 'What changed in each release of the Open Slate Chrome extension.',
+    path: 'changelog',
+  })}
+${nav}
+<main>
+<div class="wrap narrow">
+  <header class="doc-head">
+    <a class="btn ghost sm back" href="/"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Back to home</a>
     <h1>Changelog</h1>
     <p class="lede">What changed in each release, newest first.</p>
-    ${latest ? `<p class="updated">Latest release ${escape(latest)}</p>` : ''}
+    ${latest ? `<p class="updated">latest release ${escape(latest)}</p>` : ''}
   </header>
 
-  <main>
+  <div class="doc release">
     ${sections.map(toHtmlSection).join('\n\n    ')}
-  </main>
-
-  <footer>
-    <a href="/">Open Slate</a>
-    <a href="https://github.com/thepropotato/open-slate">Source</a>
-    <a href="/privacy">Privacy policy</a>
-    <a href="https://github.com/thepropotato/open-slate/blob/main/LICENSE">MIT licence</a>
-  </footer>
+  </div>
 </div>
+</main>
 
+${footer}
 </body>
 </html>
 `
