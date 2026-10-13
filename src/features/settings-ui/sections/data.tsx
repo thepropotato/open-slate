@@ -1,4 +1,5 @@
 import { DataPanel } from '../DataPanel'
+import { SnapshotList } from '../SnapshotList'
 import { SyncPanel } from '../SyncPanel'
 import type { Section } from '../types'
 
@@ -15,6 +16,18 @@ export const dataSection: Section = {
           label: 'Cross-device sync',
           control: { kind: 'custom', render: () => <SyncPanel />, bare: true },
           keywords: 'sync devices chrome profile push pull',
+        },
+      ],
+    },
+    {
+      id: 'history',
+      label: 'Recent versions',
+      help: 'Your settings as they were before each save, so a bad experiment can be undone.',
+      fields: [
+        {
+          label: 'Restore an earlier version',
+          control: { kind: 'custom', render: () => <SnapshotList />, bare: true },
+          keywords: 'undo history snapshot restore previous version revert',
         },
       ],
     },

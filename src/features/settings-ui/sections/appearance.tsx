@@ -18,9 +18,9 @@ export const appearanceSection: Section = {
           control: {
             kind: 'segmented',
             options: [
-              { value: 'auto', label: 'Auto', icon: 'auto' },
-              { value: 'light', label: 'Light', icon: 'light' },
-              { value: 'dark', label: 'Dark', icon: 'dark' },
+              { value: 'auto', title: 'Auto', icon: 'auto' },
+              { value: 'light', title: 'Light', icon: 'light' },
+              { value: 'dark', title: 'Dark', icon: 'dark' },
             ],
           },
         },
@@ -106,7 +106,7 @@ export const appearanceSection: Section = {
         {
           path: 'appearance.fontFamily',
           label: 'Font',
-          help: 'Only locally installed fonts, because a new tab should never wait on a download.',
+          help: 'Every font here ships with the extension, so a new tab never waits on a download.',
           control: {
             kind: 'select',
             options: fontOptions.map((f) => ({ value: f.id, label: f.label })),

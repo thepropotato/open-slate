@@ -1,0 +1,92 @@
+.scenes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  width: 100%;
+}
+
+.scenes__add {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.scenes__empty,
+.scenes__note {
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+}
+
+.scenes__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scenes__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 4%);
+}
+
+.scenes__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+}
+
+.scenes__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.scenes__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-sm);
+  color: var(--fg-muted);
+}
+
+.scenes__schedule {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.scenes__days {
+  display: flex;
+  gap: 4px;
+}
+
+.scenes__days button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  color: var(--fg-muted);
+  font-size: var(--text-xs);
+  font-weight: 650;
+}
+
+.scenes__days button[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--accent-fg);
+}
+
+.scenes__times {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+}

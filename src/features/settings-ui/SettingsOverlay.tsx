@@ -55,7 +55,7 @@ export function SettingsOverlay({
         if (event.target === ref.current) handleClose()
       }}
     >
-      <SettingsPanel initialSection={initialSection} onClose={handleClose} />
+      <SettingsPanel layout="drawer" initialSection={initialSection} onClose={handleClose} />
     </dialog>
   )
 }

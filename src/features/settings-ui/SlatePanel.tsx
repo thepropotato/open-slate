@@ -16,6 +16,7 @@ import { SLATE_PRESETS } from '@/core/settings/slatePresets'
 import { getWidget } from '@/core/widgets/registry'
 import { openUrl } from '@/core/platform/browser'
 import { uid } from '@/core/util/id'
+import { ScenesPanel } from './ScenesPanel'
 import './SlatePanel.css'
 
 /**
@@ -90,6 +91,14 @@ export function SlatePanel() {
           <Icon name={message.kind === 'ok' ? 'check' : 'warning'} /> {message.text}
         </p>
       ) : null}
+
+      <Row
+        title="Your scenes"
+        help="Save the layout you have under a name, switch between layouts, or have one apply itself at set times. Tiles, notes and tasks are untouched."
+        stacked
+      >
+        <ScenesPanel />
+      </Row>
 
       <Row title="Start from a slate" help="A ready-made slate to begin from. Replaces your widgets and the shape of the page; tiles, notes and tasks are untouched." stacked>
         <div className="slatep__presets">

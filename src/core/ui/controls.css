@@ -1,25 +1,29 @@
 /* Generic form primitives. */
 
 .ctl-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  /* Wraps rather than squeezes: a control too wide to sit beside its label drops below it. */
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space);
+  column-gap: var(--space);
+  row-gap: var(--space-xs);
   padding: var(--space-sm) 0;
   min-height: 40px;
 }
 
-.ctl-row--stacked {
-  grid-template-columns: 1fr;
+.ctl-row--stacked .ctl-row__label {
+  flex-basis: 100%;
 }
 
 .ctl-row--stacked .ctl-row__control {
-  justify-self: stretch;
+  flex: 1 1 100%;
+  margin-left: 0;
   width: 100%;
 }
 
 .ctl-row__label {
   display: flex;
+  flex: 1 1 9rem;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
@@ -38,9 +42,12 @@
 
 .ctl-row__control {
   display: flex;
+  flex: 0 1 auto;
   align-items: center;
   gap: var(--space-xs);
-  justify-self: end;
+  min-width: 0;
+  max-width: 100%;
+  margin-left: auto;
 }
 
 /* Toggle */
@@ -123,6 +130,38 @@
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
+}
+
+/* A dropdown says so: a chevron sits over the right edge of the field. */
+.ctl-selectwrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+
+.ctl-selectwrap .ctl-select {
+  padding-right: 32px;
+  text-overflow: ellipsis;
+}
+
+.ctl-selectwrap__chev {
+  position: absolute;
+  right: 12px;
+  pointer-events: none;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+
+.ctl-seg--icons .ctl-seg__item {
+  justify-content: center;
+  height: 30px;
+  padding: 0;
+  aspect-ratio: 1;
+}
+
+.ctl-seg--icons .ctl-seg__item .icon {
+  font-size: 14px;
 }
 
 .ctl-seg__item {
