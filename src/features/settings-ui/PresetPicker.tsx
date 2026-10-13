@@ -28,8 +28,12 @@ export function PresetPicker() {
               className="preset__swatch"
               style={{ background: palette.bg, borderColor: palette.line }}
             >
-              <span className="preset__dot" style={{ background: palette.accent }} />
-              <span className="preset__bar" style={{ background: palette.fgMuted }} />
+              <span className="preset__card" style={{ background: palette.bgElevated }}>
+                <span className="preset__dot" style={{ background: palette.accent }} />
+                <span className="preset__bar" style={{ background: palette.fg }} />
+                <span className="preset__bar preset__bar--short" style={{ background: palette.fgMuted }} />
+              </span>
+              <span className="preset__pill" style={{ background: palette.accent }} />
               {active ? (
                 <span className="preset__check" style={{ color: palette.accent }}>
                   <Icon name="check" />

@@ -169,7 +169,8 @@ video {
 /* Shared surface treatments, selected by `appearance.surface`. */
 .surface {
   border-radius: var(--radius);
-  background: var(--surface);
+  /* A faint tint over the fill keeps a panel visible when its fill is close to the page colour. */
+  background: linear-gradient(rgb(var(--surface-tint) / 5%), rgb(var(--surface-tint) / 5%)), var(--surface);
   border: var(--surface-border);
   box-shadow: var(--shadow);
   backdrop-filter: blur(var(--surface-blur)) saturate(160%);
@@ -204,7 +205,7 @@ video {
 
 /* Per-element overrides. Same specificity as the ancestor rules, so must stay after them. */
 .surface[data-scope='glass'] {
-  background: var(--surface);
+  background: linear-gradient(rgb(var(--surface-tint) / 5%), rgb(var(--surface-tint) / 5%)), var(--surface);
   border: var(--surface-border);
   box-shadow: var(--shadow);
   backdrop-filter: blur(var(--surface-blur)) saturate(160%);

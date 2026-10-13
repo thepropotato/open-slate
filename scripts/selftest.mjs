@@ -156,6 +156,10 @@ const truthy = (name, value) => check(name, Boolean(value), true)
     Array.from({ length: 50 }, () => pickForTab(null, 4, true)).every((i) => i >= 0 && i < 4),
   )
 
+  const fontOf = (family) => migrate({ version: 6, appearance: { fontFamily: family } }).appearance.fontFamily
+  check('migrate: Grotesk becomes Inter', fontOf('grotesk'), 'inter')
+  check('migrate: Condensed returns to the system font', fontOf('condensed'), 'system')
+  check('migrate: other fonts are kept', fontOf('mono'), 'mono')
   check('migrate: empty gives defaults', migrate(undefined).appearance.mode, 'auto')
   check('migrate: null gives defaults', migrate(null).tiles.labelVisibility, 'hover')
   check('migrate: unknown fields are dropped', migrate({ nonsense: true }).version, SETTINGS_VERSION)
@@ -270,6 +274,34 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   const after = contrast(hexToRgb(ensureContrast('#181717', '#0b0d12', 3)), hexToRgb('#0b0d12'))
   truthy('colour: contrast is raised', after > before)
   truthy('colour: contrast reaches the target', after >= 3)
+
+  const { themePresets } = await load('core/theme/presets.ts')
+  for (const preset of themePresets) {
+    for (const mode of ['dark', 'light']) {
+      const { bg, fgMuted, fgSubtle } = preset[mode]
+      truthy(`theme: ${preset.id} ${mode} secondary text reads`, contrast(hexToRgb(fgMuted), hexToRgb(bg)) >= 4.5)
+      truthy(`theme: ${preset.id} ${mode} tertiary text reads`, contrast(hexToRgb(fgSubtle), hexToRgb(bg)) >= 4.5)
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ scenes */
+{
+  const { sceneFor } = await load('core/settings/scenes.ts')
+  const scene = (days, from, to) => ({ id: 's', name: 'S', code: 'x', schedule: { days, from, to } })
+  const at = (day, hh, mm) => new Date(2026, 9, 11 + day, hh, mm) // 11 October 2026 is a Sunday
+
+  const work = [scene([1, 2, 3, 4, 5], '09:00', '18:00')]
+  check('scenes: weekday inside the window', sceneFor(work, at(1, 10, 0))?.id, 's')
+  check('scenes: weekday before the window', sceneFor(work, at(1, 8, 59)), null)
+  check('scenes: end of the window is exclusive', sceneFor(work, at(1, 18, 0)), null)
+  check('scenes: weekend is outside', sceneFor(work, at(0, 10, 0)), null)
+
+  const night = [scene([5], '22:00', '02:00')] // Fridays, running past midnight
+  check('scenes: overnight evening', sceneFor(night, at(5, 23, 0))?.id, 's')
+  check('scenes: overnight small hours belong to the day before', sceneFor(night, at(6, 1, 0))?.id, 's')
+  check('scenes: overnight not on the wrong morning', sceneFor(night, at(5, 1, 0)), null)
+  check('scenes: no schedule never matches', sceneFor([{ id: 'x', name: 'X', code: 'x', schedule: null }], at(1, 10, 0)), null)
 }
 
 /* ------------------------------------------------------------------ brands */

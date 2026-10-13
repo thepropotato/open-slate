@@ -1,6 +1,7 @@
 import { useLayoutEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react'
-import { useSettings } from '@/core/settings/SettingsProvider'
+import { useDraftSettings } from '@/core/settings/SettingsProvider'
 import type { Settings } from '@/core/settings/schema'
+import './fontFaces.css'
 import { accentStore } from './accentStore'
 import type { Palette } from './presets'
 import {
@@ -23,19 +24,20 @@ function usePrefersDark(): boolean {
   )
 }
 
+// The theme follows the draft while settings is open, so fonts, palettes and corners preview live.
 export function useResolvedMode(): 'light' | 'dark' {
-  const { appearance } = useSettings()
+  const { appearance } = useDraftSettings()
   return resolveMode(appearance.mode, usePrefersDark())
 }
 
 /** For the rare case a component needs real colour maths. */
 export function usePalette(): Palette {
-  const { appearance } = useSettings()
+  const { appearance } = useDraftSettings()
   return resolvePalette(appearance, useResolvedMode())
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const { appearance } = useSettings()
+  const { appearance } = useDraftSettings()
   const mode = useResolvedMode()
   const sampledAccent = useSyncExternalStore(accentStore.subscribe, accentStore.get, () => null)
 
@@ -69,7 +71,7 @@ export function ThemeScope({
   className,
   children,
 }: {
-  appearance: ReturnType<typeof useSettings>['appearance']
+  appearance: Settings['appearance']
   className?: string
   children: ReactNode
 }) {

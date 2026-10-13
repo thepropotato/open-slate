@@ -14,6 +14,15 @@ const migrations: Record<number, Migration> = {
   2: separateOverlappingWidgets,
   3: toSingleLayout,
   5: slideshowOnNewTabIsItsOwnSwitch,
+  6: retireOldFonts,
+}
+
+// 6 -> 7: the font list was rebuilt around bundled faces. "Grotesk" already led with Inter, which
+// is now bundled, and "Condensed" has no bundled counterpart, so it returns to the system font.
+function retireOldFonts(raw: Record<string, unknown>): Record<string, unknown> {
+  const appearance = (raw.appearance ?? {}) as Record<string, unknown>
+  const replacement = { grotesk: 'inter', condensed: 'system' }[String(appearance.fontFamily)]
+  return replacement ? { ...raw, appearance: { ...appearance, fontFamily: replacement } } : raw
 }
 
 // 5 -> 6: "every new tab" was the zero end of the interval slider, and zero is
