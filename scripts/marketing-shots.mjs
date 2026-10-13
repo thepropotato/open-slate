@@ -38,6 +38,11 @@ const siteDir = resolve('marketing/site/img')
 mkdirSync(storeDir, { recursive: true })
 mkdirSync(siteDir, { recursive: true })
 
+/** Every shot is taken at this fixed local time, so the clock, calendar and ages read as a normal morning. */
+const SHOT_TIME = new Date()
+SHOT_TIME.setHours(9, 41, 0, 0)
+const shotNow = () => SHOT_TIME.getTime()
+
 /** The store's required screenshot size. */
 const SIZE = { width: 1280, height: 800 }
 
@@ -161,7 +166,8 @@ const FOLDER_TILES = [
  * none - so the check always fails on one.
  */
 function demoCalendarIcs() {
-  const d = new Date()
+  const d = new Date(SHOT_TIME)
+  const now = d.getHours()
   const stamp = (day, h, m) => {
     const t = new Date(d.getFullYear(), d.getMonth(), d.getDate() + day, h, m)
     const p = (n) => String(n).padStart(2, '0')
@@ -174,9 +180,10 @@ function demoCalendarIcs() {
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Open Slate//Marketing//EN',
-    ...event('1', 'Design review', stamp(0, 18, 0), stamp(0, 19, 0)),
-    ...event('2', 'Store listing walkthrough', stamp(0, 20, 0), stamp(0, 21, 0)),
-    ...event('3', 'Ship it', stamp(0, 22, 0), stamp(0, 22, 30)),
+    // Relative to now: the day view opens at the current hour, so fixed times can fall outside it.
+    ...event('1', 'Design review', stamp(0, now + 1, 0), stamp(0, now + 2, 0)),
+    ...event('2', 'Store listing walkthrough', stamp(0, now + 2, 30), stamp(0, now + 3, 30)),
+    ...event('3', 'Ship it', stamp(0, now + 4, 0), stamp(0, now + 4, 30)),
     // A few days either side, so the month grid carries dots rather than one.
     ...event('4', 'Retro', stamp(1, 16, 0), stamp(1, 17, 0)),
     ...event('5', 'Release notes', stamp(2, 11, 0), stamp(2, 12, 0)),
@@ -192,7 +199,7 @@ function demoFeedXml() {
       '<item>',
       `<title>${title}</title>`,
       '<link>https://example.com/</link>',
-      `<pubDate>${new Date(Date.now() - mins * 60000).toUTCString()}</pubDate>`,
+      `<pubDate>${new Date(shotNow() - mins * 60000).toUTCString()}</pubDate>`,
       '</item>',
     ].join('')
 
@@ -403,23 +410,23 @@ const GALLERY = [
  */
 const USAGE_READINGS = {
   claude: {
-    at: Date.now() - 4 * 60 * 1000,
+    at: shotNow() - 4 * 60 * 1000,
     usage: {
       windows: [],
       spend: {
         used: 403.66,
         limit: 500,
         currency: 'USD',
-        resetsAt: new Date(Date.now() + 4.3e8).toISOString(),
+        resetsAt: new Date(shotNow() + 4.3e8).toISOString(),
       },
     },
   },
   chatgpt: {
-    at: Date.now() - 11 * 60 * 1000,
+    at: shotNow() - 11 * 60 * 1000,
     usage: {
       windows: [
-        { label: 'Weekly', percent: 94, resetsAt: new Date(Date.now() + 3.4e8).toISOString() },
-        { label: '5-hour', percent: 12, resetsAt: new Date(Date.now() + 8e6).toISOString() },
+        { label: 'Weekly', percent: 94, resetsAt: new Date(shotNow() + 3.4e8).toISOString() },
+        { label: '5-hour', percent: 12, resetsAt: new Date(shotNow() + 8e6).toISOString() },
       ],
       spend: null,
     },
@@ -576,7 +583,7 @@ const seedSpotifyAuth = async (page) => {
       'spotify:tokens': {
         accessToken: 'shot-access-token',
         refreshToken: 'shot-refresh-token',
-        expiresAt: Date.now() + 3600_000,
+        expiresAt: shotNow() + 3600_000,
       },
     })
   })
@@ -636,7 +643,7 @@ const seedMedia = async (page) => {
           size: blob.size,
           width: 2560,
           height: 1600,
-          addedAt: Date.now(),
+          addedAt: shotNow(),
           blob,
         })
         tx.oncomplete = ok
@@ -740,12 +747,21 @@ const onWallpaper = (extra = {}) => ({
   ...extra,
 })
 
+/** A designed gradient instead of the flat default, so the page has depth behind it. */
+const onGradient = (from, to, angle = 155) => ({
+  type: 'gradient',
+  followTheme: false,
+  gradient: { from, to, angle },
+  vignette: 0.18,
+})
+
 const scenes = [
   /* ------------------------------------------------------------ the page */
   {
     // The one that sells hardest: a real photograph, glass panels over it, and
     // an accent pulled out of the sky. Leads the site and the store listing.
     name: 'wallpaper',
+    fit: false,
     site: 'wallpaper',
     store: true,
     scheme: 'dark',
@@ -778,6 +794,7 @@ const scenes = [
     before: seedTabs(TAB_TITLES),
     seedUsage: true,
     settings: {
+      background: onGradient('#1f3a45', '#0b1217', 150),
       widgets: canvas(DASHBOARD),
       layout: { order: ['search', 'widgets'], viewMode: 'tabs', maxWidth: 1180, paddingY: 22, gap: 18 },
     },
@@ -813,7 +830,7 @@ const scenes = [
     scheme: 'dark',
     origins: [...SPOTIFY_ORIGINS, SPOTIFY_ART],
     stubSpotify: true,
-    clip: '.canvas__grid',
+    fit: '.wframe',
     settings: {
       appearance: { mode: 'dark', surface: 'glass', radius: 18 },
       background: onWallpaper({ dim: 0.55, blur: 10 }),
@@ -839,6 +856,7 @@ const scenes = [
     // the listing is better for showing that it is walked through rather than
     // left as a docs link - the setup is the part people are wary of.
     name: 'connectors',
+    fit: false,
     site: 'connectors',
     scheme: 'dark',
     settings: {},
@@ -874,7 +892,7 @@ const scenes = [
     seedUsage: true,
     // The block itself, not the frame: six tiles centred in a full page leave
     // more empty wallpaper than subject.
-    clip: '.canvas__grid',
+    fit: '.wframe',
     settings: {
       appearance: { mode: 'dark', surface: 'glass', radius: 18 },
       background: onWallpaper({ dim: 0.5, blur: 8 }),
@@ -890,7 +908,8 @@ const scenes = [
     store: true,
     scheme: 'dark',
     settings: {
-      tiles: { items: TILES, width: 168, aspect: 1.6, gap: 16, labelVisibility: 'always', plateStyle: 'tinted' },
+      background: onGradient('#1f3d34', '#0b1512', 150),
+      tiles: { items: TILES, width: 190, aspect: 16 / 9, gap: 18, labelVisibility: 'never', plateStyle: 'tinted', showAddButton: false },
       layout: { order: ['search', 'tiles'], align: 'center' },
       widgets: { enabled: false },
     },
@@ -908,9 +927,9 @@ const scenes = [
         pages: [{ id: 'p-play', name: 'Watch' }],
         pageSwitcher: 'tabs',
         width: 156,
-        aspect: 1.5,
+        aspect: 16 / 9,
         gap: 16,
-        labelVisibility: 'always',
+        labelVisibility: 'never',
         plateStyle: 'tinted',
       },
       layout: { order: ['search', 'tiles'], align: 'center' },
@@ -930,9 +949,9 @@ const scenes = [
       tiles: {
         items: TILES.slice(0, 8),
         width: 168,
-        aspect: 1.6,
+        aspect: 16 / 9,
         gap: 16,
-        labelVisibility: 'always',
+        labelVisibility: 'never',
         plateStyle: 'brand',
         columns: 4,
         showAddButton: false,
@@ -949,10 +968,20 @@ const scenes = [
     name: 'make-it-yours',
     site: 'make-it-yours',
     store: true,
-    scheme: 'light',
+    fit: false,
+    scheme: 'dark',
     settings: {
-      appearance: { mode: 'light', preset: 'paper', radius: 2, surface: 'solid', shadow: 'soft', density: 'comfortable' },
-      tiles: { items: TILES, labelVisibility: 'always', labelPlacement: 'below', plateStyle: 'neutral', aspect: 1.3, width: 152, gap: 18 },
+      appearance: {
+        mode: 'dark',
+        accentSource: 'wallpaper',
+        surface: 'glass',
+        surfaceOpacity: 0.3,
+        surfaceBlur: 22,
+        radius: 22,
+        shadow: 'soft',
+      },
+      background: onWallpaper({ dim: 0.28, vignette: 0.2 }),
+      tiles: { items: TILES, labelVisibility: 'never', plateStyle: 'brand', aspect: 16 / 9, width: 190, gap: 18, showAddButton: false },
       layout: { order: ['search', 'tiles'], align: 'center' },
       widgets: { enabled: false },
     },
@@ -977,6 +1006,7 @@ const scenes = [
   /* -------------------------------------------------------------- search */
   {
     name: 'command-palette',
+    fit: false,
     site: 'command-palette',
     store: true,
     scheme: 'dark',
@@ -986,7 +1016,8 @@ const scenes = [
     before: seedTabsAndHistory(TAB_TITLES),
     seedBrowserData: true,
     settings: {
-      tiles: { items: TILES, width: 168, aspect: 1.6, gap: 16, labelVisibility: 'always' },
+      background: onGradient('#2a2f4a', '#0d1019', 150),
+      tiles: { items: TILES, width: 190, aspect: 16 / 9, gap: 18, labelVisibility: 'never', showAddButton: false },
       layout: { order: ['search', 'tiles'] },
       widgets: { enabled: false },
     },
@@ -1005,6 +1036,7 @@ const scenes = [
   /* ------------------------------------------------------------ settings */
   {
     name: 'settings',
+    fit: false,
     site: 'settings',
     scheme: 'dark',
     settings: {},
@@ -1018,6 +1050,7 @@ const scenes = [
     // library and the adjustment sliders are sitting over something rather
     // than over a gradient and an empty shelf.
     name: 'settings-wallpaper',
+    fit: false,
     site: 'settings-wallpaper',
     scheme: 'dark',
     // Deliberately the blobId route rather than the data URL every other
@@ -1037,6 +1070,7 @@ const scenes = [
     // This is the mode that shows the settings screen cannot fall behind the
     // extension, because both are generated from one declaration.
     name: 'settings-search',
+    fit: false,
     site: 'settings-search',
     scheme: 'dark',
     settings: {},
@@ -1085,6 +1119,48 @@ function patchedExtension(origins, perms) {
   return dir
 }
 
+
+/** Margin around the content in site images, in CSS pixels. */
+const FRAME_PAD = 44
+
+const PAGE_CONTENT = '.searchband, .tiles, .tiles-pages, .page__switch, .wframe'
+
+/** Grows the window to content plus margin, centres the content, then clips to its measured bounds. */
+async function shootFramed(page, apply, { selector, pad, out }) {
+  await page.addStyleTag({ content: '.page__tools{display:none!important}' })
+  await apply({ layout: { align: 'center', paddingY: 0 } })
+
+  const measure = () =>
+    page.evaluate((sel) => {
+      const boxes = [...document.querySelectorAll(sel)]
+        .map((el) => el.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.height > 0)
+      const left = Math.min(...boxes.map((r) => r.left))
+      const top = Math.min(...boxes.map((r) => r.top))
+      const right = Math.max(...boxes.map((r) => r.right))
+      const bottom = Math.max(...boxes.map((r) => r.bottom))
+      return { x: left, y: top, w: right - left, h: bottom - top }
+    }, selector)
+
+  let box = await measure()
+  // 16:10 on every site image, so the showcase swaps them without jumping.
+  let width = box.w + pad * 2
+  let height = box.h + pad * 2
+  if (width / height < 1.6) width = height * 1.6
+  else height = width / 1.6
+  await page.setViewportSize({
+    width: Math.max(SIZE.width, Math.ceil(width)),
+    height: Math.max(SIZE.height, Math.ceil(height)),
+  })
+  await page.waitForTimeout(700)
+  box = await measure()
+
+  await page.screenshot({
+    path: out,
+    clip: { x: box.x + box.w / 2 - width / 2, y: box.y + box.h / 2 - height / 2, width, height },
+  })
+}
+
 /**
  * The tile-plates scene is one settings change shot four times, so it is
  * captured as a strip rather than as four separate scenes.
@@ -1092,7 +1168,8 @@ function patchedExtension(origins, perms) {
 const PLATE_STYLES = ['brand', 'neutral', 'tinted', 'transparent']
 
 for (const scene of scenes) {
-  if (only.length && !only.includes(scene.name)) continue
+  // Default run is the five store scenes, which are also the site's; name others explicitly.
+  if (only.length ? !only.includes(scene.name) : !scene.store) continue
 
   // A scene that needs an optional host gets its own copy of the build with
   // that host promoted to a required permission. `permissions.request` needs a
@@ -1115,6 +1192,8 @@ for (const scene of scenes) {
       colorScheme: scene.scheme,
       args: [`--disable-extensions-except=${ext}`, `--load-extension=${ext}`],
     })
+
+    await context.clock.setFixedTime(SHOT_TIME)
 
     const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'))
     const id = new URL(worker.url()).host
@@ -1165,6 +1244,8 @@ for (const scene of scenes) {
       )
       .catch(() => console.warn('   (a widget was still loading)'))
 
+    await page.addStyleTag({ content: '.page__tools{display:none!important}' })
+
     if (scene.act) await scene.act(page, id)
 
     if (scene.name === 'tile-plates') {
@@ -1174,21 +1255,26 @@ for (const scene of scenes) {
       // would leave the comparison a quarter the size on the page.
       for (const plateStyle of PLATE_STYLES) {
         await apply({ tiles: { plateStyle } })
-        const grid = page.locator('.tiles').first()
         const out = join(siteDir, `plate-${plateStyle}@2x.png`)
-        await grid.screenshot({ path: out })
+        await shootFramed(page, apply, { selector: '.tiles', pad: 40, out })
         console.log(out.replace(process.cwd() + '/', ''))
       }
     } else {
       const out = isStore
         ? join(storeDir, `${scene.name}.png`)
         : join(siteDir, `${scene.site}@2x.png`)
-      // A scene may name one element to shoot instead of the whole frame, for
-      // a subject that reads better tight than centred in a full page. The
-      // canvas always reserves an empty row below the last widget as drag
-      // room, so a short arrangement never sits optically centred in a frame.
-      const target = scene.clip ? page.locator(scene.clip).first() : page
-      await target.screenshot({ path: out })
+      // Store shots keep the exact 1280x800 frame. Site shots are framed around
+      // their content (see `shootFramed`); `fit: false` leaves a scene as the
+      // full window, for pages that are a whole interface rather than a subject.
+      if (isStore || scene.fit === false) {
+        await page.screenshot({ path: out })
+      } else {
+        await shootFramed(page, apply, {
+          selector: scene.fit ?? PAGE_CONTENT,
+          pad: scene.pad ?? FRAME_PAD,
+          out,
+        })
+      }
       console.log(out.replace(process.cwd() + '/', ''))
     }
 
