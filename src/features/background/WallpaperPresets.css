@@ -1,0 +1,74 @@
+.wp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.wp {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-align: center;
+}
+
+.wp__thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius-sm);
+  background-size: cover;
+  background-position: center;
+  border: 1px solid var(--line);
+  transition: transform var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+
+.wp:hover .wp__thumb {
+  transform: translateY(-2px);
+}
+
+.wp[aria-pressed='true'] .wp__thumb {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.wp__check {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-size: 11px;
+}
+
+.wp__label {
+  color: var(--fg-muted);
+  font-size: 12px;
+}
+
+/* Half Dawn, half Mist: the wallpaper that follows light and dark. */
+.wp__thumb--auto {
+  overflow: hidden;
+}
+
+.wp__thumb--auto::before,
+.wp__thumb--auto::after {
+  content: '';
+  position: absolute;
+  inset: 0 50% 0 0;
+  background-size: 200% 100%;
+  background-position: left;
+}
+
+.wp__thumb--auto::before {
+  background-image: var(--wp-dark);
+}
+
+.wp__thumb--auto::after {
+  inset: 0 0 0 50%;
+  background-image: var(--wp-light);
+  background-position: right;
+}
