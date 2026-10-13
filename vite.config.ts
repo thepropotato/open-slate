@@ -23,6 +23,7 @@ export default defineConfig({
         options: resolve(import.meta.dirname, 'options.html'),
         setup: resolve(import.meta.dirname, 'setup.html'),
         slate: resolve(import.meta.dirname, 'slate.html'),
+        popup: resolve(import.meta.dirname, 'popup.html'),
         background: resolve(import.meta.dirname, 'src/background/service-worker.ts'),
       },
       output: {
