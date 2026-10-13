@@ -1,0 +1,125 @@
+.dock {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: var(--z-overlay);
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-base) / 72%);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+  transition: opacity var(--dur) var(--ease);
+}
+
+/* Faint rather than gone, so the controls stay findable without sitting over the page. */
+.dock[data-idle='true']:not(:hover):not(:focus-within) {
+  opacity: 0.3;
+}
+
+.dock__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  color: var(--fg);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.dock__btn:hover {
+  background: rgb(var(--surface-tint) / 12%);
+}
+
+.dock__btn[data-hot='true'] {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.dock__btn .icon {
+  font-size: 14px;
+}
+
+/* Labels open sideways when the bar is hovered, and stay for the lit Done button. */
+.dock__label {
+  max-width: 0;
+  margin-left: 0;
+  overflow: hidden;
+  opacity: 0;
+  white-space: nowrap;
+  transition: max-width var(--dur) var(--ease), margin var(--dur) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+
+.dock:hover .dock__label,
+.dock:focus-within .dock__label,
+.dock__btn[data-hot='true'] .dock__label {
+  max-width: 96px;
+  margin-left: 8px;
+  opacity: 1;
+}
+
+/* Zen mode hides the chrome until the pointer moves. */
+.dock[data-zen='true'] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.page:hover .dock[data-zen='true'] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.arrange-banner {
+  position: fixed;
+  left: 50%;
+  top: 20px;
+  z-index: var(--z-overlay);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 8px 8px 20px;
+  border-radius: var(--radius-pill);
+  background: rgb(var(--surface-base) / 78%);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 28%);
+  transform: translateX(-50%);
+  font-size: var(--text-sm);
+  animation: banner-in var(--dur) var(--ease);
+}
+
+.arrange-banner span {
+  color: var(--fg-muted);
+}
+
+.arrange-banner__done {
+  padding: 8px 18px;
+  border-radius: var(--radius-pill);
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -8px);
+  }
+}
+
+/* Settings has its own panel; the dock would only sit half under it. */
+.page[data-drawer='true'] .dock,
+.page[data-drawer='true'] .arrange-banner {
+  opacity: 0;
+  pointer-events: none;
+}

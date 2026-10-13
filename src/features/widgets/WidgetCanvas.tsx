@@ -1,4 +1,5 @@
 import { Suspense, useCallback, useEffect, useId, useMemo, useState, type Ref } from 'react'
+import { triggerAdd } from '@/core/events'
 import { lazyChunk } from '@/core/util/lazyChunk'
 import {
   GridLayout,
@@ -23,7 +24,6 @@ import {
 } from '@/core/widgets/sizes'
 import type { AnyWidgetDefinition } from '@/core/widgets/types'
 import { setPath } from '@/core/util/path'
-import { uid } from '@/core/util/id'
 import { useContextMenu } from '@/features/menu/useContextMenu'
 import { useArrange } from '@/features/menu/ArrangeContext'
 import type { MenuItem } from '@/features/menu/ContextMenu'
@@ -31,7 +31,6 @@ import { WidgetFrame } from './WidgetFrame'
 
 // Lazy: the config dialog pulls in the settings-UI field renderer, which would
 // otherwise land in the new tab's first paint.
-const WidgetPicker = lazyChunk(() => import('./WidgetPicker').then((m) => ({ default: m.WidgetPicker })))
 const WidgetConfigDialog = lazyChunk(() =>
   import('./WidgetConfigDialog').then((m) => ({ default: m.WidgetConfigDialog })),
 )
@@ -73,7 +72,6 @@ export function WidgetCanvas() {
   const { update } = useSettingsActions()
   const { widgets, appearance } = settings
 
-  const [picking, setPicking] = useState(false)
   const [configuring, setConfiguring] = useState<string | null>(null)
 
   // Animation stays off until the frame after mount, or every widget flies in
@@ -83,12 +81,6 @@ export function WidgetCanvas() {
   useEffect(() => {
     const frame = requestAnimationFrame(() => setSettling(false))
     return () => cancelAnimationFrame(frame)
-  }, [])
-
-  useEffect(() => {
-    const onAdd = () => setPicking(true)
-    window.addEventListener('open-slate:add-widget', onAdd)
-    return () => window.removeEventListener('open-slate:add-widget', onAdd)
   }, [])
 
   // Transient and page-wide; `widgets.locked` stays in the schema unread, so
@@ -192,18 +184,6 @@ export function WidgetCanvas() {
     [update, normalize, stacked],
   )
 
-  const addWidget = (definition: AnyWidgetDefinition) => {
-    const instance = WidgetInstance.parse({ id: uid('w'), type: definition.type })
-    update((current) => ({
-      ...current,
-      widgets: {
-        ...current.widgets,
-        instances: [...current.widgets.instances, instance],
-      },
-    }))
-    setPicking(false)
-  }
-
   const removeWidget = useCallback(
     (id: string) =>
       update((current) => ({
@@ -247,7 +227,7 @@ export function WidgetCanvas() {
           label: 'Add a widget',
           icon: 'add',
           separatorBefore: forWidget.length > 0,
-          onSelect: () => setPicking(true),
+          onSelect: () => triggerAdd('widget'),
         },
         ...(arrange.arranging
           ? []
@@ -353,6 +333,16 @@ export function WidgetCanvas() {
                 }))
               }
             />
+            {arrange.arranging ? (
+              <span className="wtools">
+                <button type="button" title="Configure" aria-label="Configure" onClick={() => setConfiguring(instance.id)}>
+                  <Icon name="settings" />
+                </button>
+                <button type="button" title="Remove" aria-label="Remove" onClick={() => removeWidget(instance.id)}>
+                  <Icon name="close" />
+                </button>
+              </span>
+            ) : null}
           </div>
         ))}
       </GridLayout>
@@ -360,12 +350,6 @@ export function WidgetCanvas() {
       </div>
 
       {canvasMenu.menu}
-
-      {picking ? (
-        <Suspense fallback={null}>
-          <WidgetPicker onAdd={addWidget} onClose={() => setPicking(false)} />
-        </Suspense>
-      ) : null}
 
       {configuringInstance && configuringDefinition ? (
         <Suspense fallback={null}>
@@ -391,8 +375,8 @@ export function WidgetCanvas() {
 
       {/* The only affordance on an empty canvas: the menu that would offer this
           is invisible until right-clicked. */}
-      {widgets.instances.length === 0 && !picking ? (
-        <button type="button" className="canvas__empty" onClick={() => setPicking(true)}>
+      {widgets.instances.length === 0 ? (
+        <button type="button" className="canvas__empty" onClick={() => triggerAdd('widget')}>
           <Icon name="add" />
           <span>Add a widget</span>
           <small>A clock, the weather, or whatever else belongs on your dashboard</small>

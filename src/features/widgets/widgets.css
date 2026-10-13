@@ -237,3 +237,39 @@
 .canvas .react-grid-item.resizing > .react-resizable-handle {
   opacity: 1;
 }
+
+/* Configure and remove, only while arranging and only for the widget under the pointer. */
+.wtools {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 10;
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+
+.react-grid-item:hover .wtools,
+.wtools:focus-within {
+  opacity: 1;
+}
+
+.wtools button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  background: rgb(var(--surface-base) / 88%);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.wtools button:hover {
+  background: var(--accent);
+  color: var(--accent-fg);
+}

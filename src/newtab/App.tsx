@@ -1,12 +1,19 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { lazyChunk } from '@/core/util/lazyChunk'
-import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
+import { DraftPreview, useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
+import { applySlate } from '@/core/settings/slateCode'
+import { getSceneCursor, listScenes, sceneFor, setSceneCursor } from '@/core/settings/scenes'
+import { getWidget } from '@/core/widgets/registry'
+import { uid } from '@/core/util/id'
 import { useSettingsSync } from '@/core/settings/useSettingsSync'
-import { Icon } from '@/core/icons'
+import { triggerAdd, type AddTab } from '@/core/events'
 import type { Pane } from '@/core/settings/schema'
 
 const CommandPalette = lazyChunk(() =>
   import('@/features/palette/CommandPalette').then((m) => ({ default: m.CommandPalette })),
+)
+const AddSheet = lazyChunk(() =>
+  import('@/features/add/AddSheet').then((m) => ({ default: m.AddSheet })),
 )
 const SettingsOverlay = lazyChunk(() =>
   import('@/features/settings-ui/SettingsOverlay').then((m) => ({ default: m.SettingsOverlay })),
@@ -16,7 +23,7 @@ import { useArrangeEscape } from '@/features/menu/arrange'
 import { useContextMenu } from '@/features/menu/useContextMenu'
 import type { MenuItem } from '@/features/menu/ContextMenu'
 import { derivePanes, PageShell } from './PageShell'
-import { TopAddButton } from './TopAddButton'
+import { ArrangeBanner, Dock } from './Dock'
 import './App.css'
 
 /**
@@ -37,9 +44,13 @@ function NewTab() {
   const { layout, appearance, behavior, widgets, tiles } = settings
   const { update } = useSettingsActions()
   useSettingsSync()
-  const [paletteOpen, setPaletteOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [settingsSection, setSettingsSection] = useState<string | undefined>(undefined)
+  const [deepLink] = useState(readDeepLink)
+  const [paletteOpen, setPaletteOpen] = useState(deepLink.command === 'palette')
+  const [settingsOpen, setSettingsOpen] = useState(deepLink.command === 'settings')
+  const [adding, setAdding] = useState<{ tab: AddTab; pageId: string } | null>(
+    deepLink.command === 'add' ? { tab: 'tile', pageId: '' } : null,
+  )
+  const [settingsSection, setSettingsSection] = useState<string | undefined>(deepLink.argument)
   const contentRef = useRef<HTMLElement>(null)
   const arrange = useArrange()
 
@@ -139,6 +150,39 @@ function NewTab() {
 
   useArrangeEscape(arrange.arranging, arrange.stop)
 
+  // A scene whose schedule covers right now is applied once when its window starts. Opening a
+  // tab later in the same window leaves the layout alone, so manual changes are not undone.
+  useEffect(() => {
+    void (async () => {
+      const match = sceneFor(await listScenes(), new Date())
+      const cursor = await getSceneCursor()
+      if (!match) {
+        if (cursor) await setSceneCursor(null)
+        return
+      }
+      if (match.id === cursor) return
+      await setSceneCursor(match.id)
+      update((current) => applySlate(current, match.code, uid, (type) => getWidget(type) !== undefined))
+    })()
+  }, [update])
+
+  // The popup's actions that start settings or arrange mode run once the page has mounted.
+  const startedFromLink = useRef(false)
+  useEffect(() => {
+    if (startedFromLink.current || deepLink.command !== 'arrange') return
+    startedFromLink.current = true
+    arrange.start()
+  }, [arrange, deepLink.command])
+
+  useEffect(() => {
+    const onAdd = (event: Event) => {
+      const { tab, pageId } = (event as CustomEvent<{ tab: AddTab; pageId: string }>).detail
+      setAdding({ tab, pageId })
+    }
+    window.addEventListener('open-slate:add', onAdd)
+    return () => window.removeEventListener('open-slate:add', onAdd)
+  }, [])
+
   const buildPageMenu = useCallback(
     (event: React.MouseEvent): MenuItem[] => {
       if (event.defaultPrevented) return []
@@ -195,49 +239,25 @@ function NewTab() {
   }, [])
 
   return (
-    <PageShell
+    <>
+      <DraftPreview active={settingsOpen}>
+      <PageShell
       active={active}
       onSelectPane={showPane}
       switched={switched}
       contentRef={contentRef}
       onContextMenu={pageMenu.onContextMenu}
+      drawerOpen={settingsOpen}
     >
-      <div className="page__tools" data-zen={appearance.zenMode}>
-        <TopAddButton
-          active={active}
-          panes={panes}
-          viewMode={layout.viewMode}
-          direction="up"
-          onSelectPane={showPane}
-        />
-
-        {/* Right-click and the E key are both invisible; this is the one way
-            in that can be seen, and the same button is the way back out. */}
-        <button
-          type="button"
-          className="page__arrange is-icon-btn"
-          onClick={arrange.arranging ? arrange.stop : arrange.start}
-          title={arrange.arranging ? 'Done arranging' : 'Arrange the page'}
-          aria-label={arrange.arranging ? 'Done arranging' : 'Arrange the page'}
-          aria-pressed={arrange.arranging}
-          data-active={arrange.arranging}
-        >
-          <Icon name={arrange.arranging ? 'check' : 'drag'} />
-        </button>
-
-        <button
-          type="button"
-          className="page__settings is-icon-btn"
-          onClick={() => openSettings()}
-          // A pointer on its way to the cog is the last chance to beat the click.
-          onPointerEnter={() => SettingsOverlay.preload()}
-          onFocus={() => SettingsOverlay.preload()}
-          title="Settings"
-          aria-label="Settings"
-        >
-          <Icon name="settings" />
-        </button>
-      </div>
+      <Dock
+        arranging={arrange.arranging}
+        zen={appearance.zenMode}
+        onAdd={() => triggerAdd(active === 'widgets' && layout.viewMode === 'tabs' ? 'widget' : 'tile')}
+        onArrange={arrange.arranging ? arrange.stop : arrange.start}
+        onSettings={() => openSettings()}
+        onWarm={() => SettingsOverlay.preload()}
+      />
+      {arrange.arranging ? <ArrangeBanner onDone={arrange.stop} /> : null}
 
       {pageMenu.menu}
 
@@ -249,6 +269,15 @@ function NewTab() {
             onOpenSettings={() => openSettings()}
             onArrange={arrange.start}
           />
+        </Suspense>
+      ) : null}
+
+      </PageShell>
+      </DraftPreview>
+
+      {adding ? (
+        <Suspense fallback={null}>
+          <AddSheet initialTab={adding.tab} pageId={adding.pageId} onClose={() => setAdding(null)} />
         </Suspense>
       ) : null}
 
@@ -264,8 +293,15 @@ function NewTab() {
           />
         </Suspense>
       ) : null}
-    </PageShell>
+    </>
   )
+}
+
+/** The toolbar popup opens newtab.html#settings, #settings=background, #arrange or #palette. */
+function readDeepLink(): { command: string; argument: string | undefined } {
+  const [command = '', argument] = location.hash.slice(1).split('=')
+  if (command) history.replaceState(null, '', location.pathname + location.search)
+  return { command, argument: argument || undefined }
 }
 
 /** A bare letter shortcut must not steal the key from anything taking text. */
