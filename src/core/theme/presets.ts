@@ -1,3 +1,5 @@
+import { ensureContrast } from './color'
+
 /**
  * Colour presets, each with a light and a dark palette for `auto` mode. Chrome
  * exposes no API for the installed theme's colours, so `auto` tracks only light vs dark.
@@ -19,6 +21,13 @@ export interface Palette {
   surfaceTint: string
 }
 
+// Secondary and tertiary text are raised to readable contrast on each palette's own background.
+const readable = (palette: Palette): Palette => ({
+  ...palette,
+  fgMuted: ensureContrast(palette.fgMuted, palette.bg, 7),
+  fgSubtle: ensureContrast(palette.fgSubtle, palette.bg, 4.6),
+})
+
 export interface ThemePreset {
   id: string
   label: string
@@ -34,7 +43,7 @@ const dark = (over: Partial<Palette>): Palette => ({
   fgSubtle: '#6d768a',
   accent: '#6ea8fe',
   accentFg: '#06090f',
-  line: 'rgb(255 255 255 / 12%)',
+  line: 'rgb(255 255 255 / 20%)',
   surfaceBase: '12 14 19',
   surfaceTint: '255 255 255',
   ...over,
@@ -48,13 +57,13 @@ const light = (over: Partial<Palette>): Palette => ({
   fgSubtle: '#858d9c',
   accent: '#2f6fed',
   accentFg: '#ffffff',
-  line: 'rgb(0 0 0 / 12%)',
+  line: 'rgb(0 0 0 / 18%)',
   surfaceBase: '255 255 255',
   surfaceTint: '17 22 32',
   ...over,
 })
 
-export const themePresets: ThemePreset[] = [
+const rawPresets: ThemePreset[] = [
   {
     id: 'midnight',
     label: 'Midnight',
@@ -104,6 +113,12 @@ export const themePresets: ThemePreset[] = [
     light: light({ bg: '#faf7f0', bgElevated: '#fffdf8', accent: '#8a6a2f', accentFg: '#ffffff', surfaceBase: '255 253 248' }),
   },
 ]
+
+export const themePresets: ThemePreset[] = rawPresets.map((preset) => ({
+  ...preset,
+  dark: readable(preset.dark),
+  light: readable(preset.light),
+}))
 
 export const getPreset = (id: string): ThemePreset =>
   themePresets.find((p) => p.id === id) ?? themePresets[0]

@@ -15,7 +15,7 @@
 
 .preset__swatch {
   position: relative;
-  height: 46px;
+  height: 58px;
   border-radius: var(--radius-sm);
   border: 1px solid;
   overflow: hidden;
@@ -30,23 +30,45 @@
   box-shadow: 0 0 0 2px var(--accent);
 }
 
-.preset__dot {
+.preset__card {
   position: absolute;
-  left: 8px;
-  top: 9px;
-  width: 12px;
-  height: 12px;
+  left: 7px;
+  right: 7px;
+  top: 7px;
+  bottom: 7px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 7px;
+  border-radius: calc(var(--radius-sm) * 0.7);
+}
+
+.preset__dot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 
 .preset__bar {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 10px;
-  height: 4px;
+  height: 3px;
+  width: 70%;
   border-radius: var(--radius-pill);
+  opacity: 0.85;
+}
+
+.preset__bar--short {
+  width: 45%;
   opacity: 0.5;
+}
+
+.preset__pill {
+  position: absolute;
+  right: 11px;
+  bottom: 11px;
+  width: 14px;
+  height: 7px;
+  border-radius: var(--radius-pill);
 }
 
 .preset__check {

@@ -1,0 +1,26 @@
+/* The settings panel and popup use the brand font. Faces live in core/theme/fontFaces.css. */
+:root {
+  --ui-font: 'Bricolage Grotesque', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* The chrome around the page, not the page: the new tab keeps the font the user picked. */
+.settings-overlay,
+.settings-shell,
+.settings-drawer,
+.pop {
+  font-family: var(--ui-font);
+}
+
+.settings-overlay button,
+.settings-overlay input,
+.settings-overlay select,
+.settings-overlay textarea,
+.settings-shell button,
+.settings-shell input,
+.settings-shell select,
+.settings-shell textarea,
+.pop button,
+.pop input,
+.pop select {
+  font-family: inherit;
+}

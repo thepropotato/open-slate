@@ -1,6 +1,6 @@
 /**
- * Locally-resolving stacks only: a webfont would need a looser CSP, and a new tab
- * has to paint instantly. A raw family name names any installed font.
+ * The fonts on offer. Each non-system face ships inside the extension (`fontFaces.css`), so a
+ * new tab paints without waiting on a download and no looser CSP is needed.
  */
 
 export interface FontOption {
@@ -9,13 +9,16 @@ export interface FontOption {
   stack: string
 }
 
+const SYSTEM = `ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif`
+
 export const fontOptions: FontOption[] = [
-  { id: 'system', label: 'System', stack: `ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif` },
-  { id: 'rounded', label: 'Rounded', stack: `ui-rounded, 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Quicksand, system-ui, sans-serif` },
-  { id: 'grotesk', label: 'Grotesk', stack: `Inter, 'Helvetica Neue', Helvetica, Arial, sans-serif` },
-  { id: 'serif', label: 'Serif', stack: `ui-serif, Georgia, 'Iowan Old Style', 'Times New Roman', serif` },
-  { id: 'mono', label: 'Mono', stack: `ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace` },
-  { id: 'condensed', label: 'Condensed', stack: `'Avenir Next Condensed', 'Roboto Condensed', 'Arial Narrow', system-ui, sans-serif` },
+  { id: 'system', label: 'System default', stack: SYSTEM },
+  { id: 'brand', label: 'Bricolage Grotesque (Open Slate)', stack: `'Bricolage Grotesque', ${SYSTEM}` },
+  { id: 'inter', label: 'Inter (clean sans)', stack: `Inter, ${SYSTEM}` },
+  { id: 'rounded', label: 'Nunito (rounded)', stack: `Nunito, ui-rounded, ${SYSTEM}` },
+  { id: 'serif', label: 'Lora (serif)', stack: `Lora, ui-serif, Georgia, 'Times New Roman', serif` },
+  { id: 'mono', label: 'JetBrains Mono (mono)', stack: `'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace` },
+  { id: 'hand', label: 'Caveat (handwritten)', stack: `Caveat, 'Segoe Print', 'Bradley Hand', cursive` },
 ]
 
 /** Accepts a preset id, or any raw family name the user typed. */

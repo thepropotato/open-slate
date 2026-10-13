@@ -7,7 +7,7 @@ import { z } from 'zod'
  */
 
 export const SETTINGS_KEY = 'settings'
-export const SETTINGS_VERSION = 6
+export const SETTINGS_VERSION = 7
 
 const hex = z.string().regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/)
 const unit = z.number().min(0).max(1)
@@ -112,7 +112,8 @@ export const BackgroundPattern = z.object({
 }).prefault({})
 
 export const Background = z.object({
-  type: z.enum(['solid', 'gradient', 'pattern', 'image', 'video', 'slideshow']).default('gradient'),
+  // A new profile opens on a built-in wallpaper that follows light and dark, not a flat colour.
+  type: z.enum(['solid', 'gradient', 'pattern', 'image', 'video', 'slideshow']).default('image'),
   // Derives colour and gradient from the theme palette instead of the stored hexes,
   // so switching palette or light/dark changes the whole page.
   followTheme: z.boolean().default(true),
@@ -126,7 +127,7 @@ export const Background = z.object({
   // Either a blob id from the local media library or a remote URL.
   image: z.object({
     blobId: z.string().default(''),
-    url: z.string().default(''),
+    url: z.string().default('preset:auto'),
   }).prefault({}),
   video: z.object({
     blobId: z.string().default(''),
@@ -177,15 +178,24 @@ export const WidgetInstance = z.object({
 })
 export type WidgetInstance = z.infer<typeof WidgetInstance>
 
-// A new profile starts with one clock, as an ordinary movable/deletable instance.
+// A new profile starts with a greeting and a clock, as ordinary movable/deletable instances.
 const DEFAULT_CLOCK_ID = 'clock-default'
+const DEFAULT_GREETING_ID = 'greeting-default'
 
 export const Widgets = z.object({
   enabled: z.boolean().default(true),
-  instances: z.array(WidgetInstance).prefault([{ id: DEFAULT_CLOCK_ID, type: 'clock' }]),
+  instances: z
+    .array(WidgetInstance)
+    .prefault([
+      { id: DEFAULT_GREETING_ID, type: 'greeting' },
+      { id: DEFAULT_CLOCK_ID, type: 'clock' },
+    ]),
   // The single arrangement, at `columns` across. No per-breakpoint variants:
   // a too-narrow window gets a vertical stack derived on the fly and never stored.
-  layout: z.array(GridItem).prefault([{ i: DEFAULT_CLOCK_ID, x: 2, y: 0, w: 2, h: 1 }]),
+  layout: z.array(GridItem).prefault([
+    { i: DEFAULT_GREETING_ID, x: 0, y: 0, w: 4, h: 1 },
+    { i: DEFAULT_CLOCK_ID, x: 4, y: 0, w: 2, h: 1 },
+  ]),
   // Cells across. Cells are square and one cell is a small widget, so fewer columns means bigger widgets.
   columns: z.number().min(4).max(10).default(6),
   margin: z.number().min(0).max(48).default(14),
@@ -201,13 +211,13 @@ export type Pane = z.infer<typeof Pane>
 export const Layout = z.object({
   // Which bands appear, and in what order. The shell always hoists search to the
   // top, so its position here only decides whether it appears at all.
-  order: z.array(z.enum(['widgets', 'search', 'tiles'])).default(['search', 'widgets', 'tiles']),
+  order: z.array(z.enum(['widgets', 'search', 'tiles'])).default(['search', 'tiles', 'widgets']),
   align: z.enum(['top', 'center', 'bottom']).default('center'),
   maxWidth: z.number().min(600).max(2400).default(1180),
   paddingY: z.number().min(0).max(200).default(48),
   gap: z.number().min(0).max(120).default(36),
   // `tabs` shows one content band at a time, so a tall dashboard never buries the tiles.
-  viewMode: z.enum(['scroll', 'tabs']).default('tabs'),
+  viewMode: z.enum(['scroll', 'tabs']).default('scroll'),
   defaultPane: z.enum(['last', 'widgets', 'tiles']).default('last'),
   // Written on every switch so `defaultPane: 'last'` has something to read.
   lastPane: Pane.default('widgets'),
