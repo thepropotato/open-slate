@@ -196,7 +196,7 @@ First public release.
 ### Added
 
 - A speed dial of tiles drawn with each site's own logo, in folders and across
-  named pages, opened by position with `Alt+1`–`9`.
+  named pages, opened by position with `Alt+1` to `Alt+9`.
 - A widget canvas of square cells with five standard sizes, where growing or
   dropping a widget moves whatever was in the way at every window size.
 - A wallpaper engine - solid, gradient, image, video or slideshow - with dim,

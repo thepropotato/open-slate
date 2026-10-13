@@ -16,6 +16,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { footer, nav, pageHead } from './site-shell.mjs'
 
 const { decodeSlate, previewUrl, slateThumbnail, STORE_ID } = await import('@/core/settings/slateCode')
 const { GalleryIndex, creditOf } = await import('@/core/settings/slateGallery')
@@ -61,109 +62,57 @@ function renderCard(entry) {
     <p class="what">${esc(entry.description)}</p>
     <p class="by">${count === 1 ? '1 widget' : `${count} widgets`} &middot; by <a href="https://github.com/${esc(username)}" rel="noopener noreferrer">${esc(label)}</a></p>
     <div class="actions">
-      <a class="use" href="${esc(link)}">Use this slate</a>
-      <button class="copy" type="button" data-code="${esc(entry.code)}">Copy slate</button>
+      <a class="btn" href="${esc(link)}">Use this slate</a>
+      <button class="btn ghost copy" type="button" data-code="${esc(entry.code)}">Copy slate</button>
     </div>
   </div>
 </article>`
 }
 
 function renderPage(entries) {
-  const privacy = readFileSync(join(root, 'marketing/site/privacy.html'), 'utf8')
-  const style = privacy.slice(privacy.indexOf('<style>'), privacy.indexOf('</style>') + 8)
-
   const cards = entries.map(renderCard).join('\n')
   const empty = `<p class="none">No slates have been shared yet. <a href="https://github.com/thepropotato/open-slate/issues/new?template=slate-submission.yml">Be the first</a>.</p>`
 
-  return `<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Open Slate: community slates</title>
-<meta name="description" content="Slates shared by people who use Open Slate. Apply one to your new tab in a click.">
-<link rel="canonical" href="https://openslate.byvenu.com/slates">
-<meta name="robots" content="index, follow">
-
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://openslate.byvenu.com/slates">
-<meta property="og:title" content="Open Slate: community slates">
-<meta property="og:description" content="Slates shared by people who use Open Slate. Apply one to your new tab in a click.">
-<meta property="og:image" content="https://openslate.byvenu.com/img/og.png">
-<meta property="og:site_name" content="Open Slate">
-<meta name="twitter:card" content="summary_large_image">
-
-<link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
-${style}
-<style>
-.wrap{max-width:64rem}
-header h1{font:400 clamp(2rem,5vw,2.75rem)/1.1 var(--serif);letter-spacing:-.02em;color:var(--head);margin:1rem 0 .5rem}
-.lede{max-width:62ch;color:var(--muted);margin:0 0 2.5rem}
-
-.slates{display:grid;gap:1.5rem;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));padding:0;list-style:none}
-.slate{border:1px solid var(--border);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;background:var(--surface)}
-
-/* The preview: blocks on the slate's own grid, so the shape is the message. */
-.grid{display:grid;gap:4px;padding:12px;aspect-ratio:16/10;background:rgba(127,127,127,.06);border-bottom:1px solid var(--border)}
-.cell{border-radius:5px;background:rgba(127,127,127,.22);display:grid;place-items:center;overflow:hidden;min-width:0}
-.cell i{font-style:normal;font-size:9px;letter-spacing:.02em;color:var(--muted);opacity:.85;padding:0 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-.meta{padding:1rem 1.1rem 1.15rem;display:flex;flex-direction:column;gap:.35rem;flex:1}
-.meta h2{font:600 1.05rem/1.3 var(--sans,inherit);text-transform:none;letter-spacing:0;color:var(--head);margin:0;border:0;padding:0}
-.what{margin:0;color:var(--muted);font-size:.925rem;line-height:1.5}
-.by{margin:.15rem 0 0;font-size:.825rem;color:var(--muted)}
-.actions{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:auto;padding-top:.85rem}
-.use,.copy{font:500 .875rem/1 inherit;padding:.6rem .9rem;border-radius:8px;border:1px solid var(--border);background:none;color:inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
-/* Paired with --page, not a fixed white: the accent lightens in dark mode, so a
-   hardcoded white label loses its contrast exactly where the ground is palest. */
-.use{background:var(--accent);color:var(--page);border-color:var(--accent)}
-.copy[data-done]{color:var(--muted)}
-.none{color:var(--muted)}
-
-.how{margin-top:3rem;border-top:1px solid var(--border);padding-top:1.5rem;color:var(--muted);max-width:62ch}
-.how h2{font:600 1rem/1.3 inherit;text-transform:none;letter-spacing:0;color:var(--head);margin:0 0 .5rem;border:0;padding:0}
-</style>
-</head>
-<body>
-
+  return `${pageHead({
+    title: 'Open Slate: community slates',
+    description: 'Slates shared by people who use Open Slate. Apply one to your new tab in a click.',
+    path: 'slates',
+  })}
+${nav}
+<main>
 <div class="wrap">
-  <header>
-    <a class="back" href="/">&larr; Open Slate</a>
+  <header class="doc-head">
+    <a class="btn ghost sm back" href="/"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Back to home</a>
     <h1>Community slates</h1>
     <p class="lede">A slate is an arrangement of your new tab: which widgets are on the grid,
     where they sit, and the shape of the page around them. These are the ones people have
     built and shared. Applying one leaves your tiles, notes and tasks exactly as they are.</p>
   </header>
 
-<main>
 ${entries.length > 0 ? `<div class="slates">\n${cards}\n</div>` : empty}
 
-<section class="how">
-<h2>How this works</h2>
-<p>A slate carries the arrangement and nothing else: which widgets are on the grid,
-where they sit, and the shape of the page around them. It holds no calendars, no
-locations and no accounts, so whoever applies one points the widgets at their own.
-&ldquo;Use this slate&rdquo; opens the extension with it in the link and shows you
-the result before anything changes.</p>
-<p>To share yours, open Settings &rarr; Slates in the extension and press
-<strong>Share my slate</strong>.</p>
-</section>
-</main>
+  <section class="how">
+    <h2>How this works</h2>
+    <p>A slate carries the arrangement and nothing else: which widgets are on the grid,
+    where they sit, and the shape of the page around them. It holds no calendars, no
+    locations and no accounts, so whoever applies one points the widgets at their own.
+    &ldquo;Use this slate&rdquo; opens the extension with it in the link and shows you
+    the result before anything changes.</p>
+    <p>To share yours, open Settings &rarr; Slates in the extension and press
+    <strong>Share my slate</strong>.</p>
+  </section>
 </div>
+</main>
 
+${footer}
 <script>
-// Progressive enhancement: the link works without this, the copy button is extra.
+// The link works without this; the copy button is extra.
 document.querySelectorAll('.copy').forEach((button) => {
   button.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(button.dataset.code)
       button.textContent = 'Copied'
-      button.dataset.done = '1'
-      setTimeout(() => { button.textContent = 'Copy slate'; delete button.dataset.done }, 2000)
+      setTimeout(() => { button.textContent = 'Copy slate' }, 2000)
     } catch {
       button.textContent = 'Press Ctrl+C'
     }
