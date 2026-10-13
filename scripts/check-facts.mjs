@@ -27,6 +27,7 @@ const unwrap = (node, key) => {
 export async function collectFacts() {
   const { themePresets } = await import('@/core/theme/presets.ts')
   const { Background } = await import('@/core/settings/schema.ts')
+  const { WALLPAPER_PRESETS } = await import('@/core/wallpapers.ts')
 
   const background = unwrap(Background, 'shape')
   const wallpaperKinds = unwrap(background.shape.type, 'options').options
@@ -43,8 +44,12 @@ export async function collectFacts() {
   const styles = clock.slice(clock.indexOf('const STYLES = ['), clock.indexOf('] as const'))
   const clockFaces = [...styles.matchAll(/^ {2}'[a-z-]+',$/gm)].length
 
+  const manifest = JSON.parse(read('public/manifest.json'))
+
   return {
     version: pkg.version,
+    permissions: manifest.permissions.length,
+    builtInWallpapers: WALLPAPER_PRESETS.length,
     widgets,
     brandLogos: Object.keys(brands.icons).length,
     clockFaces,
@@ -84,6 +89,10 @@ const CLAIMS = [
   { file: 'marketing/site/index.html', fact: 'wallpaperKinds', near: '</b> wallpaper kinds<' },
   { file: 'marketing/site/index.html', fact: 'trackers', near: '</b> trackers<' },
   { file: 'marketing/site/index.html', fact: 'widgets', near: ' widgets, and none of them overlap' },
+  { file: 'marketing/LISTING.md', fact: 'permissions', near: 'installs with' },
+  { file: 'README.md', fact: 'builtInWallpapers', near: ' built-in wallpapers' },
+  { file: 'marketing/site/index.html', fact: 'builtInWallpapers', near: ' built in' },
+  { file: 'marketing/site/index.html', fact: 'permissions', near: 'installs with' },
   { file: 'marketing/site/index.html', fact: 'version', near: '"softwareVersion": "' },
 ]
 
@@ -123,6 +132,16 @@ for (const { file, fact, near } of CLAIMS) {
 const manifest = JSON.parse(readFileSync(join(root, 'public/manifest.json'), 'utf8'))
 if (manifest.version !== facts.version) {
   problems.push(`public/manifest.json: version ${manifest.version} does not match package.json ${facts.version}`)
+}
+
+// Every permission the manifest declares needs a justification a reviewer can act on.
+const store = read('STORE.md')
+for (const key of [
+  ...manifest.permissions,
+  ...(manifest.optional_permissions ?? []),
+  ...(manifest.host_permissions ?? []),
+]) {
+  if (!store.includes(`\`${key}\``)) problems.push(`STORE.md: no justification for manifest entry \`${key}\``)
 }
 
 if (problems.length) {

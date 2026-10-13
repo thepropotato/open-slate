@@ -9,12 +9,22 @@ so it is written for the people who use the extension rather than for the diff.
 
 ### Added
 
+- Eleven built-in wallpapers at the top of the Wallpaper settings: Dawn, Dusk, Night,
+  Mist, Aurora, Tide, Skyline, Dunes, Pines, Orbit and Contours. They ship with the
+  extension, apply live and set the accent colour. New profiles start on one that
+  follows light and dark.
+- Scenes: save the current layout under a name, switch between layouts from Settings
+  or the command palette, and have one apply itself on chosen days and times.
+- Recent versions in Settings, so any of your last few saved changes can be restored.
+- The command palette opens with recent items and the most useful actions, groups
+  results into sections, and shows keyboard shortcuts.
+- A toolbar popup. Add the page you are on as a tile (rename it, link to the page or the
+  whole site, pick the page or folder), or use the quick actions: open a new tab, search,
+  arrange, customise, switch the theme and cycle the wallpaper. `Alt+Shift+S` opens it,
+  and it is also where you remove a tile you already added.
 - Procedural background patterns: dot grid, blueprint grid, diagonal lines,
   isometric perspective, contour waves, and ambient mesh. Each adapts to your
   theme palette with configurable scale and intensity, with zero network downloads.
-- Top add button: a dedicated `+` icon button at the top of the page in tabbed mode,
-  and a quick floating add button in scrolling mode, to insert widgets or tiles
-  instantly without extra vertical whitespace.
 - Quotes and daily wisdom in the greeting widget: switch between traditional
   greetings, curated quotes across craft, wisdom, and stoicism with author attributions,
   or your own custom quote, updating on every new tab, hourly, or daily.
@@ -23,8 +33,25 @@ so it is written for the people who use the extension rather than for the diff.
 
 ### Changed
 
-- Arrange toolbar toggle button uses an intuitive multi-directional move icon
-  instead of the grid icon.
+- A new tab opens on search, tiles and a greeting with a clock, over a built-in
+  wallpaper, instead of a single clock. Existing setups are untouched.
+- The floating buttons and the extra "+" beside the Widgets and Tiles switch are
+  replaced by one labelled bar at the bottom: Add, Arrange and Customise. It fades
+  when you stop moving the pointer.
+- Adding a tile, folder or widget happens in one Add sheet. Paste a link and the tile
+  previews as you type, with your most-visited sites as one-click starting points.
+- Arrange mode shows a banner that says what to do, and a configure and a remove button
+  on the widget under the pointer.
+- Settings opens as a panel beside your page, which updates as you change things,
+  instead of a dialog with a small preview. The nine sections are grouped into five tabs.
+- Palettes are drawn as small versions of the real interface.
+- Secondary text and borders are easier to read in every palette, and panels have a
+  faint fill so they stand out from the page.
+- The seeded Maps tile no longer shows the Google Search logo.
+- New font choices, all bundled with the extension so nothing downloads: System default,
+  Bricolage Grotesque (the Open Slate font), Inter, Nunito, Lora, JetBrains Mono and
+  Caveat. "Grotesk" becomes Inter and "Condensed" returns to the system font. The
+  settings panel and popup use Bricolage Grotesque.
 - Scrolling over a widget now cascades smoothly to the whole page once it reaches
   the widget boundary, avoiding stuck scrolling on single-page layouts.
 - Notes widget now features a quiet, centered prompt rather than a persistent

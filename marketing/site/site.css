@@ -104,7 +104,22 @@ h3 { font-size: 1.25rem; line-height: 1.25; font-weight: 600; }
 
 .hand { font: 500 1.75rem/1.1 var(--hand); color: var(--accent); }
 .eyebrow { font: 400 .75rem/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); display: flex; align-items: center; gap: 12px; }
-.hl { background: linear-gradient(transparent 60%, var(--mark) 60% 90%, transparent 90%) no-repeat left / 0% 100%; padding-inline: .06em; animation: sweep 1s .7s var(--ease) forwards; }
+.hl { position: relative; isolation: isolate; white-space: nowrap; }
+.hl::before,
+.tally span:last-child b::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  left: -0.18em;
+  right: -0.18em;
+  bottom: -0.04em;
+  height: 0.7em;
+  background: var(--mark);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M6 40C34 14 62 52 98 30S162 48 202 24S264 42 294 16' fill='none' stroke='%23000' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M10 48C62 30 122 54 182 38S262 46 292 30' fill='none' stroke='%23000' stroke-width='15' stroke-linecap='round' opacity='.72'/%3E%3Cpath d='M16 22C70 36 130 14 190 28S262 18 288 30' fill='none' stroke='%23000' stroke-width='9' stroke-linecap='round' opacity='.5'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M6 40C34 14 62 52 98 30S162 48 202 24S264 42 294 16' fill='none' stroke='%23000' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M10 48C62 30 122 54 182 38S262 46 292 30' fill='none' stroke='%23000' stroke-width='15' stroke-linecap='round' opacity='.72'/%3E%3Cpath d='M16 22C70 36 130 14 190 28S262 18 288 30' fill='none' stroke='%23000' stroke-width='9' stroke-linecap='round' opacity='.5'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+  clip-path: inset(0 100% 0 0);
+  animation: scribble 0.9s 0.7s var(--ease) forwards;
+}
 
 .hero { padding-top: clamp(24px, 5vw, 64px); display: flex; flex-direction: column; gap: clamp(48px, 7vw, 80px); }
 .hero-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--s3); }
@@ -139,7 +154,8 @@ h3 { font-size: 1.25rem; line-height: 1.25; font-weight: 600; }
 .tally { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--s4) var(--s3); padding-block: var(--s5); border-block: 2px dashed var(--dot); }
 .tally span { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font: 400 .75rem/1.3 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--soft); }
 .tally b { font: 700 clamp(2.25rem, 4.4vw, 3.25rem)/1 var(--display); letter-spacing: -.03em; color: var(--ink); font-variant-numeric: tabular-nums; }
-.tally span:last-child b { background: linear-gradient(transparent 62%, var(--mark) 62% 92%, transparent 92%); padding-inline: .1em; }
+.tally span:last-child b { position: relative; isolation: isolate; }
+.tally span:last-child b::before { left: -0.32em; right: -0.32em; bottom: 0.02em; height: 0.5em; animation-delay: 0s; }
 @media (max-width: 760px) { .tally { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 main > section { margin-top: var(--section); }
@@ -273,7 +289,7 @@ footer a:hover { color: var(--ink); }
 .how h2 { font-size: 1.75rem; }
 .how p { color: var(--soft); }
 
-@keyframes sweep { to { background-size: 100% 100%; } }
+@keyframes scribble { to { clip-path: inset(0 0 0 0); } }
 @keyframes fade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 @keyframes rise { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 [data-rise] { animation: rise .9s calc(var(--i, 0) * 90ms) var(--ease) both; }

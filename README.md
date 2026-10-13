@@ -31,14 +31,14 @@ npm run store:shots # 1280x800 store screenshots, from the built extension
 
 ## What it does
 
-**Tiles.** Image tiles with the site's logo and its title under or inside the
+**Tiles.** A toolbar button adds the page you are on as a tile (`Alt+Shift+S`), without opening the new tab. Image tiles with the site's logo and its title under or inside the
 tile, shown always, on hover, or never. Logos come from a bundled [Simple Icons](https://simpleicons.org)
 dataset (233 sites) with the brand colour; every other site gets its favicon
 rendered large on a plate tinted by sampling that favicon. You can also paste an
 image URL or upload your own. Drag to reorder in Arrange mode, `Alt+1`–`9` to open
 by position, arrow keys to move between tiles.
 
-**Wallpaper.** Solid, gradient, image, video or slideshow, with dim, blur,
+**Wallpaper.** Eleven built-in wallpapers, or solid, gradient, image, video or slideshow, with dim, blur,
 brightness, saturation, zoom, vignette and a slow-drift option. Video pauses when
 the tab is hidden. Slideshow position lives in storage and advances on a
 background alarm, so every open tab agrees and rotation continues with no tab
@@ -77,13 +77,21 @@ from your own tabs, tiles, bookmarks and history, with web completions alongside
 them.
 
 **Command palette.** `Cmd`/`Ctrl`+`K` over tabs, tiles, bookmarks, history and
-settings commands, with a web search as the fallback.
+settings commands, with a web search as the fallback. Empty, it offers what you
+opened last and the most useful actions; typing groups results into sections.
+
+**Controls.** One labelled bar at the bottom of the page - Add, Arrange, Customise -
+that fades when you stop moving. Add is a single sheet for a tile, a folder or a
+widget. The toolbar popup (`Alt+Shift+S`) adds the page you are on and holds quick
+actions.
 
 **Settings.** Every preference is declared once, as a schema field plus a spec
-entry, and the UI renders itself from that. Searchable, with live updates across
-every open tab. Full config export and import, theme codes that carry the look
+entry, and the UI renders itself from that. It opens as a panel beside the page,
+which shows each change as you make it. Searchable, with live updates across
+every open tab, and the last few saved versions can be restored. Full config export and import, theme codes that carry the look
 and slate codes that carry the arrangement - neither carrying your content - a
-set of starter layouts, and opt-in sync across devices.
+set of starter layouts, scenes (named layouts you can switch between or schedule),
+and opt-in sync across devices.
 
 ## Two things worth knowing
 

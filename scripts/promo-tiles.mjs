@@ -26,7 +26,7 @@ const brand = (size, font) => `
 
 const headline = (size, extra = '') => `
   <h1 style="font-size:${size}px;line-height:1.04;font-weight:700;letter-spacing:-.03em;color:${C.ink};${extra}">
-    A blank tab is a <span style="background:linear-gradient(transparent 60%,${C.mark} 60% 90%,transparent 90%);padding:0 .06em">blank page.</span> Sketch on it.
+    A blank tab is a <span class="hl">blank page.</span> Sketch on it.
   </h1>`
 
 const frame = (img, style = '') => `
@@ -45,6 +45,9 @@ const page = (w, h, body) => `<!doctype html>
   html,body{width:${w}px;height:${h}px}
   body{background-color:${C.paper};background-image:radial-gradient(${C.dot} 1.2px,transparent 1.4px);background-size:24px 24px;
        font-family:'Bricolage Grotesque',system-ui,sans-serif;color:${C.soft};display:flex;overflow:hidden}
+  .hl{position:relative;isolation:isolate;white-space:nowrap}
+  .hl::before{content:'';position:absolute;z-index:-1;left:-.18em;right:-.18em;bottom:-.04em;height:.7em;background:${C.mark};
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M6 40C34 14 62 52 98 30S162 48 202 24S264 42 294 16' fill='none' stroke='%23000' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M10 48C62 30 122 54 182 38S262 46 292 30' fill='none' stroke='%23000' stroke-width='15' stroke-linecap='round' opacity='.72'/%3E%3Cpath d='M16 22C70 36 130 14 190 28S262 18 288 30' fill='none' stroke='%23000' stroke-width='9' stroke-linecap='round' opacity='.5'/%3E%3C/svg%3E") center/100% 100% no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 60' preserveAspectRatio='none'%3E%3Cpath d='M6 40C34 14 62 52 98 30S162 48 202 24S264 42 294 16' fill='none' stroke='%23000' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M10 48C62 30 122 54 182 38S262 46 292 30' fill='none' stroke='%23000' stroke-width='15' stroke-linecap='round' opacity='.72'/%3E%3Cpath d='M16 22C70 36 130 14 190 28S262 18 288 30' fill='none' stroke='%23000' stroke-width='9' stroke-linecap='round' opacity='.5'/%3E%3C/svg%3E") center/100% 100% no-repeat}
 </style>
 ${body}`
 

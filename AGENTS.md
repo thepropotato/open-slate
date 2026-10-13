@@ -46,7 +46,7 @@ rows, not all of them.
 | Anything a user would notice | [`CHANGELOG.md`](CHANGELOG.md), under `## [Unreleased]` |
 | A screen that appears in the marketing images | [`scripts/marketing-shots.mjs`](scripts/marketing-shots.mjs), then `npm run marketing:shots` |
 
-`TODO.md` also carries prose about how things work. It is notes rather than
+`docs/NOTES.md` carries prose about how things work. It is notes rather than
 published copy, so it is not checked automatically - but if you contradict
 something written there, correct it.
 
