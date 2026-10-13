@@ -4,8 +4,11 @@ import { useAsyncValue, useClosing } from '@/core/hooks'
 import { openUrl, searchDefault } from '@/core/platform/browser'
 import { useSettings, useSettingsActions } from '@/core/settings/SettingsProvider'
 import { asDestination } from '@/features/search/destination'
-import { queryLocal, type Suggestion } from '@/features/search/providers'
+import { queryLocal, type Suggestion, type SuggestionKind } from '@/features/search/providers'
+import { faviconUrl } from '@/core/platform/browser'
 import { buildActions, matchAction } from './actions'
+import { loadRecent, pushRecent } from './recent'
+import { listScenes } from '@/core/settings/scenes'
 import './CommandPalette.css'
 
 /**
@@ -32,56 +35,93 @@ export function CommandPalette({
 
   const needle = query.trim().toLowerCase()
 
+  const scenes = useAsyncValue('scenes', listScenes)
+
   const commands = useMemo(
-    () => buildActions(settings, actions, onOpenSettings, onArrange),
-    [settings, actions, onOpenSettings, onArrange],
+    () => buildActions(settings, actions, onOpenSettings, onArrange, scenes ?? []),
+    [settings, actions, onOpenSettings, onArrange, scenes],
   )
 
   const local = useAsyncValue(needle.length > 0 ? `palette:${needle}` : null, () =>
     queryLocal(query, { tiles: settings.tiles.items, limit: 12 }),
   )
 
-  const results = useMemo(() => {
+  const [recent] = useState(loadRecent)
+
+  const groups = useMemo<Group[]>(() => {
     const matched = commands
       .map((command) => matchAction(command, needle))
       .filter((item): item is Suggestion => item !== null)
 
-    const items = [...(local ?? []), ...matched].sort((a, b) => b.score - a.score)
-
-    // A web search is always offered last, so no query is ever a dead end.
-    if (needle) {
-      const destination = asDestination(query)
-      const term = query.trim()
-      items.push({
-        id: 'fallback:search',
-        kind: 'search',
-        title: destination ? `Go to ${destination}` : `Search for “${term}”`,
-        icon: destination ? 'link' : 'search',
-        score: -1,
-        run: () => {
-          const where = settings.tiles.openIn
-          if (destination) openUrl(destination, where)
-          else if (!searchDefault(term, where)) {
-            openUrl(`https://www.google.com/search?q=${encodeURIComponent(term)}`, where)
-          }
-        },
-      })
+    if (!needle) {
+      const back: Suggestion[] = recent.map((entry, index) => ({
+        id: `recent:${index}:${entry.url}`,
+        kind: entry.kind,
+        title: entry.title,
+        subtitle: entry.subtitle,
+        url: entry.url,
+        image: entry.image ?? (entry.url ? faviconUrl(entry.url, 32) : undefined),
+        score: 0,
+        run: () => openUrl(entry.url ?? '', settings.tiles.openIn),
+      }))
+      const common = commands
+        .filter((command) => command.common)
+        .map((command) => matchAction(command, ''))
+        .filter((item): item is Suggestion => item !== null)
+      return [
+        { label: 'Recent', items: back },
+        { label: 'Actions', items: common },
+      ].filter((group) => group.items.length > 0)
     }
 
-    return items.slice(0, 40)
-  }, [local, commands, needle, query, settings])
+    const byKind = new Map<SuggestionKind, Suggestion[]>()
+    for (const item of [...(local ?? []), ...matched].sort((a, b) => b.score - a.score)) {
+      byKind.set(item.kind, [...(byKind.get(item.kind) ?? []), item])
+    }
+    // Groups lead with whichever holds the best match, so the top hit is always first on screen.
+    const ordered: Group[] = [...byKind.entries()]
+      .sort((a, b) => b[1][0].score - a[1][0].score)
+      .map(([kind, items]) => ({ label: GROUP_LABEL[kind], items: items.slice(0, 8) }))
+
+    // A web search is always offered last, so no query is ever a dead end.
+    const destination = asDestination(query)
+    const term = query.trim()
+    ordered.push({
+      label: 'Search the web',
+      items: [
+        {
+          id: 'fallback:search',
+          kind: 'search',
+          title: destination ? `Go to ${destination}` : `Search for “${term}”`,
+          icon: destination ? 'link' : 'search',
+          score: -1,
+          run: () => {
+            const where = settings.tiles.openIn
+            if (destination) openUrl(destination, where)
+            else if (!searchDefault(term, where)) {
+              openUrl(`https://www.google.com/search?q=${encodeURIComponent(term)}`, where)
+            }
+          },
+        },
+      ],
+    })
+    return ordered
+  }, [local, commands, needle, query, settings, recent])
+
+  const results = useMemo(() => groups.flatMap((group) => group.items), [groups])
 
   // Clamped, not reset in an effect: no extra render to correct a shrunk list.
   const active = results.length === 0 ? 0 : Math.min(highlight, results.length - 1)
 
   // Keep the highlighted row on screen while arrowing through a long list.
   useEffect(() => {
-    listRef.current?.children[active]?.scrollIntoView({ block: 'nearest' })
+    listRef.current?.querySelector(`[data-index='${active}']`)?.scrollIntoView({ block: 'nearest' })
   }, [active])
 
   const commit = (index: number) => {
     const item = results[index]
     if (!item) return
+    pushRecent(item)
     handleClose()
     void item.run()
   }
@@ -131,37 +171,72 @@ export function CommandPalette({
         </div>
 
         <ul className="palette__list scroll-y" ref={listRef}>
-          {results.map((item, index) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                className="palette__row"
-                data-active={index === active}
-                onMouseMove={() => setHighlight(index)}
-                onClick={() => commit(index)}
-              >
-                <span className="palette__icon">
-                  {item.image ? (
-                    <img src={item.image} alt="" width={16} height={16} />
-                  ) : item.icon ? (
-                    <Icon name={item.icon} />
-                  ) : null}
-                </span>
-                <span className="palette__text">
-                  <span className="palette__title">{item.title}</span>
-                  {item.subtitle ? <span className="palette__sub">{item.subtitle}</span> : null}
-                </span>
-                <span className="palette__kind">{kindLabel(item.kind)}</span>
-              </button>
-            </li>
-          ))}
+          {groups.map((group, groupIndex) => {
+            const offset = groups.slice(0, groupIndex).reduce((total, g) => total + g.items.length, 0)
+            return (
+              <li key={group.label} className="palette__group">
+                <p className="palette__section">{group.label}</p>
+                <ul>
+                  {group.items.map((item, index) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        className="palette__row"
+                        data-active={offset + index === active}
+                        data-index={offset + index}
+                        onMouseMove={() => setHighlight(offset + index)}
+                        onClick={() => commit(offset + index)}
+                      >
+                        <span className="palette__icon">
+                          {item.image ? (
+                            <img src={item.image} alt="" width={16} height={16} />
+                          ) : item.icon ? (
+                            <Icon name={item.icon} />
+                          ) : null}
+                        </span>
+                        <span className="palette__text">
+                          <span className="palette__title">{item.title}</span>
+                          {item.subtitle ? <span className="palette__sub">{item.subtitle}</span> : null}
+                        </span>
+                        {item.shortcut ? (
+                          <kbd className="palette__key">{item.shortcut}</kbd>
+                        ) : kindLabel(item.kind) ? (
+                          <span className="palette__kind">{kindLabel(item.kind)}</span>
+                        ) : null}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            )
+          })}
           {results.length === 0 ? (
             <li className="palette__empty">Start typing to search, or press escape.</li>
           ) : null}
         </ul>
+
+        <footer className="palette__foot">
+          <span>Up and down to move</span>
+          <span>Enter to open</span>
+          <span>Esc to close</span>
+        </footer>
       </div>
     </div>
   )
+}
+
+interface Group {
+  label: string
+  items: Suggestion[]
+}
+
+const GROUP_LABEL: Record<SuggestionKind, string> = {
+  tab: 'Open tabs',
+  tile: 'Tiles',
+  bookmark: 'Bookmarks',
+  history: 'History',
+  action: 'Actions',
+  search: 'Search the web',
 }
 
 const kindLabel = (kind: Suggestion['kind']): string =>
@@ -170,6 +245,6 @@ const kindLabel = (kind: Suggestion['kind']): string =>
     bookmark: 'Bookmark',
     history: 'History',
     tile: 'Tile',
-    action: 'Command',
+    action: '',
     search: 'Search',
   })[kind]

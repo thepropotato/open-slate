@@ -92,19 +92,30 @@ export function Segmented<T extends string>({
   value,
   onChange,
   options,
+  tabs = false,
 }: {
   value: T
   onChange: (next: T) => void
   options: Choice<T>[]
+  /** Keep the buttons even with text, for a switch between views that must stay visible. */
+  tabs?: boolean
 }) {
+  // Buttons only where they stay small: every option is an icon with no text. Anything with
+  // words is a dropdown, which fits any width and shows its current choice.
+  const iconOnly = options.every((option) => option.icon && !option.label)
+  if (!iconOnly && !tabs) {
+    return <Select value={value} onChange={onChange} options={options} />
+  }
+
   return (
-    <div className="ctl-seg" role="group">
+    <div className={`ctl-seg${iconOnly ? ' ctl-seg--icons' : ''}`} role="group">
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           className="ctl-seg__item"
           aria-pressed={value === option.value}
+          aria-label={option.title ?? option.label}
           title={option.title ?? option.label}
           onClick={() => onChange(option.value)}
         >
@@ -126,17 +137,16 @@ export function Select<T extends string>({
   options: Choice<T>[]
 }) {
   return (
-    <select
-      className="ctl-select"
-      value={value}
-      onChange={(e) => onChange(e.target.value as T)}
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label ?? option.value}
-        </option>
-      ))}
-    </select>
+    <span className="ctl-selectwrap">
+      <select className="ctl-select" value={value} onChange={(e) => onChange(e.target.value as T)}>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label ?? option.value}
+          </option>
+        ))}
+      </select>
+      <Icon name="chevronDown" className="ctl-selectwrap__chev" />
+    </span>
   )
 }
 

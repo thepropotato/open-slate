@@ -1,0 +1,26 @@
+.snapshots {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.snapshots__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  padding: var(--space-xs) 0;
+  font-size: var(--text-sm);
+}
+
+.snapshots__row + .snapshots__row {
+  border-top: 1px solid var(--line);
+}
+
+.snapshots__empty {
+  padding: var(--space-sm) 0;
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+}

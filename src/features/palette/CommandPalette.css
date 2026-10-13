@@ -188,3 +188,41 @@
 .palette__scrim[data-closing='true'] .palette {
   animation: palette-out 0.15s var(--ease) forwards;
 }
+
+.palette__group ul {
+  display: contents;
+}
+
+.palette__section {
+  padding: var(--space-sm) 10px 4px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+}
+
+.palette__key {
+  margin-left: auto;
+  flex: none;
+  padding: 2px 7px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: 11px var(--font-mono, ui-monospace, monospace);
+  color: var(--fg-muted);
+}
+
+.palette__row[data-active='true'] .palette__key {
+  color: inherit;
+  border-color: currentColor;
+  opacity: 0.8;
+}
+
+.palette__foot {
+  display: flex;
+  gap: var(--space);
+  padding: var(--space-sm) var(--space);
+  border-top: 1px solid var(--line);
+  font-size: var(--text-xs);
+  color: var(--fg-subtle);
+}

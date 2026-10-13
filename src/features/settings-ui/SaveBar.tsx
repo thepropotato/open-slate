@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Icon } from '@/core/icons'
 import { Button } from '@/core/ui'
 import { useDraftActions } from '@/core/settings/SettingsProvider'
@@ -10,8 +10,24 @@ import './SaveBar.css'
  * Holding edits until confirmed is what gives a knob an undo: turning a radius
  * from 62 to 20 otherwise destroys the 62.
  */
-export function SaveBar() {
+export function SaveBar({ onSize }: { onSize?: (height: number) => void } = {}) {
   const { changed, dirty, save, discard } = useDraftActions()
+
+  // Reports the bar's height, so the panel can leave exactly that much room under its content.
+  const observer = useRef<ResizeObserver | null>(null)
+  const measure = useCallback(
+    (node: HTMLDivElement | null) => {
+      observer.current?.disconnect()
+      if (!node) {
+        onSize?.(0)
+        return
+      }
+      observer.current = new ResizeObserver(() => onSize?.(node.offsetHeight))
+      observer.current.observe(node)
+      onSize?.(node.offsetHeight)
+    },
+    [onSize],
+  )
   const count = changed.length
 
   // Set by the save itself, not derived from `dirty` going false - that would
@@ -53,7 +69,7 @@ export function SaveBar() {
 
   if (!dirty) {
     return justSaved ? (
-      <div className="savebar savebar--done" role="status">
+      <div className="savebar savebar--done" role="status" ref={measure}>
         <Icon name="check" />
         <span>Saved</span>
       </div>
@@ -61,7 +77,7 @@ export function SaveBar() {
   }
 
   return (
-    <div className="savebar" role="region" aria-label="Unsaved changes">
+    <div className="savebar" role="region" aria-label="Unsaved changes" ref={measure}>
       <p className="savebar__count">
         <span className="savebar__dot" aria-hidden="true" />
         {count} unsaved {count === 1 ? 'change' : 'changes'}

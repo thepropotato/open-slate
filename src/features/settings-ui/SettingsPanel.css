@@ -187,11 +187,10 @@
 }
 
 .settings__grouptitle {
-  font-size: var(--text-xs);
+  font-size: var(--text-md);
   font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--fg-subtle);
+  letter-spacing: -0.005em;
+  color: var(--fg);
   margin-bottom: var(--space-sm);
   margin-left: 2px;
 }
@@ -241,4 +240,281 @@
     opacity: 0;
     transform: translateY(6px);
   }
+}
+
+/* ---- Drawer layout: title and search on top, tabs, one scrolling column ---- */
+.settings-drawer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.drawer__head {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space) var(--space) var(--space-sm);
+}
+
+.drawer__title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drawer__title h1 {
+  font-size: var(--text-lg);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.drawer__tabs {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 0;
+  padding: 0 var(--space);
+  border-bottom: 1px solid var(--line);
+  /* Five short tabs always fit; hidden rather than auto so no scrollbar can appear. */
+  overflow: hidden;
+}
+
+.drawer__tab {
+  padding: 10px 12px;
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.drawer__tab:hover {
+  color: var(--fg);
+}
+
+.drawer__tab[aria-current='true'] {
+  color: var(--fg);
+  border-bottom-color: var(--accent);
+}
+
+.settings-drawer .settings__body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ---- Drawer: second-level pills and folding groups ---- */
+.drawer__subtabs {
+  flex: 0 0 auto;
+  /* Equal space above and below the switch, then a rule, so scrolling content is cut cleanly. */
+  padding: var(--space-sm) var(--space);
+  border-bottom: 1px solid var(--line);
+}
+
+.drawer__switch {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-sm);
+  background: rgb(var(--surface-tint) / 8%);
+  border: 1px solid var(--line);
+}
+
+.drawer__switchitem {
+  flex: 1 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 8px;
+  border-radius: calc(var(--radius-sm) - 2px);
+  color: var(--fg-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.drawer__switchitem span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.drawer__switchitem .icon {
+  flex: none;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.drawer__switchitem:hover {
+  color: var(--fg);
+}
+
+.drawer__switchitem[aria-selected='true'] {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.drawer__switchitem[aria-selected='true'] .icon {
+  color: inherit;
+}
+
+.settings-drawer .settings__group + .settings__group {
+  margin-top: var(--space-sm);
+}
+
+.settings__chev {
+  font-size: 11px;
+  color: var(--fg-muted);
+  transition: transform var(--dur-fast) var(--ease);
+}
+
+.settings__group[data-open='false'] .settings__chev {
+  transform: rotate(-90deg);
+}
+
+.settings__group[data-open='false'] .settings__grouphead {
+  margin-bottom: 0;
+}
+
+/* The save bar floats inset over the bottom of the drawer; the content scrolls clear of exactly its height. */
+.settings-drawer {
+  position: relative;
+}
+
+.settings-drawer .savebar {
+  position: absolute;
+  left: var(--space);
+  right: var(--space);
+  bottom: var(--space);
+  margin: 0;
+  z-index: 2;
+}
+
+.settings-drawer .settings__body {
+  padding-bottom: calc(var(--space-xl) + var(--savebar-h, 0px) + var(--space));
+}
+
+/* Five tabs share the width, so none is cut off on a narrow screen. */
+.drawer__tab {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-inline: 2px;
+  text-align: center;
+  /* Shrinks with the screen so all five names stay whole, even in a wider font. */
+  font-size: clamp(11.5px, 3.6vw, var(--text-sm));
+  white-space: nowrap;
+}
+
+/* In the drawer each group is one card with a header row, so a title never floats apart from its rows. */
+.settings-drawer .settings__group {
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.settings-drawer .settings__group + .settings__group {
+  margin-top: var(--space-sm);
+}
+
+.settings__grouphead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space);
+  width: 100%;
+  padding: 14px 16px;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--dur-fast) var(--ease);
+}
+
+.settings__grouphead:hover {
+  background: rgb(var(--surface-tint) / 5%);
+}
+
+.settings__grouphead .settings__grouptitle {
+  margin: 0;
+}
+
+.settings-drawer .settings__group[data-open='true'] .settings__grouphead {
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-drawer .settings__grouptitle {
+  margin-left: 0;
+}
+
+.settings-drawer .settings__grouphelp {
+  margin: 0;
+  padding: 12px 16px 0;
+  max-width: none;
+}
+
+/* The card already has a surface and a border; the field list inside is just padding. */
+.settings-drawer .settings__group > .settings__fields {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 16px;
+  /* Lets a row ask how wide the card is, rather than how wide the window is. */
+  container-type: inline-size;
+}
+
+.settings-drawer .settings__group > h3.settings__grouptitle {
+  margin: 0;
+  padding: 14px 16px 0;
+}
+
+/* Sliders and dropdowns shrink to stay beside their label; a row only wraps as a last resort. */
+.settings-drawer .ctl-row:has(.ctl-slider) .ctl-row__control {
+  flex: 0 1 150px;
+}
+
+.settings-drawer .ctl-slider {
+  width: 100%;
+}
+
+.settings-drawer .ctl-slider input {
+  flex: 1 1 80px;
+  width: auto;
+  min-width: 60px;
+  max-width: 148px;
+}
+
+.settings-drawer .ctl-row__label {
+  flex-basis: 5.5rem;
+}
+
+.settings-drawer .ctl-select {
+  width: auto;
+  min-width: 120px;
+  max-width: 100%;
+}
+
+/* Text boxes and dropdowns shrink to stay beside their label, like the sliders. */
+.settings-drawer .ctl-row:has(.ctl-input:not(.ctl-input--wide)) .ctl-row__control,
+.settings-drawer .ctl-row:has(.ctl-selectwrap) .ctl-row__control {
+  flex: 0 1 150px;
+}
+
+.settings-drawer .ctl-input:not(.ctl-input--wide) {
+  width: 100%;
+  min-width: 0;
+}
+
+.settings-drawer .ctl-selectwrap {
+  width: 100%;
+}
+
+.settings-drawer .ctl-selectwrap .ctl-select {
+  width: 100%;
 }

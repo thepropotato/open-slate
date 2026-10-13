@@ -18,6 +18,7 @@ import {
   saveSettings,
   subscribeSettings,
 } from './store'
+import { pushSnapshot } from './snapshots'
 
 export interface SettingsActions {
   update: (recipe: (current: Settings) => Settings) => void
@@ -126,6 +127,7 @@ export function SettingsProvider({
   const commit = useCallback(
     (next: Settings, options?: { keepDraft?: boolean }) => {
       const previous = savedRef.current
+      if (previous) void pushSnapshot(previous)
       mine(next)
       writeSettings(next)
       saveSettings(next)
@@ -179,6 +181,7 @@ export function SettingsProvider({
         })
       },
       reset: async () => {
+        if (savedRef.current) await pushSnapshot(savedRef.current)
         const fresh = await resetSettings()
         mine(fresh)
         writeSettings(fresh)
@@ -202,6 +205,7 @@ export function SettingsProvider({
       dirty: changed.length > 0,
       save: () => {
         if (!draft) return
+        if (savedRef.current) void pushSnapshot(savedRef.current)
         // Only the edited paths: the whole draft would stamp its stale copy of
         // every immediate value back over what landed while it was open.
         writeSettings((current) => {
@@ -293,6 +297,17 @@ export function SettingsOverride({
       <ActionsContext.Provider value={actions}>{children}</ActionsContext.Provider>
     </SettingsContext.Provider>
   )
+}
+
+/**
+ * Renders the page with unsaved edits applied, while `active`. Only values change: the
+ * modal settings panel already keeps the page inert, and effects such as first-run seeding
+ * must still be able to write. The tree keeps its shape, so nothing remounts.
+ */
+export function DraftPreview({ active, children }: { active: boolean; children: ReactNode }) {
+  const saved = useSettings()
+  const draft = useDraftSettings()
+  return <SettingsContext.Provider value={active ? draft : saved}>{children}</SettingsContext.Provider>
 }
 
 /** Reads and writes one dot-path; the primitive the settings controls use. */

@@ -18,6 +18,8 @@ export interface Suggestion {
   url?: string
   image?: string
   icon?: IconName
+  /** A key combination to show beside a command, such as `E`. */
+  shortcut?: string
   /** Higher sorts first. */
   score: number
   run: () => void | Promise<void>

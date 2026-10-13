@@ -1,76 +1,49 @@
-/*
- * Full-bleed popover over the page. Sized in viewport units rather than left to
- * the content, so the panel's container queries see a stable width and keep the
- * same three-column layout the standalone page has.
- */
+/* A drawer on the right edge. The page beside it stays visible and shows edits as you make them. */
 .settings-overlay {
-  /* The reset zeroes margins, killing <dialog>'s auto-centring. */
-  margin: auto;
-  width: calc(100vw - 2 * var(--space-lg));
-  height: calc(100vh - 2 * var(--space-lg));
+  /* The reset zeroes margins, so pin it to the right edge explicitly. */
+  margin: 0 0 0 auto;
+  width: min(480px, 100vw);
+  height: 100vh;
   max-width: none;
   max-height: none;
   padding: 0;
-  border: var(--surface-border);
-  border-radius: var(--radius);
+  border: 0;
+  border-left: var(--surface-border);
+  border-radius: 0;
   background: var(--bg);
   color: var(--fg);
-  box-shadow: 0 32px 80px rgb(0 0 0 / 55%);
+  box-shadow: -24px 0 60px rgb(0 0 0 / 35%);
   overflow: hidden;
   animation: settings-in var(--dur) var(--ease);
 }
 
 .settings-overlay::backdrop {
-  background: rgb(0 0 0 / 52%);
-  backdrop-filter: blur(4px);
-  animation: settings-backdrop-in var(--dur) var(--ease);
+  background: transparent;
 }
 
 @keyframes settings-in {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.985);
+    transform: translateX(32px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: none;
   }
 }
 
 @keyframes settings-out {
   from {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: none;
   }
   to {
     opacity: 0;
-    transform: translateY(10px) scale(0.985);
-  }
-}
-
-@keyframes settings-backdrop-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes settings-backdrop-out {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
+    transform: translateX(32px);
   }
 }
 
 .settings-overlay[data-closing='true'] {
   animation: settings-out 0.16s var(--ease) forwards;
   pointer-events: none;
-}
-
-.settings-overlay[data-closing='true']::backdrop {
-  animation: settings-backdrop-out 0.16s var(--ease) forwards;
 }
