@@ -10,7 +10,9 @@ a grid of user-chosen site tiles (optionally in folders and across pages), a
 search box, and widgets showing the user's own browser data (recently closed tabs,
 open tabs, bookmarks, history, downloads, most-visited sites) alongside a clock,
 calendar, weather, notes, tasks, a timer, feeds, crypto prices, and the user's
-own usage figures from AI services they are already signed in to.
+own usage figures from AI services they are already signed in to. A toolbar
+button adds the page the user is on as a tile, so the speed dial can be filled
+without opening the new tab first.
 
 Everything the extension does serves that one page. It has no content scripts, no
 remote code, and no analytics.
@@ -19,6 +21,7 @@ remote code, and no analytics.
 
 | Permission | Why |
 | --- | --- |
+| `activeTab` | The toolbar button's popup, to read the address and title of the current tab when the user clicks the button, so that page can be added as a tile. Granted by the click itself and only for that tab. Nothing is read in the background, the page's content is never read, and no script is injected. |
 | `storage` | Stores the user's settings, tiles and widget layout. |
 | `unlimitedStorage` | Wallpaper images and videos the user chooses are held in IndexedDB and can exceed the default quota. |
 | `favicon` | Draws each tile and list row with the site's own icon, read from Chrome's local favicon cache rather than fetched from a third party. |

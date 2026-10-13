@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Open Slate: your most-opened page, finally yours</title>
+<title>Open Slate: sketch on your new tab</title>
 <meta name="description" content="A Chrome extension that replaces the new tab page with a speed dial and dashboard: tiles, 18 widgets including Claude and Spotify, and a wallpaper engine. No analytics.">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <link rel="canonical" href="https://openslate.byvenu.com/">
 
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://openslate.byvenu.com/">
-<meta property="og:title" content="Open Slate: your most-opened page, finally yours">
+<meta property="og:title" content="Open Slate: sketch on your new tab">
 <meta property="og:description" content="A speed dial and dashboard for the new tab. Tiles, widgets and a wallpaper engine, with close to everything about the look under your control.">
 <meta property="og:image" content="https://openslate.byvenu.com/img/og.png">
 <meta property="og:image:width" content="1200">
@@ -19,7 +19,7 @@
 <meta property="og:site_name" content="Open Slate">
 <meta property="og:locale" content="en_US">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Open Slate: your most-opened page, finally yours">
+<meta name="twitter:title" content="Open Slate: sketch on your new tab">
 <meta name="twitter:description" content="A speed dial and dashboard for the new tab. Tiles, widgets and a wallpaper engine, with close to everything about the look under your control.">
 <meta name="twitter:image" content="https://openslate.byvenu.com/img/og.png">
 
@@ -187,6 +187,7 @@
             <li>Plates, or round icons with the title underneath</li>
             <li>Folders, and named pages for the rest</li>
             <li><kbd>Alt</kbd>+<kbd>1</kbd> to <kbd>Alt</kbd>+<kbd>9</kbd> opens a tile by position</li>
+            <li>Add the page you are on from the toolbar button</li>
             <li>Paste an image URL or upload your own</li>
           </ul>
         </div>
@@ -214,7 +215,7 @@
         <div class="tab-panel" hidden>
           <p>Eight palettes, automatic light and dark, a corner radius from fully round to fully square, four surface styles, and an accent sampled from your wallpaper.</p>
           <ul class="dots">
-            <li>Wallpaper as a colour, gradient, image, video or slideshow</li>
+            <li>Wallpaper as a colour, gradient, image, video or slideshow, with eleven built in</li>
             <li>Dim, blur, brightness, zoom and vignette</li>
             <li>Every setting is searchable</li>
             <li>Changes apply live in every open tab</li>
@@ -327,7 +328,7 @@
         </details>
         <details>
           <summary><span class="t">Permissions on use</span></summary>
-          <p class="answer">It installs with five, none of which can read another site. Tabs, history, bookmarks, downloads, sessions and scripting are requested the moment you add the widget that needs one, and declining leaves the rest working.</p>
+          <p class="answer">It installs with eight permissions, none of which can read the contents of another site. The toolbar button uses activeTab, which sees only the current page's address and title, and only when you click it. Tabs, history, bookmarks, downloads, sessions and scripting are requested the moment you add the widget that needs one, and declining leaves the rest working.</p>
         </details>
         <details>
           <summary><span class="t">Your data stays put</span></summary>
@@ -421,7 +422,7 @@
       </details>
       <details>
         <summary><span class="t">Why does the feeds widget mention broad host access?</span></summary>
-        <p class="answer">RSS feeds live at addresses only you know, so there is no fixed list to declare. The broad pattern is declared as optional and never requested wholesale: adding a feed asks for that one origin by name. A fresh install holds no host permissions at all.</p>
+        <p class="answer">RSS feeds live at addresses only you know, so there is no fixed list to declare. The broad pattern is declared as optional and never requested wholesale: adding a feed asks for that one origin by name. A fresh install declares one host, the search suggestions endpoint, and nothing is sent to it if you turn suggestions off.</p>
       </details>
       <details>
         <summary><span class="t">Can I move my setup to another machine?</span></summary>

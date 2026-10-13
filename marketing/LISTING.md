@@ -13,15 +13,15 @@ Open Slate - New Tab Dashboard
 ## Short description (132 characters max)
 
 ```
-Your most-opened page, finally yours. A speed dial and dashboard for the new tab. No analytics, no content scripts.
+A blank tab is a blank page. Sketch on it. A speed dial and dashboard for the new tab. No analytics.
 ```
 
-*114 characters.*
+*100 characters.*
 
 ## Detailed description
 
 ```
-Your most-opened page, finally yours.
+A blank tab is a blank page. Sketch on it.
 
 You open a new tab dozens of times a day and never chose what's on it. Open
 Slate replaces it with a speed dial and dashboard - tiles, widgets and a
@@ -90,8 +90,9 @@ notes or tasks. Four starter layouts get a new grid going in one click.
 IT ASKS FOR NOTHING
 No analytics, no telemetry, no crash reporting, no identifiers. No content
 scripts - the extension runs on its own page and nowhere else, so it cannot read
-the sites you visit. It installs with six permissions, none of which
-can read a page you visit; tabs, history, bookmarks, downloads, sessions and
+the sites you visit. It installs with eight permissions, none of which
+can read the content of a page you visit (the toolbar button's activeTab only
+sees the current page's address and title when you click it); tabs, history, bookmarks, downloads, sessions and
 access to any site are requested the moment you add the widget that needs one,
 and declining leaves the rest working.
 
