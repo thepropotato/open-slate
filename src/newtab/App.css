@@ -175,97 +175,18 @@
   box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
 }
 
-/* One column, so the page's fixed controls read as a set and the bottom
-   edge stays clear. */
-.page__tools {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: var(--z-overlay);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Settings opens as a drawer on the right; the page centres itself in what is left. */
+.page {
+  --drawer-width: 480px;
 }
 
-.page__settings,
-.page__arrange {
-  --icon-btn: 38px;
-  border-radius: var(--radius-sm);
-  color: var(--fg);
-  background: rgb(var(--surface-base) / 78%);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 4px 14px rgb(0 0 0 / 25%), 0 1px 3px rgb(0 0 0 / 12%);
-  opacity: 0.88;
-  cursor: pointer;
-  transition: opacity var(--dur-fast) var(--ease),
-              color var(--dur-fast) var(--ease),
-              background var(--dur-fast) var(--ease),
-              border-color var(--dur-fast) var(--ease),
-              transform var(--dur-fast) var(--ease),
-              box-shadow var(--dur-fast) var(--ease);
+.page[data-drawer='true'] {
+  padding-right: var(--drawer-width);
+  transition: padding-right var(--dur) var(--ease);
 }
 
-.page__arrange:hover {
-  opacity: 1;
-  color: var(--fg);
-  background: rgb(var(--surface-base) / 95%);
-  border-color: var(--line-strong, var(--line));
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 32%), 0 2px 6px rgb(0 0 0 / 18%);
-}
-
-.page__arrange:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 22%);
-}
-
-/* The one lit control while arranging: it is the way out. */
-.page__arrange[data-active='true'] {
-  opacity: 1;
-  color: var(--accent-fg);
-  background: var(--accent);
-  border-color: transparent;
-  box-shadow: 0 4px 16px rgb(var(--accent-rgb, 0 0 0) / 40%);
-}
-
-.page__arrange[data-active='true']:hover {
-  transform: translateY(-2px) scale(1.05);
-  filter: brightness(1.08);
-}
-
-/* Rotate the cog, not the button - the button carries the border and blur plate. */
-.page__settings .icon {
-  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.page__settings:hover {
-  opacity: 1;
-  color: var(--fg);
-  background: rgb(var(--surface-base) / 95%);
-  border-color: var(--line-strong, var(--line));
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 32%), 0 2px 6px rgb(0 0 0 / 18%);
-}
-
-.page__settings:hover .icon {
-  transform: rotate(60deg);
-}
-
-.page__settings:active {
-  transform: scale(0.95);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 22%);
-}
-
-/* Zen mode hides the chrome until the pointer moves. */
-.page__tools[data-zen='true'] {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--dur) var(--ease);
-}
-
-.page:hover .page__tools[data-zen='true'] {
-  opacity: 1;
-  pointer-events: auto;
+@media (max-width: 760px) {
+  .page[data-drawer='true'] {
+    padding-right: 0;
+  }
 }

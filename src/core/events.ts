@@ -3,11 +3,12 @@
  * nested canvas and grid components.
  */
 
-export function triggerAddWidget(): void {
-  window.dispatchEvent(new CustomEvent('open-slate:add-widget'))
+export type AddTab = 'tile' | 'folder' | 'widget'
+
+/** Opens the Add sheet. `pageId` is the tile page the new tile should land on. */
+export function triggerAdd(tab: AddTab = 'tile', pageId = ''): void {
+  window.dispatchEvent(new CustomEvent('open-slate:add', { detail: { tab, pageId } }))
 }
 
-export function triggerAddTile(): void {
-  window.dispatchEvent(new CustomEvent('open-slate:add-tile'))
-}
-
+export const triggerAddWidget = (): void => triggerAdd('widget')
+export const triggerAddTile = (): void => triggerAdd('tile')

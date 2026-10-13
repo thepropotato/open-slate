@@ -15,6 +15,7 @@ import {
   reorderWithin,
   tilesIn,
 } from './folders'
+import { triggerAdd } from '@/core/events'
 import { seedTilesFromBrowser } from './seed'
 import { useGridArrows } from './useGridArrows'
 import { useContextMenu } from '@/features/menu/useContextMenu'
@@ -41,7 +42,6 @@ export function TileGrid() {
   const { tiles, behavior } = useSettings()
   const { update } = useSettingsActions()
   const [editorId, setEditorId] = useState<string | null>(null)
-  const [creating, setCreating] = useState<{ kind: 'link' | 'folder' } | null>(null)
   const [hints, setHints] = useState(false)
   const [pageId, setPageId] = useState<string>(ROOT)
   const [openFolder, setOpenFolder] = useState<string | null>(null)
@@ -49,12 +49,6 @@ export function TileGrid() {
   const arrange = useArrange()
 
   useGridArrows(gridRef, 'a.tile__plate, button.tile__plate')
-
-  useEffect(() => {
-    const onAdd = () => setCreating({ kind: 'link' })
-    window.addEventListener('open-slate:add-tile', onAdd)
-    return () => window.removeEventListener('open-slate:add-tile', onAdd)
-  }, [])
 
   const items = tiles.items
   const pages = useMemo(() => pageIds(tiles.pages), [tiles.pages])
@@ -172,13 +166,13 @@ export function TileGrid() {
           label: 'Add a tile',
           icon: 'add',
           separatorBefore: forTile.length > 0,
-          onSelect: () => setCreating({ kind: 'link' }),
+          onSelect: () => triggerAdd('tile', pageId),
         },
         {
           id: 'folder',
           label: 'New folder',
           icon: 'folder',
-          onSelect: () => setCreating({ kind: 'folder' }),
+          onSelect: () => triggerAdd('folder', pageId),
         },
         ...(arrange.arranging
           ? []
@@ -193,7 +187,7 @@ export function TileGrid() {
             ]),
       ]
     },
-    [items, remove, arrange],
+    [items, remove, arrange, pageId],
   )
 
   const tileMenu = useContextMenu(buildMenu)
@@ -269,7 +263,7 @@ export function TileGrid() {
             className="tile-add"
             title="Add a tile"
             aria-label="Add a tile"
-            onClick={() => setCreating({ kind: 'link' })}
+            onClick={() => triggerAdd('tile', pageId)}
           >
             <Icon name="add" />
           </button>
@@ -278,7 +272,7 @@ export function TileGrid() {
 
       {/* The right-click menu is invisible, so an empty page has to say so. */}
       {visible.length === 0 ? (
-        <button type="button" className="tiles-empty" onClick={() => setCreating({ kind: 'link' })}>
+        <button type="button" className="tiles-empty" onClick={() => triggerAdd('tile', pageId)}>
           <Icon name="add" />
           <span>Add a tile</span>
           <small>or right-click for more</small>
@@ -317,21 +311,18 @@ export function TileGrid() {
         </Suspense>
       ) : null}
 
-      {editorId || creating ? (
+      {editorId ? (
         <Suspense fallback={null}>
           <TileEditor
             tile={items.find((t) => t.id === editorId) ?? null}
-            initialKind={creating?.kind ?? 'link'}
             initialPageId={activePage}
             onClose={() => {
               setEditorId(null)
-              setCreating(null)
             }}
             onSave={(tile) => {
               const exists = items.some((t) => t.id === tile.id)
               write(exists ? items.map((t) => (t.id === tile.id ? tile : t)) : [...items, tile])
               setEditorId(null)
-              setCreating(null)
             }}
             onDelete={
               editorId

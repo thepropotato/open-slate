@@ -6,7 +6,6 @@ import { TileGrid } from '@/features/tiles/TileGrid'
 import { WidgetCanvas } from '@/features/widgets'
 import type { Pane } from '@/core/settings/schema'
 import { PaneSwitch } from './PaneSwitch'
-import { TopAddButton } from './TopAddButton'
 import './App.css'
 
 /**
@@ -20,6 +19,7 @@ export function PageShell({
   switched = false,
   contentRef,
   onContextMenu,
+  drawerOpen = false,
   children,
 }: {
   active: Pane
@@ -29,6 +29,8 @@ export function PageShell({
   switched?: boolean
   contentRef?: React.Ref<HTMLElement>
   onContextMenu?: (event: React.MouseEvent) => void
+  /** Settings is open beside the page, so the page makes room for it. */
+  drawerOpen?: boolean
   /** Page-level chrome the new tab adds and the preview does not. */
   children?: ReactNode
 }) {
@@ -117,6 +119,7 @@ export function PageShell({
       data-align={layout.align}
       data-view={layout.viewMode}
       data-switched={switched}
+      data-drawer={drawerOpen || undefined}
       onContextMenu={onContextMenu}
     >
       <BackgroundLayer />
@@ -147,13 +150,6 @@ export function PageShell({
               {band === firstPane && showSwitch ? (
                 <div className="page__switch">
                   <PaneSwitch active={active} panes={panes} onSelect={onSelectPane} />
-                  <TopAddButton
-                    active={active}
-                    panes={panes}
-                    viewMode="tabs"
-                    direction="down"
-                    onSelectPane={onSelectPane}
-                  />
                 </div>
               ) : null}
 

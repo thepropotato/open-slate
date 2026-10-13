@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useAsyncValue } from '@/core/hooks'
 import { Icon } from '@/core/icons'
 import { Button, ColorInput, ConfirmDialog, Modal, Row, Segmented, Select, TextInput } from '@/core/ui'
 import { measureMedia, mediaStore } from '@/core/storage/blobStore'
+import { faviconUrl, isExtension } from '@/core/platform/browser'
+import type { AddTab } from '@/core/events'
 import { useSettings } from '@/core/settings/SettingsProvider'
 import { Tile as TileSchema, type Tile as TileModel } from '@/core/settings/schema'
 import { uid } from '@/core/util/id'
@@ -29,6 +31,9 @@ export function TileEditor({
   onSave,
   onClose,
   onDelete,
+  tab,
+  onTab,
+  widgetGallery,
 }: {
   tile: TileModel | null
   /** Whether the Add button was for a link or a folder. */
@@ -38,14 +43,21 @@ export function TileEditor({
   onSave: (tile: TileModel) => void
   onClose: () => void
   onDelete?: () => void
+  /** Set when opened as the Add sheet: which tab is showing, and how to change it. */
+  tab?: AddTab
+  onTab?: (tab: AddTab) => void
+  widgetGallery?: ReactNode
 }) {
   const { tiles } = useSettings()
-  const [draft, setDraft] = useState<TileModel>(
+  const [stored, setDraft] = useState<TileModel>(
     () =>
       tile ??
       TileSchema.parse({ id: uid('tile'), url: '', kind: initialKind, pageId: initialPageId }),
   )
+  // In the Add sheet the tab decides whether this is a link or a folder.
+  const draft: TileModel = onTab ? { ...stored, kind: tab === 'folder' ? 'folder' : 'link' } : stored
   const isFolder = draft.kind === 'folder'
+  const picks = useQuickPicks(!tile && !isFolder && !draft.url, tiles.items)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [brandQuery, setBrandQuery] = useState('')
   const [brands, setBrands] = useState<Brand[]>([])
@@ -94,18 +106,18 @@ export function TileEditor({
 
   return (
     <Modal
-      title={
-        tile
-          ? isFolder
-            ? 'Edit folder'
-            : 'Edit tile'
-          : isFolder
-            ? 'Add folder'
-            : 'Add tile'
-      }
+      title={tile ? (isFolder ? 'Edit folder' : 'Edit tile') : 'Add to your page'}
       width={640}
       onClose={onClose}
       footer={
+        tab === 'widget' ? (
+          <>
+            <span className="modal__spacer" />
+            <Button variant="ghost" onClick={onClose}>
+              Done
+            </Button>
+          </>
+        ) : (
         <>
           {onDelete ? (
             <Button variant="danger" icon="remove" onClick={() => setConfirmingDelete(true)}>
@@ -122,9 +134,10 @@ export function TileEditor({
             disabled={!valid}
             onClick={() => onSave({ ...draft, url: normalisedUrl })}
           >
-            Save
+            {tile ? 'Save' : isFolder ? 'Add folder' : 'Add tile'}
           </Button>
         </>
+        )
       }
     >
       {confirmingDelete && onDelete ? (
@@ -144,6 +157,24 @@ export function TileEditor({
         />
       ) : null}
 
+      {onTab ? (
+        <div className="tile-editor__tabs">
+          <Segmented
+            tabs
+            value={tab ?? 'tile'}
+            onChange={onTab}
+            options={[
+              { value: 'tile', label: 'Tile', icon: 'layout' },
+              { value: 'folder', label: 'Folder', icon: 'folder' },
+              { value: 'widget', label: 'Widget', icon: 'layers' },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      {tab === 'widget' ? (
+        widgetGallery
+      ) : (
       <div className="tile-editor">
         <div className="tile-editor__preview">
           <div
@@ -190,11 +221,28 @@ export function TileEditor({
                 <TextInput
                   value={draft.url}
                   onChange={(url) => patch({ url })}
-                  placeholder="example.com"
+                  placeholder="Paste a link, like github.com"
                   wide
                   type="url"
                 />
               </Row>
+
+              {picks && picks.length > 0 ? (
+                <div className="tile-editor__picks">
+                  <span>Most visited</span>
+                  {picks.map((site) => (
+                    <button
+                      key={site.url}
+                      type="button"
+                      className="tile-editor__pick"
+                      onClick={() => patch({ url: site.url, title: formatHostTitle(hostOf(site.url)) })}
+                    >
+                      <img src={faviconUrl(site.url, 32)} alt="" width={16} height={16} />
+                      {formatHostTitle(hostOf(site.url)) || hostOf(site.url)}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
 
               <Row title="Title" help="Leave empty to use the brand or host name.">
                 <TextInput
@@ -235,6 +283,8 @@ export function TileEditor({
             </Row>
           ) : null}
 
+          <details className="tile-editor__more" open={Boolean(tile)}>
+            <summary>Customise</summary>
           {isFolder ? null : (
           <Row title="Image" stacked>
             <Segmented
@@ -340,10 +390,21 @@ export function TileEditor({
               ]}
             />
           </Row>
+          </details>
         </div>
       </div>
+      )}
     </Modal>
   )
+}
+
+/** Most-visited sites not yet on the page, offered as one-click starting points. */
+function useQuickPicks(enabled: boolean, items: TileModel[]) {
+  return useAsyncValue(enabled && isExtension() ? 'quick-picks' : null, async () => {
+    const sites = await chrome.topSites.get()
+    const have = new Set(items.map((item) => hostOf(item.url)))
+    return sites.filter((site) => !have.has(hostOf(site.url))).slice(0, 6)
+  })
 }
 
 /** Renders the preview through the same visual resolver the real grid uses. */
