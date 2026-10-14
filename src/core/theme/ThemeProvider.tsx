@@ -1,7 +1,9 @@
-import { useLayoutEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useSyncExternalStore, type ReactNode } from 'react'
 import { useDraftSettings } from '@/core/settings/SettingsProvider'
 import type { Settings } from '@/core/settings/schema'
 import './fontFaces.css'
+import { googleFontName } from './fonts'
+import { loadGoogleFont } from './googleFonts'
 import { accentStore } from './accentStore'
 import type { Palette } from './presets'
 import {
@@ -46,6 +48,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     () => resolveAccent(appearance, palette, sampledAccent),
     [appearance, palette, sampledAccent],
   )
+
+  // A Google font is fetched only when it is the one in use.
+  const chosenGoogleFont = googleFontName(appearance.fontFamily)
+  useEffect(() => {
+    if (chosenGoogleFont) void loadGoogleFont(chosenGoogleFont)
+  }, [chosenGoogleFont])
 
   useLayoutEffect(() => {
     const root = document.documentElement
