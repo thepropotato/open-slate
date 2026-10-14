@@ -36,14 +36,17 @@ so it is written for the people who use the extension rather than for the diff.
 - A new tab opens on search, tiles and a greeting with a clock, over a built-in
   wallpaper, instead of a single clock. Existing setups are untouched.
 - The floating buttons and the extra "+" beside the Widgets and Tiles switch are
-  replaced by one labelled bar at the bottom: Add, Arrange and Customise. It fades
-  when you stop moving the pointer.
+  replaced by one small bar in the bottom-right corner: Add, Arrange and Customise.
+  Hover it to see the labels; it fades when you stop moving the pointer.
 - Adding a tile, folder or widget happens in one Add sheet. Paste a link and the tile
   previews as you type, with your most-visited sites as one-click starting points.
 - Arrange mode shows a banner that says what to do, and a configure and a remove button
   on the widget under the pointer.
 - Settings opens as a panel beside your page, which updates as you change things,
   instead of a dialog with a small preview. The nine sections are grouped into five tabs.
+- Settings that offer a choice of words are dropdowns with a chevron, so every row stays
+  on one line at any width. The Save and Discard bar floats clear of the content, which
+  scrolls out from under it. Light and dark is three icon buttons.
 - Palettes are drawn as small versions of the real interface.
 - Secondary text and borders are easier to read in every palette, and panels have a
   faint fill so they stand out from the page.
