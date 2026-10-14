@@ -4,6 +4,9 @@ A Chrome extension that replaces the new tab page with a speed dial and dashboar
 image tiles, widgets, and a wallpaper engine, with close to everything about the
 look under your control.
 
+Site: [openslate.byvenu.com](https://openslate.byvenu.com) ·
+[Chrome Web Store](https://chromewebstore.google.com/detail/kbacclgoobafnkifgckaenacaeghfonm)
+
 https://github.com/user-attachments/assets/81ed20f0-e126-48fd-90e2-e2b093027719
 
 ## Running it
