@@ -184,7 +184,7 @@ export function TileEditor({
             data-plate={tiles.plateStyle}
             style={
               {
-                '--tile-w': '150px',
+                '--tile-w': '172px',
                 '--tile-aspect': tiles.aspect,
                 '--tile-radius': tiles.radius === null ? 'var(--radius)' : `${tiles.radius}px`,
                 '--tile-pad': `${tiles.imagePadding}px`,
@@ -284,7 +284,12 @@ export function TileEditor({
           ) : null}
 
           <details className="tile-editor__more" open={Boolean(tile)}>
-            <summary>Customise</summary>
+            <summary>
+              <span className="tile-editor__moretitle">Customise</span>
+              <span className="tile-editor__morehelp">Logo, colour and label</span>
+              <Icon name="chevronDown" className="tile-editor__chev" />
+            </summary>
+            <div className="tile-editor__morebody">
           {isFolder ? null : (
           <Row title="Image" stacked>
             <Segmented
@@ -390,6 +395,7 @@ export function TileEditor({
               ]}
             />
           </Row>
+            </div>
           </details>
         </div>
       </div>
