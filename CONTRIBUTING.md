@@ -175,7 +175,10 @@ name in place, say so in the description, and a maintainer can merge it with the
 credit as it stands.
 
 Submitting through the extension needs no username at all: the slate is credited
-to whoever files the issue.
+to whoever files the issue. A maintainer publishes it by adding the `publish`
+label, which commits the file to `slates/` under that account and closes the
+issue. If the slate fails validation, the label comes off and the reason is
+posted on the issue instead.
 
 If you would rather not be credited as your GitHub handle, set `credit` to the
 name you want shown. Your username still appears beside it, because the username

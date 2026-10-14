@@ -1,0 +1,91 @@
+name: Publish slate
+
+# The "button" for a slate submission: a maintainer adds the `publish` label to
+# the issue and this commits the slate to the gallery and closes it. Applying a
+# label needs triage access, so only maintainers can press it.
+#
+# The issue body is a stranger's text. It is only ever read by the script, from
+# the event payload, and never interpolated into a command here.
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+
+permissions:
+  contents: write
+  issues: write
+
+# Two publishes at once would race each other's push.
+concurrency:
+  group: publish-slate
+  cancel-in-progress: false
+
+jobs:
+  # The form asks for the slate's name, so the issue title is set from it rather
+  # than typed by the submitter.
+  retitle:
+    if: github.event.action != 'labeled' && contains(github.event.issue.labels.*.name, 'slate')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: read
+        run: node scripts/publish-slate.mjs title
+
+      - if: steps.read.outputs.name != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE: ${{ github.event.issue.number }}
+          NAME: ${{ steps.read.outputs.name }}
+        run: gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --title "Slate: $NAME"
+
+  publish:
+    if: >-
+      github.event.action == 'labeled' && github.event.label.name == 'publish' &&
+      contains(github.event.issue.labels.*.name, 'slate')
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - run: npm ci
+
+      - id: write
+        run: node --import ./scripts/register.mjs scripts/publish-slate.mjs write
+
+      # The same validation and index rebuild CI checks, so what lands is what a
+      # pull request would have had to pass.
+      - run: npm run slates
+
+      - env:
+          SLATE: ${{ steps.write.outputs.id }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
+          git add slates marketing/site/slates.json marketing/site/slates.html
+          git commit -m "Add the $SLATE slate to the gallery" -m "Closes #$ISSUE"
+          git push origin HEAD:main
+
+      - env:
+          SLATE: ${{ steps.write.outputs.id }}
+        run: |
+          gh issue close "$ISSUE" --repo "$GITHUB_REPOSITORY" --reason completed \
+            --comment "Published as \`slates/$SLATE.json\`. It will be in the gallery once the site redeploys. Thank you."
+
+      - if: failure()
+        env:
+          REASON: ${{ steps.write.outputs.error }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --remove-label publish
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" \
+            --body "This slate could not be published: ${REASON:-see $RUN for the details}. Edit the issue to fix it, and a maintainer can add the label again."

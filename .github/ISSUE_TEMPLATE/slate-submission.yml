@@ -1,5 +1,7 @@
 name: Submit a slate
 description: Share a layout you have built for the gallery
+# The slate's own name is asked for below; the issue is retitled from it.
+title: 'Slate submission'
 labels: ['slate']
 body:
   - type: markdown

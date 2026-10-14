@@ -168,7 +168,8 @@ export function submissionUrl(
   const params = new URLSearchParams({
     template: 'slate-submission.yml',
     labels: 'slate',
-    title: name ? `Slate: ${name}` : 'Slate: ',
+    // Fixed, so nobody mistakes the issue title for the slate's name.
+    title: 'Slate submission',
     name,
     description,
     credit,
