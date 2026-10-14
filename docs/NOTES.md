@@ -118,3 +118,9 @@ cross-window jump carry it, and grouping added a permission for little gain.
   not a CDN and not only locally installed ones. A face downloads nothing and loads only when
   its family is in use, so a new tab on the system font pays nothing for the others. The settings
   panel and popup always use the brand font; the new tab uses whatever the user chose.
+- A Google font is added by name (`appearance.customFonts`) and selected as `google:<name>`. It loads
+  through a `<link>` stylesheet, which needs no host permission and no custom CSP (the Manifest V3
+  default restricts scripts, not styles). It tries a weight range first and falls back to the family's
+  default for fonts with a single weight, then asks `document.fonts.load` whether a face really arrived,
+  since a sheet can load for a family that does not exist. The input is validated to letters, digits and
+  spaces before it is ever placed in a URL or a stack.
