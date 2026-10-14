@@ -104,6 +104,9 @@ for (const scene of scenes) {
 
   const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'))
   const id = new URL(worker.url()).host
+  // The install handler starts the first-run welcome, which would sit over every shot.
+  await new Promise((r) => setTimeout(r, 500))
+  await worker.evaluate(() => chrome.storage.local.set({ onboarding: { stage: 'done' } }))
 
   const page = await context.newPage()
   await page.setViewportSize(SIZE)
