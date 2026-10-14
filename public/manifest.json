@@ -68,6 +68,14 @@
         "<all_urls>"
       ],
       "extension_ids": []
+    },
+    {
+      "resources": [
+        "slate.html"
+      ],
+      "matches": [
+        "https://openslate.byvenu.com/*"
+      ]
     }
   ],
   "commands": {

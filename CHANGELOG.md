@@ -5,13 +5,6 @@ Notable changes to Open Slate, newest first. Versions follow
 GitHub release, the website and the store listing's "What's new" all read from,
 so it is written for the people who use the extension rather than for the diff.
 
-## [Unreleased]
-
-### Changed
-
-- A slate shared with **Share my slate** goes into the community gallery as soon as you file it, with a reply on the issue saying so, or saying what to fix. Editing the issue updates it in the gallery.
-- The submission form now asks for the slate's name in its own field, and fills in the title for you.
-
 ## [1.4.0]
 
 ### Added
@@ -80,6 +73,12 @@ so it is written for the people who use the extension rather than for the diff.
   from leaking through on blank space.
 - Claude and ChatGPT usage meter refresh buttons now share the same button and
   icon scale as other widgets.
+- A slate shared with **Share my slate** goes into the community gallery as soon as you file it, with a reply on the issue saying so, or saying what to fix. Editing the issue updates it in the gallery.
+- The submission form now asks for the slate's name in its own field, and fills in the title for you.
+
+### Fixed
+
+- "Use this slate" in the community gallery opens the slate in the extension. Chrome was blocking the link and showing an invalid page instead.
 
 ## [1.3.0]
 

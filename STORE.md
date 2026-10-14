@@ -189,6 +189,20 @@ from `fonts.gstatic.com`.
 - The accepted input is a plain family name or a link on a Google Fonts host, validated to
   letters, digits and spaces before use (`parseGoogleFont` in `core/theme/fonts.ts`).
 
+### On the web-accessible `slate.html`
+
+The community gallery at `https://openslate.byvenu.com/slates` has a "Use this
+slate" link on each layout, which opens the extension's `slate.html` with the
+layout in the address. Chrome only lets a web page navigate to an extension page
+that is declared web-accessible, so `slate.html` is, and only for that one site.
+
+- It is a navigation the user clicks, not a request. The page reads the layout from
+  its own address and shows a preview on the user's new tab; nothing is applied
+  until they confirm it there.
+- No other site can open it, and nothing is exposed beyond that one page. The
+  gallery site can tell from it that the extension is installed, which is the
+  same thing following the link already tells it.
+
 ### On the broad `https://*/*` optional host pattern
 
 The feeds widget reads RSS and Atom feeds at addresses only the user knows, so
