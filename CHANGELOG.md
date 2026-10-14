@@ -30,6 +30,10 @@ so it is written for the people who use the extension rather than for the diff.
   or your own custom quote, updating on every new tab, hourly, or daily.
 - Manual refresh buttons on the crypto and weather widgets.
 - "Arrange the page" action in the command palette.
+- A first-run welcome on a fresh install: pick a starting look, choose whether to begin
+  with your most visited sites, then a short tour of search, tiles, the corner bar and the
+  toolbar button, and a three-item checklist that ticks itself. "Take the tour" in the
+  command palette replays it. Existing installs never see it.
 
 ### Changed
 
