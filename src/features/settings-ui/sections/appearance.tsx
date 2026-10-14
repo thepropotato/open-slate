@@ -1,4 +1,4 @@
-import { fontOptions } from '@/core/theme/fonts'
+import { FontPicker } from '../FontPicker'
 import { PresetPicker } from '../PresetPicker'
 import type { Section } from '../types'
 
@@ -104,13 +104,10 @@ export const appearanceSection: Section = {
       label: 'Typography and rhythm',
       fields: [
         {
-          path: 'appearance.fontFamily',
           label: 'Font',
-          help: 'Every font here ships with the extension, so a new tab never waits on a download.',
-          control: {
-            kind: 'select',
-            options: fontOptions.map((f) => ({ value: f.id, label: f.label })),
-          },
+          help: 'Most fonts ship with the extension. You can also add any font from Google Fonts.',
+          control: { kind: 'custom', stacked: true, render: () => <FontPicker /> },
+          keywords: 'font typeface type google fonts text family',
         },
         {
           path: 'appearance.fontScale',

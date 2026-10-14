@@ -518,3 +518,11 @@
 .settings-drawer .ctl-selectwrap .ctl-select {
   width: 100%;
 }
+
+/* A stacked row keeps its control on its own full-width line, whatever else the drawer sizes. */
+.settings-drawer .ctl-row.ctl-row--stacked .ctl-row__label,
+.settings-drawer .ctl-row.ctl-row--stacked .ctl-row__control {
+  flex: 1 1 100%;
+  margin-left: 0;
+  width: 100%;
+}

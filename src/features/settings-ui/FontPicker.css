@@ -1,0 +1,49 @@
+.fontpicker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+}
+
+.fontpicker .ctl-selectwrap,
+.fontpicker .ctl-selectwrap .ctl-select {
+  width: 100%;
+}
+
+.fontpicker__add {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: center;
+}
+
+.fontpicker__note,
+.fontpicker__bad {
+  margin: 0;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  color: var(--fg-subtle);
+}
+
+.fontpicker__bad {
+  color: var(--fg);
+}
+
+.fontpicker__list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fontpicker__list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: var(--text-sm);
+}
+
+.fontpicker__list li + li {
+  border-top: 1px solid var(--line);
+}
