@@ -122,7 +122,7 @@ function renderPage(sections) {
     description: 'What changed in each release of the Open Slate Chrome extension.',
     path: 'changelog',
   })}
-${nav}
+${nav('/changelog')}
 <main>
 <div class="wrap narrow">
   <header class="doc-head">

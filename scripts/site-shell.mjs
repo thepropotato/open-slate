@@ -36,20 +36,31 @@ export function pageHead({ title, description, path }) {
 `
 }
 
-export const nav = `<header class="site-header">
+const NAV_LINKS = [
+  ['/#features', 'Features'],
+  ['/slates', 'Slates'],
+  ['/privacy', 'Privacy'],
+  ['/changelog', 'Changelog'],
+]
+
+/** `current` is the page's own path, marked so the header shows where you are. */
+export function nav(current) {
+  const links = NAV_LINKS.map(
+    ([href, label]) => `<a href="${href}"${href === current ? ' aria-current="page"' : ''}>${label}</a>`,
+  ).join('\n        ')
+  return `<header class="site-header">
   <div class="wrap">
     <nav class="nav" aria-label="Main">
       <a class="brand" href="/"><img class="logo" src="/favicon.svg" alt="" width="28" height="28">Open Slate</a>
       <div class="nav-links">
-        <a href="/#features">Features</a>
-        <a href="/privacy">Privacy</a>
-        <a href="/changelog">Changelog</a>
+        ${links}
         <a class="btn" href="${STORE_URL}">Add to Chrome</a>
       </div>
     </nav>
   </div>
 </header>
 `
+}
 
 export const footer = `<footer>
   <div class="wrap">

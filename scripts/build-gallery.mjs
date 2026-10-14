@@ -78,7 +78,7 @@ function renderPage(entries) {
     description: 'Slates shared by people who use Open Slate. Apply one to your new tab in a click.',
     path: 'slates',
   })}
-${nav}
+${nav('/slates')}
 <main>
 <div class="wrap">
   <header class="doc-head">

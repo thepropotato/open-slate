@@ -5,6 +5,7 @@ image tiles, widgets, and a wallpaper engine, with close to everything about the
 look under your control.
 
 Site: [openslate.byvenu.com](https://openslate.byvenu.com) ·
+[Community slates](https://openslate.byvenu.com/slates) ·
 [Chrome Web Store](https://chromewebstore.google.com/detail/kbacclgoobafnkifgckaenacaeghfonm)
 
 https://github.com/user-attachments/assets/81ed20f0-e126-48fd-90e2-e2b093027719
@@ -97,7 +98,8 @@ entry, and the UI renders itself from that. It opens as a panel beside the page,
 which shows each change as you make it. Searchable, with live updates across
 every open tab, and the last few saved versions can be restored. Full config export and import, theme codes that carry the look
 and slate codes that carry the arrangement - neither carrying your content - a
-set of starter layouts, scenes (named layouts you can switch between or schedule),
+[gallery of slates other people have shared](https://openslate.byvenu.com/slates),
+a set of starter layouts, scenes (named layouts you can switch between or schedule),
 and opt-in sync across devices.
 
 ## Two things worth knowing

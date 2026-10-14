@@ -85,7 +85,9 @@ vignette and a slow-drift option.
 Every preference is searchable and applies live across every open tab. Export
 your whole configuration to a file, or share a theme code that carries the look
 and a slate code that carries the arrangement - neither carrying your tiles,
-notes or tasks. Four starter layouts get a new grid going in one click.
+notes or tasks. Four starter layouts get a new grid going in one click, and
+the community gallery at openslate.byvenu.com/slates has more that people have
+shared.
 
 IT ASKS FOR NOTHING
 No analytics, no telemetry, no crash reporting, no identifiers. No content
