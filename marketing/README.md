@@ -50,8 +50,10 @@ run when named: `node scripts/marketing-shots.mjs spotify`.
 
 ## The launch video
 
-`promo/launch-video.mp4` is a 1080p, 60-second cut that the README links to,
-re-encoded smaller for the repository. It was made with the `/brag-slim` skill:
+`promo/launch-video.mp4` is a 1080p, 60-second cut, re-encoded smaller for the
+repository. The README plays a copy uploaded as a GitHub attachment, because
+GitHub will not play video served from `raw.githubusercontent.com`; re-upload it
+and update the link whenever this file changes. It was made with the `/brag-slim` skill:
 real captures of the built extension, composed on a canvas, with a synthesised
 soundtrack. The capture and render scripts are not committed - they live in the
 gitignored `brag-output/work/` - so the video cannot be regenerated from this
