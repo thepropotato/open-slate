@@ -7,7 +7,8 @@ directory sits outside it. Verify with `npm run build && ls dist`.
 ```
 marketing/
   screenshots/   1280x800 Chrome Web Store screenshots (the five `store` scenes)
-  promo/         store promo tiles (440x280 small, 1400x560 marquee)
+  promo/         store promo tiles (440x280 small, 1400x560 marquee), and the
+                 60-second launch video with its poster frame
   assets/        inputs to the capture, not served
     wallpaper.png  generated; inlined into the shots as a data URL
   site/          the product site, deployed to openslate.byvenu.com
@@ -46,3 +47,12 @@ taken mid-flight catches a spinner.
 The default run shoots the five store scenes, which are also the ones the site uses.
 The other scenes (Spotify, usage, clock faces and so on) are kept for reuse and only
 run when named: `node scripts/marketing-shots.mjs spotify`.
+
+## The launch video
+
+`promo/launch-video.mp4` is a 1080p, 60-second cut that the README links to,
+re-encoded smaller for the repository. It was made with the `/brag-slim` skill:
+real captures of the built extension, composed on a canvas, with a synthesised
+soundtrack. The capture and render scripts are not committed - they live in the
+gitignored `brag-output/work/` - so the video cannot be regenerated from this
+repository alone. Re-render it when a screen in it changes enough to mislead.

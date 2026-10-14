@@ -4,6 +4,8 @@ A Chrome extension that replaces the new tab page with a speed dial and dashboar
 image tiles, widgets, and a wallpaper engine, with close to everything about the
 look under your control.
 
+[![Open Slate in 60 seconds](marketing/promo/launch-video.jpg)](marketing/promo/launch-video.mp4)
+
 ## Running it
 
 ```sh
