@@ -1,4 +1,5 @@
 import type { Section } from '../types'
+import { BandOrder } from '../BandOrder'
 
 export const layoutSection: Section = {
   id: 'layout',
@@ -20,6 +21,14 @@ export const layoutSection: Section = {
               { value: 'tabs', label: 'Two tabs' },
             ],
           },
+        },
+        {
+          path: 'layout.order',
+          label: 'Order',
+          help: 'Which comes first on the page, below search.',
+          keywords: 'swap reorder sections widgets tiles first',
+          when: (s) => s.layout.viewMode === 'scroll',
+          control: { kind: 'custom', render: () => <BandOrder /> },
         },
         {
           path: 'layout.defaultPane',
