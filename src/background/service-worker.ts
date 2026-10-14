@@ -11,7 +11,12 @@ const SLIDESHOW_ALARM = 'wallpaper-slideshow'
 
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
-    await chrome.storage.local.set({ installedAt: Date.now() })
+    // Only a fresh install gets the first-run tour; an update finds no record and skips it.
+    await chrome.storage.local.set({
+      installedAt: Date.now(),
+      onboarding: { stage: 'welcome', seed: true, tasks: [] },
+    })
+    await chrome.tabs.create({ url: chrome.runtime.getURL('newtab.html') })
   }
   await syncSlideshowAlarm()
 })

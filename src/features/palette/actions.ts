@@ -35,6 +35,7 @@ export function buildActions(
   onOpenSettings?: () => void,
   onArrange?: () => void,
   scenes: Scene[] = [],
+  onTour?: () => void,
 ): PaletteAction[] {
   const { update, set, reset } = actions
 
@@ -100,6 +101,17 @@ export function buildActions(
       common: true,
       run: () => (onOpenSettings ? onOpenSettings() : openOptions()),
     },
+    ...(onTour
+      ? [
+          {
+            id: 'tour',
+            title: 'Take the tour',
+            icon: 'info' as const,
+            keywords: 'help welcome guide intro tutorial onboarding how',
+            run: onTour,
+          },
+        ]
+      : []),
     {
       id: 'add:tile',
       title: 'Add a tile',

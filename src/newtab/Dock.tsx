@@ -40,6 +40,7 @@ export function Dock({
     <nav
       className="page__tools dock"
       aria-label="Page controls"
+      data-tour="dock"
       data-zen={zen}
       data-idle={idle && !arranging}
       data-arranging={arranging}
