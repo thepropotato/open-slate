@@ -48,10 +48,12 @@ so it is written for the people who use the extension rather than for the diff.
 - Secondary text and borders are easier to read in every palette, and panels have a
   faint fill so they stand out from the page.
 - The seeded Maps tile no longer shows the Google Search logo.
-- New font choices, all bundled with the extension so nothing downloads: System default,
-  Bricolage Grotesque (the Open Slate font), Inter, Nunito, Lora, JetBrains Mono and
-  Caveat. "Grotesk" becomes Inter and "Condensed" returns to the system font. The
-  settings panel and popup use Bricolage Grotesque.
+- Twelve fonts, all bundled with the extension so nothing downloads: System, Bricolage
+  Grotesque (the Open Slate font), Inter, DM Sans, Manrope, Space Grotesk, Nunito, Lora,
+  Playfair Display, JetBrains Mono, Fira Code and Caveat. "Grotesk" becomes Inter and
+  "Condensed" returns to the system font. The settings panel and popup use Bricolage Grotesque.
+- Add any font from Google Fonts by pasting its link or typing its name. It is fetched from
+  Google when you add it and while you use it; the built-in fonts never touch the network.
 - Scrolling over a widget now cascades smoothly to the whole page once it reaches
   the widget boundary, avoiding stuck scrolling on single-page layouts.
 - Notes widget now features a quiet, centered prompt rather than a persistent

@@ -172,6 +172,23 @@ What keeps this narrow:
 
 The endpoints and the gate are in `src/features/search/suggest.ts`.
 
+### On fonts added from Google Fonts
+
+Twelve fonts ship inside the package and need no network. Separately, the user may type a
+font name or paste a Google Fonts link under Settings, Appearance, Font. Only then does the
+extension load a stylesheet from `fonts.googleapis.com`, which in turn serves the font file
+from `fonts.gstatic.com`.
+
+- It is the user's own action: nothing is requested until they add a family, and a
+  stylesheet is requested again only while that family is the one in use. Google sees the
+  family name and the user's IP address, as any website using Google Fonts would.
+- It needs no permission. A `<link rel="stylesheet">` on the extension's own page is not a
+  host-permission request, and no custom content security policy is declared. The default
+  Manifest V3 policy restricts scripts and objects, so it admits a remote stylesheet and font.
+- It is styling only. No script is fetched or evaluated, so "no remote code" still holds.
+- The accepted input is a plain family name or a link on a Google Fonts host, validated to
+  letters, digits and spaces before use (`parseGoogleFont` in `core/theme/fonts.ts`).
+
 ### On the broad `https://*/*` optional host pattern
 
 The feeds widget reads RSS and Atom feeds at addresses only the user knows, so
@@ -206,6 +223,8 @@ What matters is that it is **optional and never requested wholesale**:
   approximate city; called once, while the weather widget is being set up),
   `api.coingecko.com` (a list of coin ids and a currency code),
   the feed addresses the user entered,
+  `fonts.googleapis.com` and `fonts.gstatic.com` (a font family the user chose to add,
+  only when they add one; see the section above),
   and `claude.ai` or `chatgpt.com` (that provider's own usage endpoint, requested
   from within a tab on that site, so it carries the user's existing session for
   that site exactly as loading the page normally would - and nothing else).
