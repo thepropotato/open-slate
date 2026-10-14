@@ -7,26 +7,17 @@
  * a description and a rendered preview rather than a wall of base64 they cannot
  * check by eye. Anything this script rejects never reaches the review queue.
  *
- *   node --import ./scripts/register.mjs scripts/check-slates.mjs [--write]
+ * With `--issues` it also takes in the slates submitted as issues, which is what
+ * the site build runs. The committed index is the files alone, so CI never
+ * depends on the GitHub API.
+ *
+ *   node --import ./scripts/register.mjs scripts/check-slates.mjs [--write] [--issues]
  */
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { knownTypes } from './widget-types.mjs'
 
 const { validateEntry } = await import('@/core/settings/slateGallery')
-
-// Widget types are read out of the sources rather than by importing the
-// registry: registering a widget imports its React component, and this runs
-// under plain Node with no DOM. `check-facts.mjs` reads the same file the same way.
-function knownTypes() {
-  const index = readFileSync(join('src', 'features', 'widgets', 'index.ts'), 'utf8')
-  const types = new Set()
-  for (const [, path] of index.matchAll(/^import '\.\/(.+)'$/gm)) {
-    const source = readFileSync(join('src', 'features', 'widgets', `${path}.tsx`), 'utf8')
-    const match = /registerWidget(?:<[^>]*>)?\(\{[\s\S]*?type: '([a-z0-9-]+)'/.exec(source)
-    if (match) types.add(match[1])
-  }
-  return types
-}
 
 const DIR = 'slates'
 const INDEX = join('marketing', 'site', 'slates.json')
@@ -73,6 +64,16 @@ for (const file of files) {
   } catch (error) {
     problems.push(`${path}: ${error.message}`)
   }
+}
+
+if (process.argv.includes('--issues')) {
+  const { issueEntries } = await import('./issue-slates.mjs')
+  const fromIssues = await issueEntries(seen.keys(), (type) => known.has(type))
+  for (const { entry, payload, issue } of fromIssues.entries) {
+    entries.push(entry)
+    console.log(`  ${entry.id}: ${payload.widgets.length} widgets by @${entry.author} (#${issue})`)
+  }
+  for (const { issue, reason } of fromIssues.skipped) console.warn(`  #${issue} left out: ${reason}`)
 }
 
 if (problems.length > 0) {

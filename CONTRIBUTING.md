@@ -131,13 +131,16 @@ For anything security-related, please do not open a public issue - see
 ## Submitting a slate
 
 A slate is an arrangement of widgets: which ones are on the grid and where they
-sit. The gallery is a folder of JSON files in `slates/`, so submitting one is an
-ordinary pull request and merging it is what publishes it. There is no server
-and no account.
+sit. There is no server and no account: the gallery is built from the slate
+issues on GitHub and from a folder of JSON files in `slates/`.
 
 The easiest route is from the extension. Open Settings, go to Slates and press
 **Share my slate**: that opens a submission form on GitHub with your code
-already filled in, which you post yourself. To open a pull request directly
+already filled in, which you post yourself. Filing it is what publishes it. A
+workflow checks the slate, replies on the issue, and rebuilds the site, so it
+appears in the gallery without anyone having to approve it. Editing the issue
+updates the slate there, and closing it as not planned takes it down. To open a
+pull request directly
 instead, add one file to `slates/` named after its `id`:
 
 ```json
@@ -175,10 +178,8 @@ name in place, say so in the description, and a maintainer can merge it with the
 credit as it stands.
 
 Submitting through the extension needs no username at all: the slate is credited
-to whoever files the issue. A maintainer publishes it by adding the `publish`
-label, which commits the file to `slates/` under that account and closes the
-issue. If the slate fails validation, the label comes off and the reason is
-posted on the issue instead.
+to whoever files the issue. If the slate fails validation, the reply on the
+issue says why, and it goes live once the issue is edited to fix it.
 
 If you would rather not be credited as your GitHub handle, set `credit` to the
 name you want shown. Your username still appears beside it, because the username

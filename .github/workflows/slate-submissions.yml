@@ -1,0 +1,73 @@
+name: Slate submissions
+
+# Filing a slate issue publishes it: the site build reads slate issues straight
+# from GitHub (`scripts/issue-slates.mjs`). This answers the submitter and asks
+# Vercel to rebuild, so the gallery follows the issues without anyone acting.
+#
+# The issue body is a stranger's text. It is only ever read by the script, from
+# the event payload, and never interpolated into a command here.
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, deleted, labeled, unlabeled]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  submission:
+    if: contains(github.event.issue.labels.*.name, 'slate') || github.event.label.name == 'slate'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+      GALLERY: https://openslate.byvenu.com/slates
+      REVIEW: ${{ github.event.action == 'opened' || github.event.action == 'edited' }}
+    steps:
+      - if: env.REVIEW == 'true'
+        uses: actions/checkout@v4
+
+      - if: env.REVIEW == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: npm
+
+      - if: env.REVIEW == 'true'
+        run: npm ci
+
+      - id: review
+        if: env.REVIEW == 'true'
+        run: |
+          node --import ./scripts/register.mjs scripts/issue-slates.mjs review
+
+      # The form asks for the slate's name, so the title follows it rather than
+      # being typed by the submitter.
+      - if: steps.review.outputs.name != ''
+        env:
+          NAME: ${{ steps.review.outputs.name }}
+        run: |
+          gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --title "Submission: $NAME"
+
+      - if: github.event.action == 'opened' && steps.review.outputs.ok == 'true'
+        run: |
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body "Thank you. Your slate will be in the gallery at $GALLERY once the site has rebuilt. Editing this issue updates it there, and closing it as not planned takes it down."
+
+      # On an edit, only a failure is answered, so fixing a typo does not pile up comments.
+      - if: steps.review.outputs.ok == 'false'
+        env:
+          REASON: ${{ steps.review.outputs.error }}
+        run: |
+          gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body "This slate cannot go in the gallery yet: $REASON. Edit the issue to fix it and it will be picked up again."
+
+      # Every change to a slate issue can change the gallery, including one that
+      # takes it down, so each one rebuilds.
+      - env:
+          DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "VERCEL_DEPLOY_HOOK is not set; the gallery updates on the next deploy."
+            exit 0
+          fi
+          curl -fsS -X POST "$DEPLOY_HOOK" > /dev/null

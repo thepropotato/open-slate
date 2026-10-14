@@ -99,7 +99,7 @@ ${entries.length > 0 ? `<div class="slates">\n${cards}\n</div>` : empty}
     &ldquo;Use this slate&rdquo; opens the extension with it in the link and shows you
     the result before anything changes.</p>
     <p>To share yours, open Settings &rarr; Slates in the extension and press
-    <strong>Share my slate</strong>.</p>
+    <strong>Share my slate</strong>. It appears here once you file the form.</p>
   </section>
 </div>
 </main>

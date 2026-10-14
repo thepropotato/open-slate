@@ -2,14 +2,14 @@ import { z } from 'zod'
 import { decodeSlate, type SlatePayload } from './slateCode'
 
 /**
- * The community gallery: slates people have submitted, reviewed by hand and
- * merged into the repository. There is no server and no database - a slate is a
- * JSON file in `slates/`, git history is the provenance, and merging a pull
- * request is what publishes it.
+ * The community gallery: slates people have submitted. There is no server and
+ * no database - a slate is either an issue filed through the submission form,
+ * which the site build reads straight from GitHub, or a JSON file in `slates/`.
+ * Filing the issue or merging the file is what publishes it.
  *
  * Everything here treats an entry as untrusted text. It was written by whoever
- * opened the pull request, it is rendered in the extension and on the site, and
- * a reviewer reading a diff is not a parser. So the length caps and the
+ * filed it, it is rendered in the extension and on the site, and nobody reads it
+ * before it goes live. So the length caps and the
  * character rules below are enforced in code rather than asked for in a
  * contributing guide.
  */
