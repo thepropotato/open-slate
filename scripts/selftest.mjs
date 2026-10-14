@@ -285,6 +285,21 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   }
 }
 
+/* ------------------------------------------------------------------ google fonts */
+{
+  const { parseGoogleFont, googleFontUrl, resolveFontStack } = await load('core/theme/fonts.ts')
+  check('fonts: plain name', parseGoogleFont('Space Mono'), 'Space Mono')
+  check('fonts: specimen page', parseGoogleFont('https://fonts.google.com/specimen/Open+Sans?query=open'), 'Open Sans')
+  check('fonts: embed link', parseGoogleFont('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap'), 'Roboto Slab')
+  check('fonts: first of several families', parseGoogleFont('https://fonts.googleapis.com/css2?family=Lato&family=Inter'), 'Lato')
+  check('fonts: weights after a colon are dropped', parseGoogleFont('Inter:wght@400'), 'Inter')
+  check('fonts: another site is refused', parseGoogleFont('https://example.com/css?family=Inter'), null)
+  check('fonts: markup is refused', parseGoogleFont('Inter;}body{x:y'), null)
+  check('fonts: empty is refused', parseGoogleFont('  '), null)
+  check('fonts: url encodes spaces', googleFontUrl('Open Sans', false), 'https://fonts.googleapis.com/css2?family=Open+Sans&display=swap')
+  truthy('fonts: a google id resolves by name', resolveFontStack('google:Space Mono').startsWith("'Space Mono'"))
+}
+
 /* ------------------------------------------------------------------ scenes */
 {
   const { sceneFor } = await load('core/settings/scenes.ts')
