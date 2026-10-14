@@ -4,7 +4,7 @@ A Chrome extension that replaces the new tab page with a speed dial and dashboar
 image tiles, widgets, and a wallpaper engine, with close to everything about the
 look under your control.
 
-<video src="https://github.com/user-attachments/assets/81ed20f0-e126-48fd-90e2-e2b093027719" poster="marketing/promo/launch-video.jpg" controls muted width="100%"></video>
+https://github.com/user-attachments/assets/81ed20f0-e126-48fd-90e2-e2b093027719
 
 ## Running it
 
