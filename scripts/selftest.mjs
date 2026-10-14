@@ -1485,6 +1485,22 @@ const truthy = (name, value) => check(name, Boolean(value), true)
   check('theme: flags carry the mode', themeFlags(base.appearance, 'light').mode, 'light')
 }
 
+/* ------------------------------------------------------------- first run */
+
+{
+  const { parseState, withTask, allDone, fresh } = await load('features/onboarding/state.ts')
+  check('onboarding: no record is finished', parseState(undefined), null)
+  check('onboarding: done is finished', parseState({ stage: 'done' }), null)
+  check('onboarding: junk is finished', parseState({ stage: 'nope' }), null)
+  check('onboarding: welcome resumes', parseState({ stage: 'welcome' })?.stage, 'welcome')
+  check('onboarding: seed defaults on', parseState({ stage: 'tour' })?.seed, true)
+  check('onboarding: seed off is kept', parseState({ stage: 'tour', seed: false })?.seed, false)
+  check('onboarding: unknown tasks dropped', parseState({ stage: 'checklist', tasks: ['widget', 'x'] })?.tasks, ['widget'])
+  const once = withTask(fresh('checklist'), 'palette')
+  check('onboarding: a task is recorded once', withTask(once, 'palette').tasks, ['palette'])
+  check('onboarding: partial is not done', allDone(once), false)
+  check('onboarding: all three is done', allDone(withTask(withTask(once, 'widget'), 'arrange')), true)
+}
 
 /* ------------------------------------------------------------------ output */
 

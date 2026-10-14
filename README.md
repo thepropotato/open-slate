@@ -85,6 +85,8 @@ that fades when you stop moving. Add is a single sheet for a tile, a folder or a
 widget. The toolbar popup (`Alt+Shift+S`) adds the page you are on and holds quick
 actions.
 
+**First run.** A fresh install opens a welcome (pick a look, optionally start with your most visited sites), a four-step tour on the real page, and a checklist that ticks itself. Progress is kept on the device, apart from settings, and "Take the tour" in the palette replays it.
+
 **Settings.** Every preference is declared once, as a schema field plus a spec
 entry, and the UI renders itself from that. It opens as a panel beside the page,
 which shows each change as you make it. Searchable, with live updates across
