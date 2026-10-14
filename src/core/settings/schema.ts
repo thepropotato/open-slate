@@ -29,6 +29,8 @@ export const Appearance = z.object({
   radius: z.number().min(0).max(40).default(16),
   density: z.enum(['compact', 'comfortable', 'spacious']).default('spacious'),
   fontFamily: z.string().default('system'),
+  // Family names added from Google Fonts. Fetched only when one is chosen.
+  customFonts: z.array(z.string().regex(/^[A-Za-z0-9][A-Za-z0-9 ]{0,59}$/)).default([]),
   fontScale: z.number().min(0.75).max(1.5).default(1),
   surface: z.enum(['glass', 'solid', 'outline', 'none']).default('glass'),
   surfaceOpacity: unit.default(0.4),
