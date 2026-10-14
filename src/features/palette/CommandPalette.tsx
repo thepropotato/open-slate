@@ -19,11 +19,13 @@ export function CommandPalette({
   onClose,
   onOpenSettings,
   onArrange,
+  onTour,
 }: {
   onClose: () => void
   /** Opens settings in place; falls back to the options page when absent. */
   onOpenSettings?: () => void
   onArrange?: () => void
+  onTour?: () => void
 }) {
   const { closing, handleClose } = useClosing(onClose, 150)
   const settings = useSettings()
@@ -38,8 +40,8 @@ export function CommandPalette({
   const scenes = useAsyncValue('scenes', listScenes)
 
   const commands = useMemo(
-    () => buildActions(settings, actions, onOpenSettings, onArrange, scenes ?? []),
-    [settings, actions, onOpenSettings, onArrange, scenes],
+    () => buildActions(settings, actions, onOpenSettings, onArrange, scenes ?? [], onTour),
+    [settings, actions, onOpenSettings, onArrange, scenes, onTour],
   )
 
   const local = useAsyncValue(needle.length > 0 ? `palette:${needle}` : null, () =>

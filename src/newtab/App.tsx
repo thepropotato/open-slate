@@ -18,6 +18,10 @@ const AddSheet = lazyChunk(() =>
 const SettingsOverlay = lazyChunk(() =>
   import('@/features/settings-ui/SettingsOverlay').then((m) => ({ default: m.SettingsOverlay })),
 )
+const Onboarding = lazyChunk(() =>
+  import('@/features/onboarding/Onboarding').then((m) => ({ default: m.Onboarding })),
+)
+import { OnboardingProvider, useOnboarding } from '@/features/onboarding/OnboardingProvider'
 import { ArrangeProvider, useArrange } from '@/features/menu/ArrangeContext'
 import { useArrangeEscape } from '@/features/menu/arrange'
 import { useContextMenu } from '@/features/menu/useContextMenu'
@@ -33,9 +37,11 @@ import './App.css'
  */
 export function App() {
   return (
-    <ArrangeProvider>
-      <NewTab />
-    </ArrangeProvider>
+    <OnboardingProvider>
+      <ArrangeProvider>
+        <NewTab />
+      </ArrangeProvider>
+    </OnboardingProvider>
   )
 }
 
@@ -55,6 +61,7 @@ function NewTab() {
   const [settingsSection, setSettingsSection] = useState<string | undefined>(deepLink.argument)
   const contentRef = useRef<HTMLElement>(null)
   const arrange = useArrange()
+  const onboarding = useOnboarding()
 
   const openSettings = useCallback((section?: string) => {
     setSettingsSection(section)
@@ -178,6 +185,14 @@ function NewTab() {
     arrange.start()
   }, [arrange, deepLink.command])
 
+  // `#welcome` and `#tour` start the first-run flow again; the palette offers the tour too.
+  const startedTour = useRef(false)
+  useEffect(() => {
+    if (startedTour.current || !onboarding?.ready) return
+    startedTour.current = true
+    if (deepLink.command === 'welcome' || deepLink.command === 'tour') onboarding.start(deepLink.command)
+  }, [onboarding, deepLink.command])
+
   useEffect(() => {
     const onAdd = (event: Event) => {
       const { tab, pageId } = (event as CustomEvent<{ tab: AddTab; pageId: string }>).detail
@@ -272,12 +287,27 @@ function NewTab() {
             onClose={() => setPaletteOpen(false)}
             onOpenSettings={() => openSettings()}
             onArrange={arrange.start}
+            onTour={onboarding ? () => onboarding.start('tour') : undefined}
           />
         </Suspense>
       ) : null}
 
       </PageShell>
       </DraftPreview>
+
+      {/* Only a fresh install has anything to show, so nobody else pays for the chunk. */}
+      {onboarding?.ready && onboarding.state ? (
+        <Suspense fallback={null}>
+          <Onboarding
+            signals={{
+              paletteOpen,
+              arranging: arrange.arranging,
+              onPalette: () => setPaletteOpen(true),
+              onArrange: arrange.start,
+            }}
+          />
+        </Suspense>
+      ) : null}
 
       {adding ? (
         <Suspense fallback={null}>
@@ -303,7 +333,7 @@ function NewTab() {
   )
 }
 
-/** The toolbar popup opens newtab.html#settings, #settings=background, #arrange or #palette. */
+/** The toolbar popup opens newtab.html#settings, #settings=background, #arrange or #palette; #welcome and #tour restart the first-run flow. */
 function readDeepLink(): { command: string; argument: string | undefined } {
   const [command = '', argument] = location.hash.slice(1).split('=')
   if (command) history.replaceState(null, '', location.pathname + location.search)

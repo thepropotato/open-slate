@@ -124,7 +124,7 @@ export function SearchBar() {
 
   return (
     <div className="searchband">
-      <div className="search" style={{ maxWidth: search.width }}>
+      <div className="search" data-tour="search" style={{ maxWidth: search.width }}>
         {/* A fixed height, not a floor: a chip taller than the setting would
             grow the row and nudge whatever sits under it. */}
         <div className="search__row surface" style={{ height: search.height }}>

@@ -16,6 +16,7 @@ import {
   tilesIn,
 } from './folders'
 import { triggerAdd } from '@/core/events'
+import { useSeedGate } from '@/features/onboarding/OnboardingProvider'
 import { seedTilesFromBrowser } from './seed'
 import { useGridArrows } from './useGridArrows'
 import { useContextMenu } from '@/features/menu/useContextMenu'
@@ -74,8 +75,9 @@ export function TileGrid() {
   )
 
   // First run: offer the browser's own most-visited sites rather than a blank page.
+  const mayFill = useSeedGate()
   useEffect(() => {
-    if (items.length > 0) return
+    if (items.length > 0 || !mayFill) return
     let alive = true
     void seedTilesFromBrowser().then((seeded) => {
       if (!alive || seeded.length === 0) return
@@ -88,7 +90,7 @@ export function TileGrid() {
     return () => {
       alive = false
     }
-  }, [items.length, update])
+  }, [items.length, mayFill, update])
 
   // Holding Alt reveals the 1-9 shortcut badges.
   const shortcuts = behavior.tileNumberShortcuts
@@ -229,7 +231,7 @@ export function TileGrid() {
   } as React.CSSProperties
 
   return (
-    <div className="tiles-band" onContextMenu={tileMenu.onContextMenu}>
+    <div className="tiles-band" data-tour="tiles" onContextMenu={tileMenu.onContextMenu}>
       <div
         className="tiles"
         ref={gridRef}
