@@ -37,7 +37,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           ISSUE: ${{ github.event.issue.number }}
           NAME: ${{ steps.read.outputs.name }}
-        run: gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --title "Slate: $NAME"
+        run: |
+          gh issue edit "$ISSUE" --repo "$GITHUB_REPOSITORY" --title "Slate: $NAME"
 
   publish:
     if: >-
