@@ -20,8 +20,10 @@ body:
   - type: input
     id: name
     attributes:
-      label: Name
-      description: A few words. "Focus", "Two columns", "Everything at once".
+      label: Slate name
+      description: >
+        What your slate is called in the gallery. A few words, such as "Focus",
+        "Two columns" or "Everything at once". Leave the title above as it is.
       placeholder: Focus
     validations:
       required: true

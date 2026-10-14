@@ -32,7 +32,7 @@ function output(key, value) {
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${key}=${value}\n`)
 }
 
-const name = field('Name')
+const name = field('Slate name')
 
 if (mode === 'title') {
   // Newlines would break the output file; the name is single-line anyway.
