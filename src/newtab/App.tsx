@@ -50,12 +50,16 @@ function NewTab() {
   const [adding, setAdding] = useState<{ tab: AddTab; pageId: string } | null>(
     deepLink.command === 'add' ? { tab: 'tile', pageId: '' } : null,
   )
+  const [drawerClosing, setDrawerClosing] = useState(false)
+  const [drawerShown, setDrawerShown] = useState(false)
   const [settingsSection, setSettingsSection] = useState<string | undefined>(deepLink.argument)
   const contentRef = useRef<HTMLElement>(null)
   const arrange = useArrange()
 
   const openSettings = useCallback((section?: string) => {
     setSettingsSection(section)
+    setDrawerClosing(false)
+    setDrawerShown(false)
     setSettingsOpen(true)
   }, [])
 
@@ -247,7 +251,7 @@ function NewTab() {
       switched={switched}
       contentRef={contentRef}
       onContextMenu={pageMenu.onContextMenu}
-      drawerOpen={settingsOpen}
+      drawerOpen={settingsOpen && drawerShown && !drawerClosing}
     >
       <Dock
         arranging={arrange.arranging}
@@ -286,6 +290,8 @@ function NewTab() {
         <Suspense fallback={null}>
           <SettingsOverlay
             initialSection={settingsSection}
+            onClosing={() => setDrawerClosing(true)}
+            onShown={() => setDrawerShown(true)}
             onClose={() => {
               setSettingsOpen(false)
               setSettingsSection(undefined)

@@ -122,4 +122,5 @@
 .page[data-drawer='true'] .arrange-banner {
   opacity: 0;
   pointer-events: none;
+  transition: opacity var(--dur) var(--ease);
 }

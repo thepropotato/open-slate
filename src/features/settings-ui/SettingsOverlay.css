@@ -21,29 +21,32 @@
   background: transparent;
 }
 
+/* One duration and one curve for the drawer and the page beside it, so they move as a single gesture.
+   A pure slide, no fade: a panel that is fading is also still, which reads as a pop. */
 @keyframes settings-in {
   from {
-    opacity: 0;
-    transform: translateX(32px);
+    transform: translateX(100%);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
 
 @keyframes settings-out {
   from {
-    opacity: 1;
     transform: none;
   }
   to {
-    opacity: 0;
-    transform: translateX(32px);
+    transform: translateX(100%);
   }
 }
 
+.settings-overlay {
+  animation: settings-in var(--dur-drawer) var(--ease-drawer) both;
+  will-change: transform;
+}
+
 .settings-overlay[data-closing='true'] {
-  animation: settings-out 0.16s var(--ease) forwards;
+  animation: settings-out var(--dur-drawer-out) var(--ease-drawer-out) forwards;
   pointer-events: none;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useClosing } from '@/core/hooks'
 import { SettingsPanel } from './SettingsPanel'
 import './SettingsOverlay.css'
@@ -14,11 +14,21 @@ import './SettingsOverlay.css'
 export function SettingsOverlay({
   initialSection,
   onClose,
+  onClosing,
+  onShown,
 }: {
   initialSection?: string
   onClose: () => void
+  /** Fires as the close animation starts, so the page can move back in step with the drawer. */
+  onClosing?: () => void
+  /** Fires once the drawer is on screen, so the page moves when the drawer does, not before. */
+  onShown?: () => void
 }) {
-  const { closing, handleClose } = useClosing(onClose, 160)
+  const { closing, handleClose: startClose } = useClosing(onClose, 320)
+  const handleClose = useCallback(() => {
+    onClosing?.()
+    startClose()
+  }, [onClosing, startClose])
   const ref = useRef<HTMLDialogElement>(null)
 
   // Read through a ref: the caller passes a fresh closure on every render, and
@@ -29,11 +39,17 @@ export function SettingsOverlay({
     close.current = handleClose
   }, [handleClose])
 
+  const shown = useRef(onShown)
+  useEffect(() => {
+    shown.current = onShown
+  }, [onShown])
+
   // Opens once, on mount, and closes once, on unmount.
   useEffect(() => {
     const dialog = ref.current
     if (!dialog) return
     dialog.showModal()
+    shown.current?.()
     const onCancel = (event: Event) => {
       event.preventDefault()
       close.current()

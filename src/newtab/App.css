@@ -180,9 +180,15 @@
   --drawer-width: 480px;
 }
 
+.page {
+  /* Leaving: the same duration and curve as the drawer sliding out. */
+  transition: padding-right var(--dur-drawer-out) var(--ease-drawer-out);
+}
+
 .page[data-drawer='true'] {
   padding-right: var(--drawer-width);
-  transition: padding-right var(--dur) var(--ease);
+  /* Arriving: the same duration and curve as the drawer sliding in. */
+  transition: padding-right var(--dur-drawer) var(--ease-drawer);
 }
 
 @media (max-width: 760px) {

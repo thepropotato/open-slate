@@ -55,6 +55,11 @@
   --dur: calc(200ms * var(--motion));
   --dur-slow: calc(420ms * var(--motion));
   --ease: cubic-bezier(0.32, 0.72, 0, 1);
+  /* The settings drawer: eases out softly on the way in, and gathers speed on the way out. */
+  --dur-drawer: calc(420ms * var(--motion));
+  --dur-drawer-out: calc(320ms * var(--motion));
+  --ease-drawer: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drawer-out: cubic-bezier(0.4, 0, 0.8, 0.2);
 
   --z-background: 0;
   --z-content: 10;
